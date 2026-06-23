@@ -1,11 +1,10 @@
-
 'use client';
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
-  UserCircle, MapPin, Edit3, Users, History, Stethoscope, 
-  Settings, LogOut, ChevronRight, LayoutDashboard,
+  UserCircle, MapPin, Edit3, Users, History, 
+  Settings, LogOut, ChevronRight,
   HeartPulse, ShieldAlert, MessageCircleQuestion
 } from 'lucide-react';
 import { useStore } from '@/lib/store';
@@ -38,7 +37,6 @@ export default function ProfilePage() {
     { label: 'Manage Family', subLabel: 'Mata/Pita ya Sadasya jodien', icon: Users, color: 'bg-indigo-50 text-indigo-500', href: '/patients' },
     { label: 'Medical History Log', subLabel: 'Vitals: Blood Group, Height, Weight', icon: HeartPulse, color: 'bg-purple-50 text-purple-500', href: '/onboarding' },
     { label: 'Past Appointments', subLabel: 'Purane records dekhein', icon: History, color: 'bg-green-50 text-green-500', href: '/appointments' },
-    { label: 'Admin Console', subLabel: 'Platform Management', icon: LayoutDashboard, color: 'bg-amber-50 text-amber-500', href: '/admin' },
     { label: 'Help & Support', subLabel: 'Clinic se sampark karein', icon: MessageCircleQuestion, color: 'bg-yellow-50 text-yellow-500', href: '#' },
     { label: 'Settings', subLabel: 'App Preferences', icon: Settings, color: 'bg-slate-50 text-slate-500', href: '#' },
   ];
