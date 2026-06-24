@@ -1,7 +1,6 @@
-
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Calendar, Clock, Filter, Loader2, Circle } from 'lucide-react';
 import { useStore } from '@/lib/store';
@@ -50,6 +49,16 @@ export default function AppointmentsPage() {
     return dateStr;
   };
 
+  /**
+   * Mock logic to simulate live position based on DB status.
+   * In a production app, this would fetch real-time queue length from the clinic.
+   */
+  const getQueuePosition = (status: string, index: number) => {
+    if (status === 'Waiting') return index + 1;
+    if (status === 'In Consultation') return 'NOW';
+    return index + 2; // Default for Confirmed but not yet checked-in
+  };
+
   if (!isAuthenticated) return null;
 
   return (
@@ -92,70 +101,77 @@ export default function AppointmentsPage() {
           </div>
         ) : (
           <div className="space-y-6">
-            {currentList.map((app, index) => (
-              <Card key={app.id} className="border-slate-300 shadow-lg rounded-[2.5rem] overflow-hidden bg-white border-2">
-                <CardContent className="p-6 space-y-5">
-                  <div className="flex justify-between items-center px-1">
-                    <p className="text-[11px] font-black text-slate-500 tracking-tight">ID: #APT-{app.id.slice(-6).toUpperCase()}</p>
-                    <div className={cn(
-                      "px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest",
-                      app.status === 'Confirmed' ? "bg-green-100 text-green-700" : 
-                      app.status === 'Cancelled' ? "bg-red-100 text-red-700" : "bg-orange-100 text-orange-700"
-                    )}>
-                      {app.status === 'Confirmed' ? 'BOOKED' : app.status === 'Waiting' ? 'WAITING' : app.status.toUpperCase()}
-                    </div>
-                  </div>
-
-                  <hr className="border-slate-200" />
-
-                  <div className="flex items-center space-x-5">
-                    <div className="h-16 w-16 rounded-2xl bg-slate-50 flex items-center justify-center text-primary font-bold text-2xl border-2 border-slate-200 shadow-inner overflow-hidden relative">
-                      <span>🏥</span>
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-black text-slate-900 leading-tight">{app.doctorName}</h3>
-                      <p className="text-[12px] font-bold text-primary">Specialist</p>
-                      <p className="text-[11px] font-bold text-slate-500">Patient: {app.patientName}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-center space-x-3 bg-slate-50/80 border border-slate-200 p-3 rounded-[1.5rem]">
-                    <div className="flex items-center space-x-2">
-                      <Calendar className="h-4 w-4 text-orange-500" />
-                      <span className="text-[12px] font-black text-slate-700">{formatDate(app.date)}</span>
-                    </div>
-                    <span className="h-1.5 w-1.5 rounded-full bg-slate-300" />
-                    <div className="flex items-center space-x-2">
-                      <Clock className="h-4 w-4 text-orange-500" />
-                      <span className="text-[12px] font-black text-slate-700">{app.time}</span>
-                    </div>
-                  </div>
-
-                  {activeTab === 'Upcoming' && (
-                    <div className="bg-slate-900 text-white rounded-[2rem] p-6 mt-4 shadow-xl shadow-slate-900/10">
-                      <div className="flex justify-between items-center mb-4 px-1">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Live Queue Status</p>
-                        <div className="flex items-center space-x-1.5">
-                          <Circle className="h-2 w-2 fill-green-500 text-green-500 animate-pulse" />
-                          <span className="text-[10px] font-black text-green-400 uppercase tracking-widest">Sync Active</span>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center divide-x divide-slate-800">
-                        <div className="flex-1 text-center pr-4">
-                          <p className="text-2xl font-black text-blue-400">#{index + 1}</p>
-                          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Your Turn</p>
-                        </div>
-                        <div className="flex-1 text-center pl-4">
-                          <p className="text-2xl font-black text-blue-400">{(index + 1) * 15}m</p>
-                          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Est. Wait Time</p>
-                        </div>
+            {currentList.map((app, index) => {
+              const pos = getQueuePosition(app.status, index);
+              return (
+                <Card key={app.id} className="border-slate-300 shadow-lg rounded-[2.5rem] overflow-hidden bg-white border-2">
+                  <CardContent className="p-6 space-y-5">
+                    <div className="flex justify-between items-center px-1">
+                      <p className="text-[11px] font-black text-slate-500 tracking-tight">ID: #APT-{app.id.slice(-6).toUpperCase()}</p>
+                      <div className={cn(
+                        "px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest",
+                        app.status === 'Confirmed' ? "bg-green-100 text-green-700" : 
+                        app.status === 'Cancelled' ? "bg-red-100 text-red-700" : "bg-orange-100 text-orange-700"
+                      )}>
+                        {app.status === 'Confirmed' ? 'BOOKED' : app.status === 'Waiting' ? 'WAITING' : app.status.toUpperCase()}
                       </div>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
+
+                    <hr className="border-slate-200" />
+
+                    <div className="flex items-center space-x-5">
+                      <div className="h-16 w-16 rounded-2xl bg-slate-50 flex items-center justify-center text-primary font-bold text-2xl border-2 border-slate-200 shadow-inner overflow-hidden relative">
+                        <span>🏥</span>
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-black text-slate-900 leading-tight">{app.doctorName}</h3>
+                        <p className="text-[12px] font-bold text-primary">Specialist</p>
+                        <p className="text-[11px] font-bold text-slate-500">Patient: {app.patientName}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-center space-x-3 bg-slate-50/80 border border-slate-200 p-3 rounded-[1.5rem]">
+                      <div className="flex items-center space-x-2">
+                        <Calendar className="h-4 w-4 text-orange-500" />
+                        <span className="text-[12px] font-black text-slate-700">{formatDate(app.date)}</span>
+                      </div>
+                      <span className="h-1.5 w-1.5 rounded-full bg-slate-300" />
+                      <div className="flex items-center space-x-2">
+                        <Clock className="h-4 w-4 text-orange-500" />
+                        <span className="text-[12px] font-black text-slate-700">{app.time}</span>
+                      </div>
+                    </div>
+
+                    {activeTab === 'Upcoming' && (
+                      <div className="bg-slate-900 text-white rounded-[2rem] p-6 mt-4 shadow-xl shadow-slate-900/10">
+                        <div className="flex justify-between items-center mb-4 px-1">
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Live Queue Status</p>
+                          <div className="flex items-center space-x-1.5">
+                            <Circle className="h-2 w-2 fill-green-500 text-green-500 animate-pulse" />
+                            <span className="text-[10px] font-black text-green-400 uppercase tracking-widest">Live Updates</span>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center divide-x divide-slate-800">
+                          <div className="flex-1 text-center pr-4">
+                            <p className="text-2xl font-black text-blue-400">{typeof pos === 'number' ? `#${pos}` : pos}</p>
+                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">
+                              {pos === 'NOW' ? 'Consulting' : 'Your Turn'}
+                            </p>
+                          </div>
+                          <div className="flex-1 text-center pl-4">
+                            <p className="text-2xl font-black text-blue-400">
+                              {pos === 'NOW' ? '0' : (typeof pos === 'number' ? (pos * 12) : 15)}m
+                            </p>
+                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Est. Wait Time</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
 
             {currentList.length === 0 && (
               <div className="flex flex-col items-center justify-center py-24 text-center space-y-6">
