@@ -7,7 +7,7 @@ import { BrowserGuard } from '@/components/BrowserGuard';
 export const metadata: Metadata = {
   title: 'DOCTIVO - Book Appointments',
   description: 'Book Doctor Appointments With Ease',
-  manifest: '/manifest.json',
+  manifest: '/manifest.json?v=2',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
@@ -39,7 +39,7 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <link rel="manifest" href="/manifest.json" />
+        <link rel="manifest" href="/manifest.json?v=2" />
       </head>
       <body className="font-body antialiased bg-slate-100">
         <BrowserGuard>
