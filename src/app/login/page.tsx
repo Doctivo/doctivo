@@ -104,8 +104,8 @@ export default function LoginPage() {
               <div className="space-y-1 px-1">
                 <label className="text-[11px] font-black text-primary uppercase tracking-widest">Mobile Number</label>
                 
-                {/* Fixed Underlined input alignment */}
-                <div className="flex items-center border-b-2 border-slate-100 focus-within:border-primary transition-all py-2">
+                {/* Fixed Underlined input with better visibility */}
+                <div className="flex items-center border-b-2 border-slate-200 focus-within:border-primary transition-all py-3">
                   <span className="text-slate-400 font-bold text-xl mr-3">+91</span>
                   <Input 
                     type="tel" 
@@ -120,7 +120,7 @@ export default function LoginPage() {
             </div>
 
             <Button 
-              className="w-full h-16 text-lg font-black bg-white text-slate-400 border-2 border-slate-100 hover:bg-slate-50 hover:text-primary hover:border-primary rounded-full transition-all flex items-center justify-center gap-2 group shadow-none"
+              className="w-full h-16 text-lg font-black bg-white text-slate-400 border-2 border-slate-200 hover:bg-slate-50 hover:text-primary hover:border-primary rounded-full transition-all flex items-center justify-center gap-2 group shadow-none"
               onClick={handleLogin}
               disabled={phone.length !== 10 || isLoading}
             >
