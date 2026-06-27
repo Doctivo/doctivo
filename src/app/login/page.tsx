@@ -96,24 +96,22 @@ export default function LoginPage() {
       </div>
 
       <div className="flex-1">
-        {/* Title matches the 'Login' text outside card in screenshot */}
         <h2 className="text-2xl font-bold text-slate-700 mb-6 px-2">Login</h2>
 
         <Card className="w-full bg-white border-none shadow-[0_4px_25px_rgba(0,0,0,0.05)] rounded-[2rem] overflow-hidden">
           <CardContent className="pt-10 px-8 pb-10 space-y-10">
             <div className="space-y-6">
-              {/* Field Label matches the small text style above line */}
               <div className="space-y-1 px-1">
                 <label className="text-[11px] font-black text-primary uppercase tracking-widest">Mobile Number</label>
                 
-                {/* Underlined input style from screenshot */}
-                <div className="flex items-end border-b-2 border-slate-100 focus-within:border-primary transition-all pb-1">
-                  <span className="text-slate-400 font-bold text-lg mr-2">+91</span>
+                {/* Fixed Underlined input alignment */}
+                <div className="flex items-center border-b-2 border-slate-100 focus-within:border-primary transition-all py-2">
+                  <span className="text-slate-400 font-bold text-xl mr-3">+91</span>
                   <Input 
                     type="tel" 
-                    placeholder="Enter 10 Digits" 
-                    className="border-none shadow-none focus-visible:ring-0 h-12 text-lg font-bold text-slate-800 placeholder:text-slate-200 p-0"
-                    value={phone}
+                    placeholder="00000 00000" 
+                    className="border-none shadow-none focus-visible:ring-0 h-10 text-xl font-black text-slate-800 placeholder:text-slate-200 p-0 bg-transparent"
+                    value={phone || ''}
                     onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
                     onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
                   />
@@ -121,7 +119,6 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Pill shaped button inside card as per design */}
             <Button 
               className="w-full h-16 text-lg font-black bg-white text-slate-400 border-2 border-slate-100 hover:bg-slate-50 hover:text-primary hover:border-primary rounded-full transition-all flex items-center justify-center gap-2 group shadow-none"
               onClick={handleLogin}
