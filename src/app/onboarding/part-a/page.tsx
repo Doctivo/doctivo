@@ -69,7 +69,7 @@ export default function PartAPage() {
           <div className="space-y-2">
             <Label className="text-slate-600 font-bold">Full Name</Label>
             <Input 
-              placeholder="e.g. Gaurav Singh" 
+              placeholder="Enter Your Name" 
               className="h-12 rounded-xl bg-slate-50 border-slate-100"
               value={formData.name}
               onChange={(e) => setFormData({...formData, name: e.target.value})}

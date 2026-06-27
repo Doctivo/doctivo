@@ -59,7 +59,7 @@ export default function ProfilePage() {
           </button>
         </div>
         
-        <h2 className="text-xl font-black text-slate-900 tracking-tight">{user?.name || 'Gaurav Singh'}</h2>
+        <h2 className="text-xl font-black text-slate-900 tracking-tight">{user?.name || 'Full Name'}</h2>
         <p className="text-slate-400 font-bold text-xs uppercase tracking-widest mt-1">+91 {user?.phone || '9807XXXXXX'}</p>
         
         <div className="mt-4 flex flex-wrap gap-2 justify-center">

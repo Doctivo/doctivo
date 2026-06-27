@@ -6,8 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
 const MOCK_LOGS = [
-  { action: "Admin approved Dr. Ramesh Mishra", user: "Admin Gaurav", time: "10 mins ago", type: "Approval" },
-  { action: "SaaS limits updated for Dr. Priya Patel", user: "Admin Singh", time: "45 mins ago", type: "Billing" },
+  { action: "Admin approved Dr. Ramesh Mishra", user: "Admin Team", time: "10 mins ago", type: "Approval" },
+  { action: "SaaS limits updated for Dr. Priya Patel", user: "Admin Team", time: "45 mins ago", type: "Billing" },
   { action: "Patient account DOC-USR-77382 suspended", user: "System Auto-Flag", time: "2 hours ago", type: "Security" },
   { action: "Database backup completed successfully", user: "System", time: "5 hours ago", type: "Database" },
   { action: "New sub-admin added: Manager Rohit", user: "Super Admin", time: "1 day ago", type: "Access" },

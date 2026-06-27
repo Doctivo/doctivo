@@ -130,7 +130,7 @@ export default function OnboardingPage() {
           <div className="space-y-2">
             <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">Full Name</Label>
             <Input 
-              placeholder="Jaise: Gaurav Singh" 
+              placeholder="Enter Your Name" 
               className="h-14 rounded-2xl bg-slate-50 border-border font-bold" 
               value={formData.name || ''} 
               onChange={e => setFormData({...formData, name: e.target.value})} 
