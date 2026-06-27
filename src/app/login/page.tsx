@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -120,7 +119,7 @@ export default function LoginPage() {
             </div>
 
             <Button 
-              className="w-full h-16 text-lg font-black bg-white text-slate-400 border-2 border-slate-200 hover:bg-slate-50 hover:text-primary hover:border-primary rounded-full transition-all flex items-center justify-center gap-2 group shadow-none"
+              className="w-full h-16 text-lg font-black bg-primary text-white rounded-full transition-all flex items-center justify-center gap-2 group shadow-xl shadow-primary/20 hover:bg-primary/90"
               onClick={handleLogin}
               disabled={phone.length !== 10 || isLoading}
             >
