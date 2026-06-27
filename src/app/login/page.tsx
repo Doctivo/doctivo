@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowRight, Loader2, Phone } from 'lucide-react';
+import { ArrowRight, Loader2 } from 'lucide-react';
 import { loginWithoutOtp } from '@/app/actions/auth-actions';
 import { useToast } from '@/hooks/use-toast';
 import { useStore } from '@/lib/store';
@@ -44,13 +44,11 @@ export default function LoginPage() {
       
       if (result.success) {
         if (result.newUser) {
-          // New User
           setUserStore(result.user as any);
           setIsAuthenticated(true);
           toast({ title: "Welcome!", description: "Please complete your profile to start booking." });
           router.push('/onboarding');
         } else {
-          // Existing User - Sync Data
           setUserStore(result.user as any);
           
           const fullPatientList: Patient[] = [
@@ -85,59 +83,63 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="mobile-container p-6 bg-[#F8FAFF]">
-      <div className="flex-1 flex flex-col items-center justify-center py-12">
-        <div className="flex flex-col items-center mb-12 space-y-4 w-full">
-          <div className="bg-primary h-20 w-20 rounded-[1.5rem] flex items-center justify-center shadow-xl shadow-primary/20 mb-2">
-            <span className="text-white text-4xl font-extrabold">D</span>
-          </div>
-          <div className="text-center space-y-1">
-            <h1 className="text-3xl font-black tracking-tight text-[#1E293B]">DOCTIVO</h1>
-            <p className="text-slate-400 text-sm font-medium">Healthcare Simplified</p>
-          </div>
+    <div className="mobile-container flex flex-col p-6 bg-[#F8FAFF] min-h-screen overflow-hidden">
+      {/* Logo Section */}
+      <div className="flex flex-col items-center mt-12 mb-16 space-y-3 w-full">
+        <div className="bg-primary h-16 w-16 rounded-[1.2rem] flex items-center justify-center shadow-lg shadow-primary/20">
+          <span className="text-white text-3xl font-black">D</span>
         </div>
+        <div className="text-center">
+          <h1 className="text-2xl font-black tracking-tight text-slate-800">DOCTIVO</h1>
+          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em]">Healthcare Simplified</p>
+        </div>
+      </div>
 
-        <Card className="w-full bg-white border-none shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[2.5rem] overflow-hidden">
-          <CardContent className="pt-8 px-6 pb-8 space-y-6">
-            <div className="space-y-2 text-center sm:text-left">
-              <h2 className="text-xl font-bold text-[#1E293B]">Enter Phone Number</h2>
-              <p className="text-slate-400 text-xs leading-relaxed">
-                Login instantly with your mobile number.
-              </p>
-            </div>
+      <div className="flex-1">
+        {/* Title matches the 'Login' text outside card in screenshot */}
+        <h2 className="text-2xl font-bold text-slate-700 mb-6 px-2">Login</h2>
 
-            <div className="space-y-4 pt-2">
-              <div className="flex items-center border border-slate-100 rounded-2xl bg-white overflow-hidden focus-within:ring-2 focus-within:ring-primary/20 transition-all">
-                <span className="pl-4 pr-3 text-[#1E293B] font-bold text-lg border-r border-slate-50 py-4">+91</span>
-                <Input 
-                  type="tel" 
-                  placeholder="9876543210" 
-                  className="border-none shadow-none focus-visible:ring-0 h-14 text-lg font-medium text-[#1E293B] placeholder:text-slate-300"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                  onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-                />
+        <Card className="w-full bg-white border-none shadow-[0_4px_25px_rgba(0,0,0,0.05)] rounded-[2rem] overflow-hidden">
+          <CardContent className="pt-10 px-8 pb-10 space-y-10">
+            <div className="space-y-6">
+              {/* Field Label matches the small text style above line */}
+              <div className="space-y-1 px-1">
+                <label className="text-[11px] font-black text-primary uppercase tracking-widest">Mobile Number</label>
+                
+                {/* Underlined input style from screenshot */}
+                <div className="flex items-end border-b-2 border-slate-100 focus-within:border-primary transition-all pb-1">
+                  <span className="text-slate-400 font-bold text-lg mr-2">+91</span>
+                  <Input 
+                    type="tel" 
+                    placeholder="Enter 10 Digits" 
+                    className="border-none shadow-none focus-visible:ring-0 h-12 text-lg font-bold text-slate-800 placeholder:text-slate-200 p-0"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                    onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+                  />
+                </div>
               </div>
-
-              <Button 
-                className="w-full h-16 text-base font-bold bg-primary hover:bg-primary/90 rounded-2xl shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
-                onClick={handleLogin}
-                disabled={phone.length !== 10 || isLoading}
-              >
-                {isLoading ? (
-                  <Loader2 className="h-6 w-6 animate-spin" />
-                ) : (
-                  <>Continue <ArrowRight className="h-5 w-5" /></>
-                )}
-              </Button>
             </div>
+
+            {/* Pill shaped button inside card as per design */}
+            <Button 
+              className="w-full h-16 text-lg font-black bg-white text-slate-400 border-2 border-slate-100 hover:bg-slate-50 hover:text-primary hover:border-primary rounded-full transition-all flex items-center justify-center gap-2 group shadow-none"
+              onClick={handleLogin}
+              disabled={phone.length !== 10 || isLoading}
+            >
+              {isLoading ? (
+                <Loader2 className="h-6 w-6 animate-spin" />
+              ) : (
+                <>Continue <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" /></>
+              )}
+            </Button>
           </CardContent>
         </Card>
       </div>
 
-      <div className="pb-8 text-center px-4 mt-auto">
-        <p className="text-[10px] text-slate-400 leading-normal">
-          Secure, direct access to Gorakhpur's best doctors.
+      <div className="pb-10 text-center px-6">
+        <p className="text-[10px] text-slate-400 font-bold leading-relaxed uppercase tracking-wider">
+          Secure, direct access to <br/> Gorakhpur's top specialists.
         </p>
       </div>
     </div>
