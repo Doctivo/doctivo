@@ -84,10 +84,10 @@ export default function LoginPage() {
 
   return (
     <div className="mobile-container flex flex-col p-6 bg-[#F8FAFF] min-h-screen overflow-hidden">
-      {/* Logo Section */}
+      {/* Logo Section (Using high-quality Image 8) */}
       <div className="flex flex-col items-center mt-12 mb-16 space-y-3 w-full">
         <div className="h-20 w-20 rounded-[1.5rem] flex items-center justify-center shadow-lg relative overflow-hidden">
-          <Image src="/562c71b5-1be4-415a-94dc-002e1889eb7c-8.jpg" alt="Logo" fill className="object-cover" />
+          <Image src="/562c71b5-1be4-415a-94dc-002e1889eb7c-8.jpg" alt="Logo" fill className="object-cover" priority />
         </div>
         <div className="text-center">
           <h1 className="text-2xl font-black tracking-tight text-slate-800">DOCTIVO</h1>

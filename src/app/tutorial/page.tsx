@@ -12,25 +12,21 @@ const TUTORIAL_STEPS = [
   {
     title: "Verify Yourself",
     description: "Secure login with your mobile number and direct access.",
-    image: "/562c71b5-1be4-415a-94dc-002e1889eb7c-0.jpg",
     color: "bg-blue-500"
   },
   {
     title: "Create Profile",
     description: "Add your medical history and symptoms for smarter matches.",
-    image: "/562c71b5-1be4-415a-94dc-002e1889eb7c-1.jpg",
     color: "bg-purple-500"
   },
   {
     title: "Book Instantly",
     description: "Choose specialists near you and book slots in seconds.",
-    image: "/562c71b5-1be4-415a-94dc-002e1889eb7c-2.jpg",
     color: "bg-green-500"
   },
   {
     title: "Live Queue Tracking",
     description: "Track your turn in real-time. No more long waiting hours.",
-    image: "/562c71b5-1be4-415a-94dc-002e1889eb7c-3.jpg",
     color: "bg-orange-500"
   }
 ];
@@ -59,16 +55,17 @@ export default function TutorialPage() {
   return (
     <div className="mobile-container bg-white flex flex-col items-center justify-between p-8 pt-20">
       <div className="w-full flex flex-col items-center space-y-12">
-        {/* Step Visual */}
+        {/* Logo Visual (Using high-quality Image 8 for all steps) */}
         <div className={cn(
           "h-48 w-48 rounded-[2.5rem] flex items-center justify-center text-white shadow-2xl transition-all duration-500 transform relative overflow-hidden",
           TUTORIAL_STEPS[currentStep].color
         )}>
           <Image 
-            src={TUTORIAL_STEPS[currentStep].image} 
-            alt={TUTORIAL_STEPS[currentStep].title} 
+            src="/562c71b5-1be4-415a-94dc-002e1889eb7c-8.jpg" 
+            alt="Doctivo Logo" 
             fill 
             className="object-cover"
+            priority
           />
         </div>
 

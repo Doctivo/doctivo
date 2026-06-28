@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Bell, Search, Loader2 } from 'lucide-react';
+import { Bell, Search, Loader2, Stethoscope, CalendarCheck2, Activity, UserPlus2 } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { Input } from '@/components/ui/input';
 import { BottomNav } from '@/components/BottomNav';
@@ -35,28 +35,28 @@ function HomeContent() {
   const quickActions = [
     { 
       label: 'Book Appointment', 
-      image: '/562c71b5-1be4-415a-94dc-002e1889eb7c-4.jpg', 
+      icon: Stethoscope, 
       bgColor: 'bg-blue-200',
       textColor: 'text-blue-700',
       onClick: () => router.push('/doctors') 
     },
     { 
       label: 'My Appointment', 
-      image: '/562c71b5-1be4-415a-94dc-002e1889eb7c-5.jpg', 
+      icon: CalendarCheck2, 
       bgColor: 'bg-green-200',
       textColor: 'text-green-700',
       onClick: () => router.push('/appointments') 
     },
     { 
       label: 'Physiotherapist', 
-      image: '/562c71b5-1be4-415a-94dc-002e1889eb7c-6.jpg', 
+      icon: Activity, 
       bgColor: 'bg-purple-200',
       textColor: 'text-purple-700',
       onClick: () => router.push('/doctors?specialty=Orthopedic') 
     },
     { 
       label: 'Add Patient', 
-      image: '/562c71b5-1be4-415a-94dc-002e1889eb7c-7.jpg', 
+      icon: UserPlus2, 
       bgColor: 'bg-orange-200',
       textColor: 'text-orange-700',
       onClick: () => router.push('/patients') 
@@ -100,8 +100,8 @@ function HomeContent() {
                 action.bgColor
               )}
             >
-              <div className="h-20 w-20 bg-transparent flex items-center justify-center mb-4 transition-transform group-active:scale-90 relative overflow-hidden rounded-2xl">
-                <Image src={action.image} alt={action.label} fill className="object-cover" />
+              <div className="mb-4 transition-transform group-active:scale-90">
+                <action.icon className={cn("h-12 w-12", action.textColor)} />
               </div>
               <span className={cn("text-[11px] font-black uppercase tracking-widest text-center leading-tight", action.textColor)}>
                 {action.label}
