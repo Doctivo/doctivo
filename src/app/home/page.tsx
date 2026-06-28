@@ -66,13 +66,8 @@ function HomeContent() {
         </div>
       </div>
 
-      <div className="p-6 space-y-8">
-        <div className="py-4">
-          <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-1">Hello, {user?.name?.split(' ')[0] || 'User'}!</h2>
-          <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">How can we help you today?</p>
-        </div>
-
-        {/* Quick Actions Grid */}
+      <div className="p-6 pt-10 space-y-8">
+        {/* Quick Actions Grid - Only cards as requested */}
         <div className="grid grid-cols-2 gap-4">
           {quickActions.map((action, idx) => (
             <button 
@@ -86,20 +81,6 @@ function HomeContent() {
               <span className="text-[11px] font-black uppercase tracking-widest text-slate-700 text-center">{action.label}</span>
             </button>
           ))}
-        </div>
-
-        <div className="bg-blue-600 rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-2xl shadow-blue-600/20">
-          <div className="relative z-10 space-y-4">
-            <h3 className="text-xl font-black leading-tight">Book your first <br/> consultation today!</h3>
-            <p className="text-blue-100 text-xs font-bold uppercase tracking-widest">Top specialists in Gorakhpur.</p>
-            <Button 
-              className="bg-white text-blue-600 hover:bg-blue-50 font-black rounded-xl h-12 px-6"
-              onClick={() => router.push('/doctors')}
-            >
-              Browse Doctors
-            </Button>
-          </div>
-          <div className="absolute -right-10 -bottom-10 h-40 w-40 bg-white/10 rounded-full blur-3xl"></div>
         </div>
       </div>
       <BottomNav />
