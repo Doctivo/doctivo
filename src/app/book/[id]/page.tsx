@@ -20,35 +20,15 @@ import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 
-const generateTimeSlots = (start: string, end: string, duration: number, selectedDate: string) => {
+const generateTimeSlots = (start: string, end: string, duration: number) => {
   const slots = [];
   try {
     let current = new Date(`2024-01-01T${start}:00`);
     const stop = new Date(`2024-01-01T${end}:00`);
-    const now = new Date();
-    const isToday = selectedDate === now.toISOString().split('T')[0];
 
     while (current < stop) {
       const timeString = current.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-      
-      // If it's today, filter out past time slots
-      if (isToday) {
-        const [hourStr, minutePart] = timeString.split(':');
-        const [minuteStr, period] = minutePart.split(' ');
-        let h = parseInt(hourStr);
-        if (period === 'PM' && h !== 12) h += 12;
-        if (period === 'AM' && h === 12) h = 0;
-        
-        const slotTime = new Date();
-        slotTime.setHours(h, parseInt(minuteStr), 0, 0);
-        
-        if (slotTime > now) {
-          slots.push(timeString);
-        }
-      } else {
-        slots.push(timeString);
-      }
-      
+      slots.push(timeString);
       current = new Date(current.getTime() + duration * 60000);
     }
   } catch (e) {}
@@ -90,8 +70,7 @@ export default function BookingPage({ params }: { params: Promise<{ id: string }
       days.push({
         fullDate: date.toISOString().split('T')[0],
         dayName: date.toLocaleDateString('en-US', { weekday: 'short' }),
-        dateNum: date.getDate(),
-        dayFullName: date.toLocaleDateString('en-US', { weekday: 'long' })
+        dateNum: date.getDate()
       });
     }
     return days;
@@ -99,8 +78,8 @@ export default function BookingPage({ params }: { params: Promise<{ id: string }
 
   const timeSlots = useMemo(() => {
     if (!doc) return [];
-    return generateTimeSlots(doc.startTime, doc.endTime, doc.slotDuration, selectedDate);
-  }, [doc, selectedDate]);
+    return generateTimeSlots(doc.startTime, doc.endTime, doc.slotDuration);
+  }, [doc]);
 
   useEffect(() => {
     async function sync() {
@@ -127,7 +106,7 @@ export default function BookingPage({ params }: { params: Promise<{ id: string }
       if (!doc || !selectedDate) return;
       const booked = await getBookedSlots(doc.id, selectedDate);
       setBookedSlots(booked);
-      setSelectedSlot(''); // Reset slot when date changes
+      setSelectedSlot('');
     }
     fetchBooked();
   }, [doc, selectedDate]);
@@ -190,11 +169,7 @@ export default function BookingPage({ params }: { params: Promise<{ id: string }
     };
     const result = await createAppointment(appData);
     if (result.success) {
-      // result.data contains the new appointment with the accurate token_number
-      addAppointmentStore({
-        ...appData,
-        tokenNumber: result.data.token_number
-      } as any);
+      addAppointmentStore({ ...appData, tokenNumber: result.data.token_number } as any);
       router.push(`/success?id=${appData.id}`);
     } else {
       setIsBooking(false);
@@ -202,10 +177,26 @@ export default function BookingPage({ params }: { params: Promise<{ id: string }
     }
   };
 
+  const checkIsPast = (slot: string) => {
+    const now = new Date();
+    const isToday = selectedDate === now.toISOString().split('T')[0];
+    if (!isToday) return false;
+    
+    const [hourStr, minutePart] = slot.split(':');
+    const [minuteStr, period] = minutePart.split(' ');
+    let h = parseInt(hourStr);
+    if (period === 'PM' && h !== 12) h += 12;
+    if (period === 'AM' && h === 12) h = 0;
+    
+    const slotTime = new Date();
+    slotTime.setHours(h, parseInt(minuteStr), 0, 0);
+    return slotTime < now;
+  };
+
   if (isFetching) return <div className="flex justify-center items-center min-h-screen"><Loader2 className="animate-spin text-primary" /></div>;
   if (!doc) return <div className="p-10 text-center font-black">Doctor not found</div>;
 
-  const formattedHindiDate = new Date(selectedDate).toLocaleDateString('hi-IN', { day: 'numeric', month: 'long' });
+  const displayDateString = new Date(selectedDate).toLocaleDateString('en-US', { day: 'numeric', month: 'long' });
 
   return (
     <div className="mobile-container pb-60 bg-slate-50 min-h-screen overflow-y-auto">
@@ -221,7 +212,7 @@ export default function BookingPage({ params }: { params: Promise<{ id: string }
           <Alert className="bg-blue-50 border-blue-200 rounded-2xl mb-4">
             <CheckCircle2 className="h-4 w-4 text-blue-600" />
             <AlertTitle className="text-[10px] font-black uppercase text-blue-700">Payment Simulation</AlertTitle>
-            <AlertDescription className="text-xs text-blue-600 font-medium">Bypassing Razorpay for prototyping...</AlertDescription>
+            <AlertDescription className="text-xs text-blue-600 font-medium">Processing mock transaction for prototype...</AlertDescription>
           </Alert>
         )}
         
@@ -304,7 +295,7 @@ export default function BookingPage({ params }: { params: Promise<{ id: string }
             <SelectContent className="rounded-2xl border-2 border-border shadow-xl">
               {displayPatients.map(p => (
                 <SelectItem key={p.id} value={p.id} className="py-4 font-bold border-b last:border-0 border-slate-50">
-                  {p.name} ({p.relation === 'Self' ? 'Self (Primary User)' : p.relation})
+                  {p.name} ({p.relation === 'Self' ? 'Self' : p.relation})
                 </SelectItem>
               ))}
             </SelectContent>
@@ -316,7 +307,7 @@ export default function BookingPage({ params }: { params: Promise<{ id: string }
           <div className="relative">
             <MessageSquare className="absolute left-4 top-4 h-5 w-5 text-slate-400" />
             <Textarea 
-              placeholder="Briefly describe your health issue..." 
+              placeholder="Briefly describe your current symptoms..." 
               className="min-h-[100px] rounded-2xl bg-white border-2 border-border p-5 pl-12 font-bold placeholder:text-slate-300"
               value={symptoms || ''}
               onChange={e => setSymptoms(e.target.value)}
@@ -348,14 +339,17 @@ export default function BookingPage({ params }: { params: Promise<{ id: string }
           <div className="grid grid-cols-3 gap-3">
             {timeSlots.map(slot => {
               const isBooked = bookedSlots.includes(slot);
+              const isPast = checkIsPast(slot);
+              const isDisabled = isBooked || isPast;
+
               return (
                 <button
                   key={slot}
-                  disabled={isBooked}
+                  disabled={isDisabled}
                   onClick={() => setSelectedSlot(slot)}
                   className={cn(
                     "py-3 rounded-xl font-black text-[10px] border-2 transition-all",
-                    isBooked ? "bg-slate-100 border-slate-200 text-slate-300 cursor-not-allowed" :
+                    isDisabled ? "bg-slate-100 border-slate-200 text-slate-300 cursor-not-allowed opacity-60" :
                     selectedSlot === slot ? "bg-primary border-primary text-white" : "bg-white border-border text-slate-900"
                   )}
                 >
@@ -363,11 +357,6 @@ export default function BookingPage({ params }: { params: Promise<{ id: string }
                 </button>
               );
             })}
-            {timeSlots.length === 0 && (
-              <div className="col-span-3 text-center py-4 bg-slate-100 rounded-xl text-[10px] font-black text-slate-400">
-                No slots available for today.
-              </div>
-            )}
           </div>
         </div>
 
@@ -377,7 +366,7 @@ export default function BookingPage({ params }: { params: Promise<{ id: string }
             <h4 className="text-sm font-black uppercase tracking-tight">Booking Policy</h4>
           </div>
           <p className="text-xs font-bold text-orange-600 leading-relaxed">
-            Agar aap <span className="text-slate-900 font-black">{formattedHindiDate}</span> clinic par nahi pahuchten hain to appointment cancel ho jayega. Kripya samay par pahunchein.
+            If you do not reach the clinic on <span className="text-slate-900 font-black">{displayDateString}</span>, your appointment will be automatically cancelled. Please arrive on time.
           </p>
         </div>
       </div>
@@ -393,7 +382,7 @@ export default function BookingPage({ params }: { params: Promise<{ id: string }
             disabled={!selectedSlot || !selectedPatientId || isBooking} 
             onClick={processPayment}
           >
-            {isBooking ? <Loader2 className="animate-spin" /> : 'Book Slot'}
+            {isBooking ? <Loader2 className="animate-spin" /> : 'Confirm Booking'}
           </Button>
         </div>
       </div>

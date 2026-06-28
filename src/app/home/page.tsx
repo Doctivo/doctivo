@@ -2,7 +2,7 @@
 
 import { Suspense, useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Bell, Search, MapPin, Star, Loader2 } from 'lucide-react';
+import { Bell, Search, MapPin, Loader2, Calendar, Users, Stethoscope, UserPlus } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { DOCTOR_CATEGORIES } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,6 @@ import { BottomNav } from '@/components/BottomNav';
 import { cn } from '@/lib/utils';
 import { getDoctors } from '@/app/actions/doctor-actions';
 import { Doctor } from '@/lib/types';
-import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
 
@@ -60,6 +59,13 @@ function HomeContent() {
 
   if (!hasHydrated) return <div className="flex justify-center items-center min-h-screen"><Loader2 className="animate-spin" /></div>;
 
+  const quickActions = [
+    { label: 'Book Appointment', icon: Calendar, color: 'bg-blue-50 text-blue-600', onClick: () => { setSelectedCategory('All'); window.scrollTo({ top: 400, behavior: 'smooth' }); } },
+    { label: 'My Appointment', icon: Stethoscope, color: 'bg-green-50 text-green-600', onClick: () => router.push('/appointments') },
+    { label: 'Physiotherapist', icon: Users, color: 'bg-purple-50 text-purple-600', onClick: () => setSelectedCategory('Orthopedic') },
+    { label: 'Add Patient', icon: UserPlus, color: 'bg-orange-50 text-orange-600', onClick: () => router.push('/patients') },
+  ];
+
   return (
     <div className="max-w-[480px] mx-auto pb-24 bg-white min-h-screen">
       {/* Header Section */}
@@ -82,7 +88,23 @@ function HomeContent() {
         </div>
       </div>
 
-      <div className="p-6 space-y-6">
+      <div className="p-6 space-y-8">
+        {/* Quick Actions Grid */}
+        <div className="grid grid-cols-2 gap-4">
+          {quickActions.map((action, idx) => (
+            <button 
+              key={idx}
+              onClick={action.onClick}
+              className="flex flex-col items-center justify-center p-6 rounded-[2rem] bg-white border-2 border-slate-50 shadow-sm hover:border-primary/20 transition-all group"
+            >
+              <div className={cn("h-12 w-12 rounded-2xl flex items-center justify-center mb-3 transition-transform group-active:scale-90", action.color)}>
+                <action.icon className="h-6 w-6" />
+              </div>
+              <span className="text-[11px] font-black uppercase tracking-tight text-slate-700">{action.label}</span>
+            </button>
+          ))}
+        </div>
+
         {/* Specialties Section */}
         <div className="space-y-3">
           <h2 className="text-lg font-black text-slate-800 tracking-tight">Specialties</h2>
@@ -105,8 +127,8 @@ function HomeContent() {
         {/* Doctors List Section */}
         <div className="space-y-4">
           <div className="flex justify-between items-center px-1">
-            <h2 className="text-lg font-black text-slate-800 tracking-tight">Top Rated Doctors</h2>
-            <button onClick={() => { setSelectedCategory('All'); setSearch(''); }} className="text-[10px] font-black text-primary uppercase">Clear</button>
+            <h2 className="text-lg font-black text-slate-800 tracking-tight">Available Doctors</h2>
+            <button onClick={() => { setSelectedCategory('All'); setSearch(''); }} className="text-[10px] font-black text-primary uppercase">Clear All</button>
           </div>
           <div className="space-y-4 mt-0">
             {isLoading ? (
@@ -116,12 +138,10 @@ function HomeContent() {
                 <CardContent className="p-5">
                   <div className="flex justify-between items-start">
                     <div className="flex space-x-4">
-                      {/* Doctor Profile Image (Square) */}
                       <div className="h-20 w-20 rounded-xl bg-slate-50 flex items-center justify-center overflow-hidden relative border border-border">
                         {doc.imageUrl ? <Image src={doc.imageUrl} alt={doc.name} fill className="object-cover" /> : <span className="text-3xl">🏥</span>}
                       </div>
                       
-                      {/* Doctor Text Details */}
                       <div className="space-y-0.5">
                         <h3 className="font-black text-slate-900 text-[13px] uppercase tracking-tight">{doc.name}</h3>
                         <p className="text-[11px] font-bold text-slate-500 leading-tight">
@@ -133,28 +153,24 @@ function HomeContent() {
                       </div>
                     </div>
 
-                    {/* Fee Section (Top Right) */}
                     <div className="text-right">
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Fee</p>
                       <p className="text-base font-black text-slate-900 leading-none">₹{doc.fees}</p>
                     </div>
                   </div>
 
-                  {/* Bottom Row: Location and Book Button */}
                   <div className="mt-4 flex items-end justify-between">
-                    {/* Locality with Pin Icon */}
                     <div className="flex items-center text-[11px] font-bold text-slate-500">
                       <MapPin className="h-3 w-3 mr-1 text-red-500 fill-red-500/20" />
                       {doc.address}
                     </div>
 
-                    {/* Book Button */}
                     <Button 
                       size="sm"
                       className="h-10 px-8 rounded-xl font-black bg-primary shadow-lg shadow-primary/20 text-xs"
                       onClick={() => router.push(`/book/${doc.id}`)}
                     >
-                      Book
+                      Book Now
                     </Button>
                   </div>
                 </CardContent>

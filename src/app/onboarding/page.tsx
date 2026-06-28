@@ -87,7 +87,7 @@ export default function OnboardingPage() {
 
   const handleComplete = async () => {
     if (!formData.name || !formData.age || !formData.height_cm || !formData.blood_group) {
-      toast({ variant: 'destructive', title: 'Missing Details', description: 'Kripya sabhi zaroori jankari bharein.' });
+      toast({ variant: 'destructive', title: 'Missing Details', description: 'Please fill in all mandatory fields.' });
       return;
     }
     setIsLoading(true);
@@ -95,7 +95,7 @@ export default function OnboardingPage() {
     const result = await upsertPatientProfile(profileData);
     if (result.success) {
       setUserStore(profileData);
-      toast({ title: 'Success!', description: 'Aapka profile update ho gaya hai.' });
+      toast({ title: 'Success!', description: 'Your profile has been updated.' });
       router.push('/home');
     } else {
       toast({ variant: 'destructive', title: 'Failed', description: result.error });
@@ -106,8 +106,8 @@ export default function OnboardingPage() {
   return (
     <div className="mobile-container flex flex-col p-6 bg-white overflow-y-auto pb-32">
       <div className="mb-12 pt-8 text-center space-y-3">
-        <h1 className="text-3xl font-black text-slate-900 tracking-tight">Onboarding</h1>
-        <p className="text-slate-500 text-sm font-bold px-4">Health services start karne ke liye profile puri karein</p>
+        <h1 className="text-3xl font-black text-slate-900 tracking-tight">Profile Details</h1>
+        <p className="text-slate-500 text-sm font-bold px-4">Complete your profile to access healthcare services.</p>
       </div>
 
       <div className="space-y-10">
@@ -123,7 +123,7 @@ export default function OnboardingPage() {
             )}
             <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageSelect} />
           </div>
-          <p className="text-[10px] font-black text-slate-500 mt-3 uppercase tracking-widest">Upload Profile Photo</p>
+          <p className="text-[10px] font-black text-slate-500 mt-3 uppercase tracking-widest">Update Photo</p>
         </div>
 
         <div className="space-y-6">
@@ -237,7 +237,7 @@ export default function OnboardingPage() {
             <div className="space-y-2">
               <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">Area / Society</Label>
               <Input 
-                placeholder="e.g. Medical Road" 
+                placeholder="e.g. Civil Lines" 
                 className="h-14 rounded-2xl bg-slate-50 border-border font-bold" 
                 value={formData.area || ''} 
                 onChange={e => setFormData({...formData, area: e.target.value})} 
@@ -273,7 +273,7 @@ export default function OnboardingPage() {
 
       <div className="fixed bottom-0 left-0 right-0 p-6 bg-white/95 backdrop-blur-md border-t border-slate-200 z-50">
         <Button className="w-full h-18 text-xl font-black bg-primary rounded-2xl shadow-2xl shadow-primary/30" onClick={handleComplete} disabled={isLoading}>
-          {isLoading ? <Loader2 className="animate-spin h-6 w-6" /> : 'Complete Profile'}
+          {isLoading ? <Loader2 className="animate-spin h-6 w-6" /> : 'Save Profile'}
         </Button>
       </div>
 

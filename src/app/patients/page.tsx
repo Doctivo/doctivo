@@ -128,7 +128,7 @@ export default function PatientsPage() {
 
   const handleSavePatient = async () => {
     if (!currentMember.name || !currentMember.age || !currentMember.blood_group) {
-      toast({ variant: 'destructive', title: 'Missing Details', description: 'Kripya sabhi zaroori jankari bharein.' });
+      toast({ variant: 'destructive', title: 'Missing Details', description: 'Please fill in all mandatory fields.' });
       return;
     }
     setIsSaving(true);
@@ -187,7 +187,6 @@ export default function PatientsPage() {
 
   return (
     <div className="max-w-[480px] mx-auto pb-24 bg-white min-h-screen">
-      {/* Header Design */}
       <div className="bg-white sticky top-0 z-20 shadow-sm border-b border-border">
         <div className="p-4 flex items-center gap-3">
           <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden relative border border-border shadow-sm shrink-0">
@@ -196,7 +195,7 @@ export default function PatientsPage() {
           <div className="flex-1 relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input 
-              placeholder="Search profile..." 
+              placeholder="Search profiles..." 
               className="pl-11 h-12 bg-slate-50 border-border rounded-full font-medium focus-visible:ring-primary/20" 
               value={search || ''} 
               onChange={(e) => setSearch(e.target.value)} 
@@ -211,13 +210,11 @@ export default function PatientsPage() {
         </div>
       </div>
 
-      {/* List Sub-Header */}
       <div className="bg-slate-50/50 px-6 py-3 border-b border-border flex justify-between items-center">
         <h2 className="text-[10px] font-black text-slate-800 uppercase tracking-widest">Patient Profiles</h2>
-        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{displayPatients.length} Account(s)</span>
+        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{displayPatients.length} Active Accounts</span>
       </div>
 
-      {/* Patient List */}
       <div className="bg-white">
         {displayPatients.map((patient) => (
           <div key={patient.id} className="px-6 py-6 border-b border-border last:border-0 hover:bg-slate-50/30 transition-all">
@@ -233,10 +230,10 @@ export default function PatientsPage() {
               <div className="flex-1 min-w-0">
                 <h3 className="font-black text-slate-900 text-lg leading-tight truncate">{patient.name}</h3>
                 <p className="text-[10px] font-black text-primary uppercase tracking-tight mt-1">
-                  {patient.relation === 'Self' ? 'PRIMARY' : patient.relation.toUpperCase()}
+                  {patient.relation === 'Self' ? 'Primary User' : patient.relation.toUpperCase()}
                 </p>
                 <div className="flex items-center text-[11px] text-slate-400 font-bold uppercase tracking-widest mt-1">
-                  <User className="h-3 w-3 mr-1.5" /> {patient.age} YRS • {patient.gender}
+                  <User className="h-3 w-3 mr-1.5" /> {patient.age} Years • {patient.gender}
                 </div>
               </div>
 
@@ -278,7 +275,7 @@ export default function PatientsPage() {
             </div>
             <div>
               <p className="font-black text-slate-900 text-sm uppercase">No Profiles Found</p>
-              <p className="text-[10px] font-bold text-slate-400 uppercase">Aapke sabhi profiles yahan dikhenge.</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase">Your saved family profiles will appear here.</p>
             </div>
           </div>
         )}
@@ -288,7 +285,7 @@ export default function PatientsPage() {
         <DialogContent className="max-w-[95vw] sm:max-w-md rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl h-[85vh] flex flex-col">
           <DialogHeader className="p-8 bg-slate-50 border-b border-border">
             <DialogTitle className="text-2xl font-black tracking-tight text-slate-800">
-              {isEditing ? 'Update Profile' : 'New Member'}
+              {isEditing ? 'Update Profile' : 'Add New Member'}
             </DialogTitle>
           </DialogHeader>
           
@@ -306,7 +303,7 @@ export default function PatientsPage() {
                   )}
                   <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageSelect} />
                 </div>
-                <span className="text-[10px] font-black text-slate-400 mt-2 uppercase tracking-widest">Upload Photo</span>
+                <span className="text-[10px] font-black text-slate-400 mt-2 uppercase tracking-widest">Update Photo</span>
               </div>
 
               <div className="space-y-6">
@@ -368,7 +365,7 @@ export default function PatientsPage() {
                     <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                     <Input 
                       type="tel" 
-                      placeholder="Member Number" 
+                      placeholder="Mobile Number" 
                       className="h-14 rounded-xl bg-slate-50 border-border pl-12 font-bold" 
                       value={currentMember.phone || ''} 
                       onChange={e => setCurrentMember({...currentMember, phone: e.target.value.replace(/\D/g, '').slice(0, 10)})} 
@@ -379,7 +376,7 @@ export default function PatientsPage() {
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Medical History</Label>
                   <Textarea 
-                    placeholder="Past illnesses, surgeries..." 
+                    placeholder="Brief history of illnesses, surgeries, or chronic conditions..." 
                     className="rounded-xl bg-slate-50 border-border font-bold min-h-[100px]" 
                     value={currentMember.medicalHistory || ''} 
                     onChange={e => setCurrentMember({...currentMember, medicalHistory: e.target.value})} 
@@ -389,7 +386,7 @@ export default function PatientsPage() {
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Allergies</Label>
                   <Textarea 
-                    placeholder="Drug allergies, food allergies..." 
+                    placeholder="Mention any drug, food, or environmental allergies..." 
                     className="rounded-xl bg-slate-50 border-border font-bold min-h-[100px]" 
                     value={currentMember.allergies || ''} 
                     onChange={e => setCurrentMember({...currentMember, allergies: e.target.value})} 
@@ -401,7 +398,7 @@ export default function PatientsPage() {
           
           <div className="p-8 bg-white border-t border-border z-50">
             <Button className="w-full h-16 bg-primary font-black text-lg rounded-2xl shadow-xl shadow-primary/20 hover:bg-primary/90 transition-all" onClick={handleSavePatient} disabled={isSaving}>
-              {isSaving ? <Loader2 className="animate-spin h-6 w-6" /> : (isEditing ? 'Save Changes' : 'Create Profile')}
+              {isSaving ? <Loader2 className="animate-spin h-6 w-6" /> : (isEditing ? 'Save Changes' : 'Add Profile')}
             </Button>
           </div>
         </DialogContent>
@@ -418,7 +415,7 @@ export default function PatientsPage() {
             </div>
             <div className="p-8 bg-white space-y-6">
               <input type="range" min={1} max={3} step={0.1} value={zoom} onChange={e => setZoom(Number(e.target.value))} className="w-full accent-primary" />
-              <Button onClick={getCroppedImg} className="w-full h-16 bg-primary text-white font-black text-lg rounded-2xl shadow-xl shadow-primary/20">Apply Photo</Button>
+              <Button onClick={getCroppedImg} className="w-full h-16 bg-primary text-white font-black text-lg rounded-2xl shadow-xl shadow-primary/20">Confirm Photo</Button>
             </div>
           </DialogContent>
         </Dialog>
