@@ -1,54 +1,27 @@
 'use client';
 
-import { Suspense, useState, useEffect, useMemo } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { Bell, Search, MapPin, Loader2, Calendar, Users, Stethoscope, UserPlus } from 'lucide-react';
+import { Suspense, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Bell, Search, Loader2, Calendar, Users, Stethoscope, UserPlus } from 'lucide-react';
 import { useStore } from '@/lib/store';
-import { DOCTOR_CATEGORIES } from '@/lib/mock-data';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
 import { BottomNav } from '@/components/BottomNav';
 import { cn } from '@/lib/utils';
-import { getDoctors } from '@/app/actions/doctor-actions';
-import { Doctor } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
 
 function HomeContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const filterSpecialtyFromQuery = searchParams.get('specialty');
   const user = useStore(state => state.user);
   const isAuthenticated = useStore(state => state.isAuthenticated);
   const hasHydrated = useStore(state => state._hasHydrated);
   const { toast } = useToast();
   
-  const [search, setSearch] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState(filterSpecialtyFromQuery || 'All');
-  const [doctors, setDoctors] = useState<Doctor[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
   useEffect(() => {
     if (!hasHydrated) return;
     if (!isAuthenticated) { router.push('/login'); return; }
     if (user && user.isProfileComplete === false) { router.push('/onboarding'); return; }
-
-    async function loadDoctors() {
-      setIsLoading(true);
-      const data = await getDoctors(selectedCategory === 'All' ? undefined : selectedCategory);
-      setDoctors(data);
-      setIsLoading(false);
-    }
-    loadDoctors();
-  }, [selectedCategory, isAuthenticated, user, router, hasHydrated]);
-
-  const filteredDoctors = useMemo(() => {
-    return doctors.filter(doc => 
-      doc.name.toLowerCase().includes(search.toLowerCase()) || 
-      doc.specialty.toLowerCase().includes(search.toLowerCase())
-    );
-  }, [doctors, search]);
+  }, [isAuthenticated, user, router, hasHydrated]);
 
   const handleNotificationClick = () => {
     toast({
@@ -60,9 +33,9 @@ function HomeContent() {
   if (!hasHydrated) return <div className="flex justify-center items-center min-h-screen"><Loader2 className="animate-spin" /></div>;
 
   const quickActions = [
-    { label: 'Book Appointment', icon: Calendar, color: 'bg-blue-50 text-blue-600', onClick: () => { setSelectedCategory('All'); window.scrollTo({ top: 400, behavior: 'smooth' }); } },
+    { label: 'Book Appointment', icon: Calendar, color: 'bg-blue-50 text-blue-600', onClick: () => router.push('/doctors') },
     { label: 'My Appointment', icon: Stethoscope, color: 'bg-green-50 text-green-600', onClick: () => router.push('/appointments') },
-    { label: 'Physiotherapist', icon: Users, color: 'bg-purple-50 text-purple-600', onClick: () => setSelectedCategory('Orthopedic') },
+    { label: 'Physiotherapist', icon: Users, color: 'bg-purple-50 text-purple-600', onClick: () => router.push('/doctors?specialty=Orthopedic') },
     { label: 'Add Patient', icon: UserPlus, color: 'bg-orange-50 text-orange-600', onClick: () => router.push('/patients') },
   ];
 
@@ -76,7 +49,12 @@ function HomeContent() {
           </div>
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input placeholder="Search doctor, clinic..." className="pl-9 h-11 bg-slate-50 border-border rounded-xl font-medium" value={search} onChange={(e) => setSearch(e.target.value)} />
+            <Input 
+              placeholder="Search doctor, clinic..." 
+              className="pl-9 h-11 bg-slate-50 border-border rounded-xl font-medium" 
+              onClick={() => router.push('/doctors')}
+              readOnly
+            />
           </div>
           <button 
             onClick={handleNotificationClick}
@@ -89,98 +67,39 @@ function HomeContent() {
       </div>
 
       <div className="p-6 space-y-8">
+        <div className="py-4">
+          <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-1">Hello, {user?.name?.split(' ')[0] || 'User'}!</h2>
+          <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">How can we help you today?</p>
+        </div>
+
         {/* Quick Actions Grid */}
         <div className="grid grid-cols-2 gap-4">
           {quickActions.map((action, idx) => (
             <button 
               key={idx}
               onClick={action.onClick}
-              className="flex flex-col items-center justify-center p-6 rounded-[2rem] bg-white border-2 border-slate-50 shadow-sm hover:border-primary/20 transition-all group"
+              className="flex flex-col items-center justify-center p-8 rounded-[2.5rem] bg-white border-2 border-slate-50 shadow-sm hover:border-primary/20 transition-all group aspect-square"
             >
-              <div className={cn("h-12 w-12 rounded-2xl flex items-center justify-center mb-3 transition-transform group-active:scale-90", action.color)}>
-                <action.icon className="h-6 w-6" />
+              <div className={cn("h-16 w-16 rounded-[1.5rem] flex items-center justify-center mb-4 transition-transform group-active:scale-90", action.color)}>
+                <action.icon className="h-8 w-8" />
               </div>
-              <span className="text-[11px] font-black uppercase tracking-tight text-slate-700">{action.label}</span>
+              <span className="text-[11px] font-black uppercase tracking-widest text-slate-700 text-center">{action.label}</span>
             </button>
           ))}
         </div>
 
-        {/* Specialties Section */}
-        <div className="space-y-3">
-          <h2 className="text-lg font-black text-slate-800 tracking-tight">Specialties</h2>
-          <div className="flex space-x-3 overflow-x-auto pb-4 scroll-hide -mx-2 px-2">
-            {DOCTOR_CATEGORIES.map((cat) => (
-              <button 
-                key={cat.id} 
-                onClick={() => setSelectedCategory(cat.name)} 
-                className={cn(
-                  "flex items-center space-x-2 px-5 py-2 rounded-2xl border transition-all font-bold text-sm whitespace-nowrap", 
-                  selectedCategory === cat.name ? "bg-primary border-primary text-white shadow-lg" : "bg-white border-border text-slate-600"
-                )}
-              >
-                <span>{cat.icon}</span><span>{cat.name}</span>
-              </button>
-            ))}
+        <div className="bg-blue-600 rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-2xl shadow-blue-600/20">
+          <div className="relative z-10 space-y-4">
+            <h3 className="text-xl font-black leading-tight">Book your first <br/> consultation today!</h3>
+            <p className="text-blue-100 text-xs font-bold uppercase tracking-widest">Top specialists in Gorakhpur.</p>
+            <Button 
+              className="bg-white text-blue-600 hover:bg-blue-50 font-black rounded-xl h-12 px-6"
+              onClick={() => router.push('/doctors')}
+            >
+              Browse Doctors
+            </Button>
           </div>
-        </div>
-
-        {/* Doctors List Section */}
-        <div className="space-y-4">
-          <div className="flex justify-between items-center px-1">
-            <h2 className="text-lg font-black text-slate-800 tracking-tight">Available Doctors</h2>
-            <button onClick={() => { setSelectedCategory('All'); setSearch(''); }} className="text-[10px] font-black text-primary uppercase">Clear All</button>
-          </div>
-          <div className="space-y-4 mt-0">
-            {isLoading ? (
-              <div className="text-center py-20"><Loader2 className="animate-spin inline-block" /></div>
-            ) : filteredDoctors.length > 0 ? filteredDoctors.map((doc) => (
-              <Card key={doc.id} className="border-border shadow-sm rounded-[1.5rem] overflow-hidden bg-white border">
-                <CardContent className="p-5">
-                  <div className="flex justify-between items-start">
-                    <div className="flex space-x-4">
-                      <div className="h-20 w-20 rounded-xl bg-slate-50 flex items-center justify-center overflow-hidden relative border border-border">
-                        {doc.imageUrl ? <Image src={doc.imageUrl} alt={doc.name} fill className="object-cover" /> : <span className="text-3xl">🏥</span>}
-                      </div>
-                      
-                      <div className="space-y-0.5">
-                        <h3 className="font-black text-slate-900 text-[13px] uppercase tracking-tight">{doc.name}</h3>
-                        <p className="text-[11px] font-bold text-slate-500 leading-tight">
-                          {doc.specialty} {doc.qualification ? `— ${doc.qualification}` : '— MBBS, MD'}
-                        </p>
-                        <p className="text-[11px] font-bold text-slate-400">
-                          {doc.experience}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="text-right">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Fee</p>
-                      <p className="text-base font-black text-slate-900 leading-none">₹{doc.fees}</p>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 flex items-end justify-between">
-                    <div className="flex items-center text-[11px] font-bold text-slate-500">
-                      <MapPin className="h-3 w-3 mr-1 text-red-500 fill-red-500/20" />
-                      {doc.address}
-                    </div>
-
-                    <Button 
-                      size="sm"
-                      className="h-10 px-8 rounded-xl font-black bg-primary shadow-lg shadow-primary/20 text-xs"
-                      onClick={() => router.push(`/book/${doc.id}`)}
-                    >
-                      Book Now
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )) : (
-              <div className="text-center py-20 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
-                <p className="font-bold text-slate-400">No doctors found in this category.</p>
-              </div>
-            )}
-          </div>
+          <div className="absolute -right-10 -bottom-10 h-40 w-40 bg-white/10 rounded-full blur-3xl"></div>
         </div>
       </div>
       <BottomNav />

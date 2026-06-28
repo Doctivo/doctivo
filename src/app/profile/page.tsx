@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { 
   UserCircle, MapPin, Edit3, Users, History, 
   Settings, LogOut, ChevronRight,
-  HeartPulse, ShieldAlert, MessageCircleQuestion
+  HeartPulse, MessageCircleQuestion
 } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { BottomNav } from '@/components/BottomNav';
@@ -33,11 +33,11 @@ export default function ProfilePage() {
   if (!isAuthenticated) return null;
 
   const menuItems = [
-    { label: 'Edit Profile', subLabel: 'Name, Age, Location badlein', icon: Edit3, color: 'bg-blue-50 text-blue-500', href: '/onboarding' },
-    { label: 'Manage Family', subLabel: 'Mata/Pita ya Sadasya jodien', icon: Users, color: 'bg-indigo-50 text-indigo-500', href: '/patients' },
+    { label: 'Edit Profile', subLabel: 'Update Name, Age, Location', icon: Edit3, color: 'bg-blue-50 text-blue-500', href: '/onboarding' },
+    { label: 'Manage Family', subLabel: 'Add Mother, Father or Spouse', icon: Users, color: 'bg-indigo-50 text-indigo-500', href: '/patients' },
     { label: 'Medical History Log', subLabel: 'Vitals: Blood Group, Height, Weight', icon: HeartPulse, color: 'bg-purple-50 text-purple-500', href: '/onboarding' },
-    { label: 'Past Appointments', subLabel: 'Purane records dekhein', icon: History, color: 'bg-green-50 text-green-500', href: '/appointments' },
-    { label: 'Help & Support', subLabel: 'Clinic se sampark karein', icon: MessageCircleQuestion, color: 'bg-yellow-50 text-yellow-500', href: '#' },
+    { label: 'Past Appointments', subLabel: 'View your booking history', icon: History, color: 'bg-green-50 text-green-500', href: '/appointments' },
+    { label: 'Help & Support', subLabel: 'Contact clinic support', icon: MessageCircleQuestion, color: 'bg-yellow-50 text-yellow-500', href: '#' },
     { label: 'Settings', subLabel: 'App Preferences', icon: Settings, color: 'bg-slate-50 text-slate-500', href: '#' },
   ];
 
@@ -96,7 +96,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Danger Zone */}
+        {/* Action Zone */}
         <div className="pt-4">
           <Button 
             variant="ghost" 
@@ -104,13 +104,6 @@ export default function ProfilePage() {
             onClick={handleLogout}
           >
             <LogOut className="mr-2 h-5 w-5" /> Sign Out from Device
-          </Button>
-          
-          <Button 
-            variant="ghost" 
-            className="w-full h-12 mt-3 text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center justify-center gap-2 hover:text-red-600"
-          >
-            <ShieldAlert className="h-3 w-3" /> Permanent Account Deletion
           </Button>
           
           <p className="text-center text-[10px] text-slate-300 mt-10 font-black uppercase tracking-widest">

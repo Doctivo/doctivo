@@ -12,6 +12,7 @@ import { upsertPatientProfile } from '@/app/actions/patient-actions';
 import { Loader2, Camera, Phone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 import Image from 'next/image';
 import Cropper from 'react-easy-crop';
 import { cn } from '@/lib/utils';
@@ -85,9 +86,14 @@ export default function OnboardingPage() {
     } catch (e) {}
   };
 
+  const handleNumericInput = (field: string, val: string) => {
+    const num = val.replace(/\D/g, '');
+    setFormData({ ...formData, [field]: num });
+  };
+
   const handleComplete = async () => {
     // Strict Validation
-    if (!formData.name || !formData.age || !formData.height_cm || !formData.blood_group || !formData.state || !formData.city) {
+    if (!formData.name || !formData.age || !formData.height_cm || !formData.blood_group || !formData.state || !formData.city || !formData.area || !formData.pincode) {
       toast({ variant: 'destructive', title: 'Missing Details', description: 'Please fill in all mandatory fields (*).' });
       return;
     }
@@ -157,7 +163,8 @@ export default function OnboardingPage() {
                 placeholder="Enter Your Age" 
                 className="h-14 rounded-2xl bg-slate-50 border-border font-bold" 
                 value={formData.age || ''} 
-                onChange={e => setFormData({...formData, age: e.target.value})} 
+                min="0"
+                onChange={e => handleNumericInput('age', e.target.value)} 
               />
             </div>
             <div className="space-y-2">
@@ -183,17 +190,19 @@ export default function OnboardingPage() {
                 placeholder="175" 
                 className="h-14 rounded-2xl bg-slate-50 border-border font-bold" 
                 value={formData.height_cm || ''} 
-                onChange={e => setFormData({...formData, height_cm: e.target.value})} 
+                min="0"
+                onChange={e => handleNumericInput('height_cm', e.target.value)} 
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">Weight (kg)</Label>
+              <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">Weight (kg) <span className="text-red-500">*</span></Label>
               <Input 
                 type="number" 
                 placeholder="70" 
                 className="h-14 rounded-2xl bg-slate-50 border-border font-bold" 
                 value={formData.weight_kg || ''} 
-                onChange={e => setFormData({...formData, weight_kg: e.target.value})} 
+                min="0"
+                onChange={e => handleNumericInput('weight_kg', e.target.value)} 
               />
             </div>
           </div>
@@ -247,7 +256,7 @@ export default function OnboardingPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">Area / Society</Label>
+              <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">Area / Society <span className="text-red-500">*</span></Label>
               <Input 
                 placeholder="e.g. Civil Lines" 
                 className="h-14 rounded-2xl bg-slate-50 border-border font-bold" 
@@ -256,7 +265,7 @@ export default function OnboardingPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">Pincode (6 Digits)</Label>
+              <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">Pincode (6 Digits) <span className="text-red-500">*</span></Label>
               <Input 
                 type="text" 
                 placeholder="273001" 
@@ -281,6 +290,28 @@ export default function OnboardingPage() {
                 onChange={e => setFormData({...formData, secondaryPhone: e.target.value.replace(/\D/g, '').slice(0, 10)})} 
               />
             </div>
+          </div>
+
+          <hr className="border-border my-6" />
+
+          <div className="space-y-2">
+            <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">Medical History (Optional)</Label>
+            <Textarea 
+              placeholder="e.g. Sugar, BP, Diabetes, Thyroid..." 
+              className="min-h-[120px] bg-slate-50 border-border rounded-2xl focus:ring-primary/20 font-bold"
+              value={formData.medicalHistory || ''}
+              onChange={(e) => setFormData({...formData, medicalHistory: e.target.value})}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">Known Allergies (Optional)</Label>
+            <Textarea 
+              placeholder="Mention any drug allergies or current medicines..." 
+              className="min-h-[120px] bg-slate-50 border-border rounded-2xl focus:ring-primary/20 font-bold"
+              value={formData.allergies || ''}
+              onChange={(e) => setFormData({...formData, allergies: e.target.value})}
+            />
           </div>
         </div>
       </div>

@@ -126,10 +126,15 @@ export default function PatientsPage() {
     syncData();
   }, [isAuthenticated, hasHydrated, user?.id, user?.phone, router, setPatients, setUser]);
 
+  const handleNumericInput = (field: string, val: string) => {
+    const num = val.replace(/\D/g, '');
+    setCurrentMember(prev => ({ ...prev, [field]: num }));
+  };
+
   const handleSavePatient = async () => {
     // Validation
-    if (!currentMember.name || !currentMember.age || !currentMember.blood_group || !currentMember.gender || !currentMember.relation) {
-      toast({ variant: 'destructive', title: 'Missing Details', description: 'Please fill in mandatory fields (*).' });
+    if (!currentMember.name || !currentMember.age || !currentMember.blood_group || !currentMember.gender || !currentMember.relation || !currentMember.height_cm) {
+      toast({ variant: 'destructive', title: 'Missing Details', description: 'Please fill in all mandatory fields (*).' });
       return;
     }
 
@@ -322,7 +327,14 @@ export default function PatientsPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Age <span className="text-red-500">*</span></Label>
-                    <Input type="number" placeholder="Enter Your Age" className="h-14 rounded-xl bg-slate-50 border-border font-bold" value={currentMember.age || ''} onChange={e => setCurrentMember({...currentMember, age: e.target.value})} />
+                    <Input 
+                      type="number" 
+                      placeholder="Enter Your Age" 
+                      className="h-14 rounded-xl bg-slate-50 border-border font-bold" 
+                      value={currentMember.age || ''} 
+                      min="0"
+                      onChange={e => handleNumericInput('age', e.target.value)} 
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Blood Group <span className="text-red-500">*</span></Label>
@@ -338,22 +350,24 @@ export default function PatientsPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Height (cm) <span className="text-red-500">*</span></Label>
-                    <Input type="number" placeholder="175" className="h-14 rounded-xl bg-slate-50 border-border font-bold" value={currentMember.height_cm || ''} onChange={e => setCurrentMember({...currentMember, height_cm: e.target.value})} />
+                    <Input 
+                      type="number" 
+                      placeholder="175" 
+                      className="h-14 rounded-xl bg-slate-50 border-border font-bold" 
+                      value={currentMember.height_cm || ''} 
+                      min="0"
+                      onChange={e => handleNumericInput('height_cm', e.target.value)} 
+                    />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Weight (kg)</Label>
-                    <Input type="number" placeholder="70" className="h-14 rounded-xl bg-slate-50 border-border font-bold" value={currentMember.weight_kg || ''} onChange={e => setCurrentMember({...currentMember, weight_kg: e.target.value})} />
+                    <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Gender <span className="text-red-500">*</span></Label>
+                    <Select value={currentMember.gender || ''} onValueChange={v => setCurrentMember({...currentMember, gender: v as Gender})}>
+                      <SelectTrigger className="h-14 rounded-xl bg-slate-50 border-border font-bold"><SelectValue /></SelectTrigger>
+                      <SelectContent className="rounded-2xl">
+                        {['Male', 'Female', 'Other'].map(g => (<SelectItem key={g} value={g} className="font-bold">{g}</SelectItem>))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Gender <span className="text-red-500">*</span></Label>
-                  <Select value={currentMember.gender || ''} onValueChange={v => setCurrentMember({...currentMember, gender: v as Gender})}>
-                    <SelectTrigger className="h-14 rounded-xl bg-slate-50 border-border font-bold"><SelectValue /></SelectTrigger>
-                    <SelectContent className="rounded-2xl">
-                      {['Male', 'Female', 'Other'].map(g => (<SelectItem key={g} value={g} className="font-bold">{g}</SelectItem>))}
-                    </SelectContent>
-                  </Select>
                 </div>
 
                 <div className="space-y-2">
@@ -381,8 +395,10 @@ export default function PatientsPage() {
                   </div>
                 </div>
 
+                <hr className="border-border my-6" />
+
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Medical History</Label>
+                  <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Medical History (Optional)</Label>
                   <Textarea 
                     placeholder="Brief history of illnesses, surgeries, or chronic conditions..." 
                     className="rounded-xl bg-slate-50 border-border font-bold min-h-[100px]" 
@@ -392,7 +408,7 @@ export default function PatientsPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Allergies</Label>
+                  <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Allergies (Optional)</Label>
                   <Textarea 
                     placeholder="Mention any drug, food, or environmental allergies..." 
                     className="rounded-xl bg-slate-50 border-border font-bold min-h-[100px]" 
