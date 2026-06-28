@@ -1,8 +1,9 @@
+
 'use client';
 
 import { Suspense, useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Search, MapPin, Loader2, ChevronLeft, Bell } from 'lucide-react';
+import { Search, MapPin, Loader2, ChevronLeft } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { DOCTOR_CATEGORIES } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
@@ -20,12 +21,18 @@ function DoctorsContent() {
   const filterSpecialtyFromQuery = searchParams.get('specialty');
   const isAuthenticated = useStore(state => state.isAuthenticated);
   const hasHydrated = useStore(state => state._hasHydrated);
-  const { toast } = useToast();
   
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(filterSpecialtyFromQuery || 'All');
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Sync state with URL parameters when they change (e.g. from Home page)
+  useEffect(() => {
+    if (filterSpecialtyFromQuery) {
+      setSelectedCategory(filterSpecialtyFromQuery);
+    }
+  }, [filterSpecialtyFromQuery]);
 
   useEffect(() => {
     if (!hasHydrated) return;

@@ -1,7 +1,8 @@
+
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { Plus, Loader2, Edit3, Camera, Clock } from 'lucide-react';
+import { Plus, Loader2, Edit3, Camera } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +12,8 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DOCTOR_CATEGORIES } from '@/lib/mock-data';
 import Image from 'next/image';
 import Cropper from 'react-easy-crop';
 
@@ -30,7 +33,7 @@ export default function DoctorCatalog() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  const [newDoc, setNewDoc] = useState<any>({ name: '', email: '', phone: '', specialty: '', fees: '500', imageUrl: '' });
+  const [newDoc, setNewDoc] = useState<any>({ name: '', email: '', phone: '', specialty: 'General', fees: '500', imageUrl: '' });
   const [isSaving, setIsSaving] = useState(false);
 
   async function load() {
@@ -110,7 +113,19 @@ export default function DoctorCatalog() {
                   </div>
                   <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400">Name</Label><Input className="h-12 bg-slate-50 border-none font-bold" value={newDoc.name} onChange={e => setNewDoc({...newDoc, name: e.target.value})} /></div>
-                    <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400">Specialty</Label><Input className="h-12 bg-slate-50 border-none font-bold" value={newDoc.specialty} onChange={e => setNewDoc({...newDoc, specialty: e.target.value})} /></div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-slate-400">Specialty</Label>
+                      <Select value={newDoc.specialty} onValueChange={v => setNewDoc({...newDoc, specialty: v})}>
+                        <SelectTrigger className="h-12 bg-slate-50 border-none font-bold">
+                          <SelectValue placeholder="Select" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {DOCTOR_CATEGORIES.filter(c => c.id !== 'all').map(cat => (
+                            <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                </ScrollArea>
                <DialogFooter className="p-8 bg-slate-50 border-t"><Button onClick={handleAdd} className="w-full h-14 bg-blue-600 font-bold rounded-2xl">Create Doctor</Button></DialogFooter>
@@ -167,7 +182,16 @@ export default function DoctorCatalog() {
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase text-slate-400">Specialty</Label>
-                    <Input className="h-12 bg-slate-50 border-none font-bold" value={editingDoc.specialty} onChange={e => setEditingDoc({...editingDoc, specialty: e.target.value})} />
+                    <Select value={editingDoc.specialty} onValueChange={v => setEditingDoc({...editingDoc, specialty: v})}>
+                      <SelectTrigger className="h-12 bg-slate-50 border-none font-bold">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {DOCTOR_CATEGORIES.filter(c => c.id !== 'all').map(cat => (
+                          <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase text-slate-400">Phone</Label>

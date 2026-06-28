@@ -5,14 +5,15 @@ import { query } from '@/lib/db';
 import { Doctor } from '@/lib/types';
 
 /**
- * Fetches all approved doctors from the database
+ * Fetches all approved doctors from the database with robust specialty filtering
  */
 export async function getDoctors(specialty?: string) {
   let sql = 'SELECT * FROM doctors WHERE is_approved = true';
   const params: any[] = [];
 
   if (specialty && specialty !== 'All') {
-    sql += ' AND specialty = $1';
+    // Use ILIKE for case-insensitive matching to handle "General" vs "general"
+    sql += ' AND specialty ILIKE $1';
     params.push(specialty);
   }
 
@@ -31,8 +32,8 @@ export async function getDoctors(specialty?: string) {
       imageUrl: row.image_url || '',
       startTime: row.start_time || '09:00',
       endTime: row.end_time || '17:00',
-      slotDuration: row.slot_duration || 15,
-      availableSlots: [], // Logic handled on booking page
+      slot_duration: row.slot_duration || 15,
+      availableSlots: [], 
       categoryIcon: '🏥'
     })) as Doctor[];
   } catch (error) {
