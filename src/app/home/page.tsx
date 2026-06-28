@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 import { getDoctors } from '@/app/actions/doctor-actions';
 import { Doctor } from '@/lib/types';
 import { Separator } from '@/components/ui/separator';
+import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
 
 function HomeContent() {
@@ -22,6 +23,7 @@ function HomeContent() {
   const user = useStore(state => state.user);
   const isAuthenticated = useStore(state => state.isAuthenticated);
   const hasHydrated = useStore(state => state._hasHydrated);
+  const { toast } = useToast();
   
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(filterSpecialtyFromQuery || 'All');
@@ -49,6 +51,13 @@ function HomeContent() {
     );
   }, [doctors, search]);
 
+  const handleNotificationClick = () => {
+    toast({
+      title: "Notifications",
+      description: "No new alerts at the moment.",
+    });
+  };
+
   if (!hasHydrated) return <div className="flex justify-center items-center min-h-screen"><Loader2 className="animate-spin" /></div>;
 
   return (
@@ -63,7 +72,10 @@ function HomeContent() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input placeholder="Search doctor, clinic..." className="pl-9 h-11 bg-slate-50 border-border rounded-xl font-medium" value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
-          <button className="p-2.5 bg-slate-50 rounded-xl text-slate-500 relative border border-border">
+          <button 
+            onClick={handleNotificationClick}
+            className="p-2.5 bg-slate-50 rounded-xl text-slate-500 relative border border-border"
+          >
             <Bell className="h-5 w-5" />
             <span className="absolute top-2 right-2 h-2 w-2 bg-red-500 rounded-full border-2 border-white"></span>
           </button>
@@ -99,7 +111,7 @@ function HomeContent() {
           <div className="space-y-4 mt-0">
             {isLoading ? (
               <div className="text-center py-20"><Loader2 className="animate-spin inline-block" /></div>
-            ) : filteredDoctors.map((doc) => (
+            ) : filteredDoctors.length > 0 ? filteredDoctors.map((doc) => (
               <Card key={doc.id} className="border-border shadow-sm rounded-[1.5rem] overflow-hidden bg-white border">
                 <CardContent className="p-5">
                   <div className="flex justify-between items-start">
@@ -147,7 +159,11 @@ function HomeContent() {
                   </div>
                 </CardContent>
               </Card>
-            ))}
+            )) : (
+              <div className="text-center py-20 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
+                <p className="font-bold text-slate-400">No doctors found in this category.</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

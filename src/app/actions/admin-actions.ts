@@ -52,7 +52,7 @@ export async function initializeDatabase() {
       );
     `);
 
-    // Migration: Add phone_number column to family_members if it doesn't exist
+    // Migration: Add phone_number column if missing
     await query(`
       DO $$ 
       BEGIN 
@@ -106,11 +106,22 @@ export async function initializeDatabase() {
         payment_mode VARCHAR(50),
         transaction_id VARCHAR(100),
         status VARCHAR(50) DEFAULT 'Confirmed',
+        token_number INT DEFAULT 1,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
 
-    // 5. Attendants Table (For Payroll)
+    // Migration: Add token_number column to appointments if it doesn't exist
+    await query(`
+      DO $$ 
+      BEGIN 
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='appointments' AND column_name='token_number') THEN 
+          ALTER TABLE appointments ADD COLUMN token_number INT DEFAULT 1; 
+        END IF;
+      END $$;
+    `);
+
+    // 5. Attendants Table
     await query(`
       CREATE TABLE IF NOT EXISTS attendants (
         attendant_id VARCHAR(50) PRIMARY KEY,

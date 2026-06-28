@@ -1,4 +1,3 @@
-
 export type Gender = 'Male' | 'Female' | 'Other';
 export type Severity = 'Mild' | 'Moderate' | 'Severe';
 
@@ -85,5 +84,6 @@ export interface Appointment {
   payment_status: 'Paid' | 'Pending';
   transaction_id: string;
   status: 'Confirmed' | 'Cancelled' | 'Completed' | 'Waiting' | 'In Consultation';
+  tokenNumber?: number;
   current_symptoms?: string;
 }

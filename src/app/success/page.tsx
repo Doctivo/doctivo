@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Suspense, useState, useEffect, useRef } from 'react';
@@ -98,7 +97,7 @@ function SuccessContent() {
     if (!appointment) return;
     const shareData = {
       title: 'Doctivo Appointment Confirmation',
-      text: `My appointment with ${appointment.doctorName} is confirmed! Token: #${appointment.id.slice(-2)}. Booking ID: ${appointment.id}`,
+      text: `My appointment with ${appointment.doctorName} is confirmed! Token: #${appointment.tokenNumber}. Booking ID: ${appointment.id}`,
       url: window.location.href,
     };
 
@@ -192,7 +191,7 @@ function SuccessContent() {
               <div className="flex justify-between items-center">
                 <div className="space-y-1">
                   <p className="text-slate-400 text-[10px] uppercase font-black tracking-widest">Your Token</p>
-                  <p className="text-4xl font-black text-primary">#{appointment.id.slice(-2)}</p>
+                  <p className="text-4xl font-black text-primary">#{appointment.tokenNumber || 1}</p>
                 </div>
                 <div className="bg-slate-50 p-4 rounded-3xl border border-slate-100 text-center min-w-[100px] print:bg-white">
                   <p className="text-slate-400 text-[9px] uppercase font-black tracking-tighter">Booking ID</p>
@@ -209,7 +208,7 @@ function SuccessContent() {
                 </div>
                 <div className="space-y-1 text-right">
                   <p className="text-slate-400 text-[10px] uppercase font-black tracking-widest">Type</p>
-                  <p className="text-sm font-black text-primary uppercase">{appointment.patientType}</p>
+                  <p className="text-sm font-black text-primary uppercase">{appointment.patientType.replace('_', ' ')}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-slate-400 text-[10px] uppercase font-black tracking-widest">Date</p>
