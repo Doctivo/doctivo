@@ -4,7 +4,7 @@ import { query } from '@/lib/db';
 
 /**
  * Initializes all database tables in the correct order of dependency.
- * Includes migrations for missing columns like token_number.
+ * Includes migrations for missing columns like token_number and name-to-fullname.
  */
 export async function initializeDatabase() {
   try {
@@ -157,6 +157,16 @@ export async function initializeDatabase() {
         permissions JSONB DEFAULT '{}',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
+    `);
+
+    // Migration: Rename 'name' to 'full_name' in admins table if legacy column exists
+    await query(`
+      DO $$ 
+      BEGIN 
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='admins' AND column_name='name') THEN 
+          ALTER TABLE admins RENAME COLUMN name TO full_name; 
+        END IF;
+      END $$;
     `);
 
     return { success: true };
