@@ -322,7 +322,7 @@ export default function PatientsPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Age <span className="text-red-500">*</span></Label>
-                    <Input type="number" placeholder="Age" className="h-14 rounded-xl bg-slate-50 border-border font-bold" value={currentMember.age || ''} onChange={e => setCurrentMember({...currentMember, age: e.target.value})} />
+                    <Input type="number" placeholder="Enter Your Age" className="h-14 rounded-xl bg-slate-50 border-border font-bold" value={currentMember.age || ''} onChange={e => setCurrentMember({...currentMember, age: e.target.value})} />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Blood Group <span className="text-red-500">*</span></Label>

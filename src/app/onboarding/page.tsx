@@ -154,7 +154,7 @@ export default function OnboardingPage() {
               <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">Age <span className="text-red-500">*</span></Label>
               <Input 
                 type="number" 
-                placeholder="28" 
+                placeholder="Enter Your Age" 
                 className="h-14 rounded-2xl bg-slate-50 border-border font-bold" 
                 value={formData.age || ''} 
                 onChange={e => setFormData({...formData, age: e.target.value})} 

@@ -265,8 +265,8 @@ export default function BookingPage({ params }: { params: Promise<{ id: string }
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <Label className="text-[10px] font-black text-slate-900 uppercase">Age</Label>
-                      <Input type="number" placeholder="Age" value={newPatient.age || ''} onChange={e => setNewPatient({...newPatient, age: e.target.value})} className="h-12 rounded-xl bg-slate-50 border-border font-bold" />
+                      <Label className="text-[10px] font-black text-slate-900 uppercase">Age <span className="text-red-500">*</span></Label>
+                      <Input type="number" placeholder="Enter Your Age" value={newPatient.age || ''} onChange={e => setNewPatient({...newPatient, age: e.target.value})} className="h-12 rounded-xl bg-slate-50 border-border font-bold" />
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-[10px] font-black text-slate-900 uppercase">Blood Group</Label>
