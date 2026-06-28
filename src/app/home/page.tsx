@@ -91,7 +91,7 @@ function HomeContent() {
       </div>
 
       <div className="p-6 pt-10 space-y-8">
-        {/* Quick Actions Grid - Vibrant Color Cards */}
+        {/* Quick Actions Grid - Vibrant Color Cards (Level 200 for visibility) */}
         <div className="grid grid-cols-2 gap-4">
           {quickActions.map((action, idx) => (
             <button 
@@ -102,6 +102,7 @@ function HomeContent() {
                 action.bgColor
               )}
             >
+              {/* Icon Background None (Transparent) */}
               <div className="h-16 w-16 bg-transparent flex items-center justify-center mb-4 transition-transform group-active:scale-90">
                 <action.icon className={cn("h-10 w-10", action.iconColor)} />
               </div>

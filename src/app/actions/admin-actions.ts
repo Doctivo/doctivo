@@ -53,16 +53,6 @@ export async function initializeDatabase() {
       );
     `);
 
-    // Migration: Add phone_number column to family_members if missing
-    await query(`
-      DO $$ 
-      BEGIN 
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='family_members' AND column_name='phone_number') THEN 
-          ALTER TABLE family_members ADD COLUMN phone_number VARCHAR(15); 
-        END IF;
-      END $$;
-    `);
-
     // 3. Doctors Table
     await query(`
       CREATE TABLE IF NOT EXISTS doctors (
@@ -112,7 +102,7 @@ export async function initializeDatabase() {
       );
     `);
 
-    // Migration: Add token_number column to appointments if it doesn't exist
+    // Migration: Add token_number column to appointments if missing
     await query(`
       DO $$ 
       BEGIN 
@@ -159,7 +149,8 @@ export async function initializeDatabase() {
       );
     `);
 
-    // Migration: Resolve 'name' column conflict in admins table
+    // Migration: Handle legacy 'name' column conflict in admins table
+    // We explicitly drop the NOT NULL constraint from 'name' so it doesn't block inserts
     await query(`
       DO $$ 
       BEGIN 
@@ -172,7 +163,8 @@ export async function initializeDatabase() {
           END IF;
         END IF;
 
-        -- If 'name' column still exists as a legacy column, make it nullable so it doesn't block inserts
+        -- CRITICAL: If 'name' column still exists as a legacy column, remove its NOT NULL constraint
+        -- This fixes the error: null value in column "name" violates not-null constraint
         IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='admins' AND column_name='name') THEN
           ALTER TABLE admins ALTER COLUMN name DROP NOT NULL;
         END IF;
@@ -327,7 +319,7 @@ export async function getAdminUsers() {
 export async function createAdminUser(data: any) {
   const id = `ADM-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
   try {
-    // We send the admin name to the full_name column
+    // Legacy support: Insert into full_name. The 'name' column (if it exists) will be handled by migration (DROP NOT NULL)
     await query('INSERT INTO admins (admin_id, full_name, email, role, permissions) VALUES ($1, $2, $3, $4, $5)', [id, data.name, data.email, data.role, JSON.stringify(data.permissions || {})]);
     return { success: true };
   } catch (error: any) {
