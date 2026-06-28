@@ -65,7 +65,6 @@ function HomeContent() {
 
   return (
     <div className="max-w-[480px] mx-auto pb-24 bg-white min-h-screen">
-      {/* Header Section */}
       <div className="bg-white sticky top-0 z-20 border-b border-border">
         <div className="p-4 flex items-center gap-3 bg-white">
           <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center text-primary font-bold overflow-hidden relative shadow-sm border border-border">
@@ -91,7 +90,6 @@ function HomeContent() {
       </div>
 
       <div className="p-6 pt-10 space-y-8">
-        {/* Quick Actions Grid - Vibrant Color Cards (Level 200 for visibility) */}
         <div className="grid grid-cols-2 gap-4">
           {quickActions.map((action, idx) => (
             <button 
@@ -102,7 +100,6 @@ function HomeContent() {
                 action.bgColor
               )}
             >
-              {/* Icon Background None (Transparent) */}
               <div className="h-16 w-16 bg-transparent flex items-center justify-center mb-4 transition-transform group-active:scale-90">
                 <action.icon className={cn("h-10 w-10", action.iconColor)} />
               </div>
