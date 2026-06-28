@@ -1,4 +1,3 @@
-
 import type {Metadata, Viewport} from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
@@ -7,11 +6,15 @@ import { BrowserGuard } from '@/components/BrowserGuard';
 export const metadata: Metadata = {
   title: 'DOCTIVO - Book Appointments',
   description: 'Book Doctor Appointments With Ease',
-  manifest: '/manifest.json?v=2',
+  manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
     title: 'DOCTIVO',
+  },
+  icons: {
+    icon: '/562ca6c0e52711681283626.png',
+    apple: '/562ca6c0e52e41681283626.png',
   },
   formatDetection: {
     telephone: false,
@@ -39,7 +42,7 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <link rel="manifest" href="/manifest.json?v=2" />
+        <link rel="apple-touch-icon" href="/562ca6c0e52e41681283626.png" />
       </head>
       <body className="font-body antialiased bg-slate-100">
         <BrowserGuard>

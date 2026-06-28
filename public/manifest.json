@@ -1,32 +1,29 @@
 {
-  "name": "DOCTIVO - Healthcare Simplified",
+  "name": "DOCTIVO",
   "short_name": "DOCTIVO",
-  "description": "Book Doctor Appointments with Ease in Gorakhpur",
-  "start_url": "/tutorial",
+  "description": "Book Doctor Appointments with Ease",
+  "start_url": "/home",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#2563eb",
+  "orientation": "portrait",
+  "scope": "/",
   "icons": [
     {
-      "src": "/e990c749-34ba-4201-9252-777f9f30b91d.png",
-      "sizes": "32x32",
-      "type": "image/png"
-    },
-    {
-      "src": "/cc1033a3-b45d-4581-9951-4043b4f69747.png",
+      "src": "/562ca6c0e52711681283626.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/562ca6c0-6d43-41c0-a75d-556102be8d96.png",
+      "src": "/562ca6c0e52b21681283626.png",
       "sizes": "512x512",
       "type": "image/png"
     },
     {
-      "src": "/12028713-3329-43c3-9d41-e94086603a15.png",
-      "sizes": "180x180",
+      "src": "/562ca6c0e526a1681283626.png",
+      "sizes": "192x192",
       "type": "image/png",
-      "purpose": "apple touch icon"
+      "purpose": "maskable"
     }
   ]
 }
