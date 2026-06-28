@@ -127,10 +127,17 @@ export default function PatientsPage() {
   }, [isAuthenticated, hasHydrated, user?.id, user?.phone, router, setPatients, setUser]);
 
   const handleSavePatient = async () => {
-    if (!currentMember.name || !currentMember.age || !currentMember.blood_group) {
-      toast({ variant: 'destructive', title: 'Missing Details', description: 'Please fill in all mandatory fields.' });
+    // Validation
+    if (!currentMember.name || !currentMember.age || !currentMember.blood_group || !currentMember.gender || !currentMember.relation) {
+      toast({ variant: 'destructive', title: 'Missing Details', description: 'Please fill in mandatory fields (*).' });
       return;
     }
+
+    if (currentMember.phone && currentMember.phone.length !== 10) {
+      toast({ variant: 'destructive', title: 'Invalid Phone', description: 'Phone number must be exactly 10 digits.' });
+      return;
+    }
+
     setIsSaving(true);
     
     try {
@@ -308,17 +315,17 @@ export default function PatientsPage() {
 
               <div className="space-y-6">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Full Name</Label>
+                  <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Full Name <span className="text-red-500">*</span></Label>
                   <Input placeholder="Enter Name" className="h-14 rounded-xl bg-slate-50 border-border font-bold" value={currentMember.name || ''} onChange={e => setCurrentMember({...currentMember, name: e.target.value})} />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Age</Label>
+                    <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Age <span className="text-red-500">*</span></Label>
                     <Input type="number" placeholder="Age" className="h-14 rounded-xl bg-slate-50 border-border font-bold" value={currentMember.age || ''} onChange={e => setCurrentMember({...currentMember, age: e.target.value})} />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Blood Group</Label>
+                    <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Blood Group <span className="text-red-500">*</span></Label>
                     <Select value={currentMember.blood_group || ''} onValueChange={v => setCurrentMember({...currentMember, blood_group: v})}>
                       <SelectTrigger className="h-14 rounded-xl bg-slate-50 border-border font-bold"><SelectValue placeholder="Select" /></SelectTrigger>
                       <SelectContent className="rounded-2xl">
@@ -330,7 +337,7 @@ export default function PatientsPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Height (cm)</Label>
+                    <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Height (cm) <span className="text-red-500">*</span></Label>
                     <Input type="number" placeholder="175" className="h-14 rounded-xl bg-slate-50 border-border font-bold" value={currentMember.height_cm || ''} onChange={e => setCurrentMember({...currentMember, height_cm: e.target.value})} />
                   </div>
                   <div className="space-y-2">
@@ -340,7 +347,7 @@ export default function PatientsPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Gender</Label>
+                  <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Gender <span className="text-red-500">*</span></Label>
                   <Select value={currentMember.gender || ''} onValueChange={v => setCurrentMember({...currentMember, gender: v as Gender})}>
                     <SelectTrigger className="h-14 rounded-xl bg-slate-50 border-border font-bold"><SelectValue /></SelectTrigger>
                     <SelectContent className="rounded-2xl">
@@ -350,7 +357,7 @@ export default function PatientsPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Relation</Label>
+                  <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Relation <span className="text-red-500">*</span></Label>
                   <Select value={currentMember.relation || ''} onValueChange={v => setCurrentMember({...currentMember, relation: v})}>
                     <SelectTrigger className="h-14 rounded-xl bg-slate-50 border-border font-bold"><SelectValue /></SelectTrigger>
                     <SelectContent className="rounded-2xl">
@@ -360,12 +367,13 @@ export default function PatientsPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Mobile Number</Label>
+                  <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Mobile Number (10 Digits)</Label>
                   <div className="relative">
                     <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                     <Input 
                       type="tel" 
                       placeholder="Mobile Number" 
+                      maxLength={10}
                       className="h-14 rounded-xl bg-slate-50 border-border pl-12 font-bold" 
                       value={currentMember.phone || ''} 
                       onChange={e => setCurrentMember({...currentMember, phone: e.target.value.replace(/\D/g, '').slice(0, 10)})} 

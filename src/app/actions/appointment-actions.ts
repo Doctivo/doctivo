@@ -2,6 +2,7 @@
 
 import { query } from '@/lib/db';
 import { Appointment } from '@/lib/types';
+import { isBefore, parseISO, startOfDay } from 'date-fns';
 
 /**
  * Saves a new appointment to the appointments table
@@ -59,27 +60,39 @@ export async function createAppointment(app: Partial<Appointment>) {
 }
 
 /**
- * Fetches all appointments for a specific user
+ * Fetches all appointments for a specific user and auto-handles missed visits
  */
 export async function getUserAppointments(userId: string) {
   try {
     const result = await query('SELECT * FROM appointments WHERE booked_by_user_id = $1 ORDER BY created_at DESC', [userId]);
-    return result.rows.map((r: any) => ({
-      id: r.appointment_id,
-      doctorId: r.doctor_id,
-      doctorName: r.doctor_name,
-      patientId: r.booked_by_user_id,
-      patientName: r.patient_name,
-      patientType: r.patient_type,
-      date: r.appointment_date instanceof Date ? r.appointment_date.toISOString().split('T')[0] : String(r.appointment_date || ''),
-      time: r.appointment_time_slot,
-      current_symptoms: r.current_symptoms,
-      consultation_fee_amount: r.consultation_fee_amount,
-      payment_status: r.payment_status,
-      transaction_id: r.transaction_id,
-      status: r.status,
-      tokenNumber: r.token_number || 1
-    })) as Appointment[];
+    const today = startOfDay(new Date());
+
+    return result.rows.map((r: any) => {
+      const appDate = r.appointment_date instanceof Date ? r.appointment_date : parseISO(String(r.appointment_date));
+      let status = r.status;
+
+      // Auto-cancel (Missed) if the date has passed and it was never completed/cancelled
+      if (isBefore(appDate, today) && (status === 'Confirmed' || status === 'Waiting')) {
+        status = 'Missed';
+      }
+
+      return {
+        id: r.appointment_id,
+        doctorId: r.doctor_id,
+        doctorName: r.doctor_name,
+        patientId: r.booked_by_user_id,
+        patientName: r.patient_name,
+        patientType: r.patient_type,
+        date: r.appointment_date instanceof Date ? r.appointment_date.toISOString().split('T')[0] : String(r.appointment_date || ''),
+        time: r.appointment_time_slot,
+        current_symptoms: r.current_symptoms,
+        consultation_fee_amount: r.consultation_fee_amount,
+        payment_status: r.payment_status,
+        transaction_id: r.transaction_id,
+        status: status,
+        tokenNumber: r.token_number || 1
+      };
+    }) as Appointment[];
   } catch (error) {
     console.error('Error fetching user appointments:', error);
     return [];
@@ -92,7 +105,7 @@ export async function getUserAppointments(userId: string) {
 export async function getBookedSlots(doctorId: string, date: string) {
   try {
     const result = await query(
-      "SELECT appointment_time_slot FROM appointments WHERE doctor_id = $1 AND appointment_date = $2 AND status = 'Confirmed'",
+      "SELECT appointment_time_slot FROM appointments WHERE doctor_id = $1 AND appointment_date = $2 AND status IN ('Confirmed', 'Waiting')",
       [doctorId, date]
     );
     return result.rows.map(r => r.appointment_time_slot) as string[];

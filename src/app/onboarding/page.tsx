@@ -86,10 +86,22 @@ export default function OnboardingPage() {
   };
 
   const handleComplete = async () => {
-    if (!formData.name || !formData.age || !formData.height_cm || !formData.blood_group) {
-      toast({ variant: 'destructive', title: 'Missing Details', description: 'Please fill in all mandatory fields.' });
+    // Strict Validation
+    if (!formData.name || !formData.age || !formData.height_cm || !formData.blood_group || !formData.state || !formData.city) {
+      toast({ variant: 'destructive', title: 'Missing Details', description: 'Please fill in all mandatory fields (*).' });
       return;
     }
+
+    if (formData.pincode && formData.pincode.length !== 6) {
+      toast({ variant: 'destructive', title: 'Invalid Pincode', description: 'Pincode must be exactly 6 digits.' });
+      return;
+    }
+
+    if (formData.secondaryPhone && formData.secondaryPhone.length !== 10) {
+      toast({ variant: 'destructive', title: 'Invalid Number', description: 'Alternate phone must be 10 digits.' });
+      return;
+    }
+
     setIsLoading(true);
     const profileData = { ...user, ...formData, isProfileComplete: true } as UserProfile;
     const result = await upsertPatientProfile(profileData);
@@ -128,7 +140,7 @@ export default function OnboardingPage() {
 
         <div className="space-y-6">
           <div className="space-y-2">
-            <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">Full Name</Label>
+            <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">Full Name <span className="text-red-500">*</span></Label>
             <Input 
               placeholder="Enter Your Name" 
               className="h-14 rounded-2xl bg-slate-50 border-border font-bold" 
@@ -139,7 +151,7 @@ export default function OnboardingPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">Age</Label>
+              <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">Age <span className="text-red-500">*</span></Label>
               <Input 
                 type="number" 
                 placeholder="28" 
@@ -149,7 +161,7 @@ export default function OnboardingPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">Blood Group</Label>
+              <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">Blood Group <span className="text-red-500">*</span></Label>
               <Select value={formData.blood_group || ''} onValueChange={v => setFormData({...formData, blood_group: v})}>
                 <SelectTrigger className="h-14 rounded-2xl bg-slate-50 border-border font-bold">
                   <SelectValue placeholder="Select" />
@@ -165,7 +177,7 @@ export default function OnboardingPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">Height (cm)</Label>
+              <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">Height (cm) <span className="text-red-500">*</span></Label>
               <Input 
                 type="number" 
                 placeholder="175" 
@@ -187,7 +199,7 @@ export default function OnboardingPage() {
           </div>
 
           <div className="space-y-2">
-            <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">Gender</Label>
+            <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">Gender <span className="text-red-500">*</span></Label>
             <div className="flex bg-slate-100 p-1.5 rounded-2xl border border-border">
               {['Male', 'Female', 'Other'].map((g) => (
                 <button
@@ -206,7 +218,7 @@ export default function OnboardingPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">State</Label>
+              <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">State <span className="text-red-500">*</span></Label>
               <Select value={formData.state || ''} onValueChange={v => setFormData({...formData, state: v})}>
                 <SelectTrigger className="h-14 rounded-2xl bg-slate-50 border-border font-bold">
                   <SelectValue placeholder="Select State" />
@@ -219,7 +231,7 @@ export default function OnboardingPage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">City</Label>
+              <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">City <span className="text-red-500">*</span></Label>
               <Select value={formData.city || ''} onValueChange={v => setFormData({...formData, city: v})}>
                 <SelectTrigger className="h-14 rounded-2xl bg-slate-50 border-border font-bold">
                   <SelectValue placeholder="Select City" />
@@ -244,24 +256,26 @@ export default function OnboardingPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">Pincode</Label>
+              <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">Pincode (6 Digits)</Label>
               <Input 
-                type="number" 
+                type="text" 
                 placeholder="273001" 
+                maxLength={6}
                 className="h-14 rounded-2xl bg-slate-50 border-border font-bold" 
                 value={formData.pincode || ''} 
-                onChange={e => setFormData({...formData, pincode: e.target.value})} 
+                onChange={e => setFormData({...formData, pincode: e.target.value.replace(/\D/g, '').slice(0, 6)})} 
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">Alternative Number (Optional)</Label>
+            <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">Alternative Number (10 Digits)</Label>
             <div className="relative">
               <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
               <Input 
                 type="tel" 
                 placeholder="98765XXXXX" 
+                maxLength={10}
                 className="h-14 rounded-2xl bg-slate-50 border-border pl-12 font-bold" 
                 value={formData.secondaryPhone || ''} 
                 onChange={e => setFormData({...formData, secondaryPhone: e.target.value.replace(/\D/g, '').slice(0, 10)})} 
