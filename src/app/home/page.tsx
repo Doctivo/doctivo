@@ -36,28 +36,28 @@ function HomeContent() {
     { 
       label: 'Book Appointment', 
       icon: Calendar, 
-      bgColor: 'bg-blue-50',
+      bgColor: 'bg-blue-100',
       iconColor: 'text-blue-600',
       onClick: () => router.push('/doctors') 
     },
     { 
       label: 'My Appointment', 
       icon: Stethoscope, 
-      bgColor: 'bg-green-50',
+      bgColor: 'bg-green-100',
       iconColor: 'text-green-600',
       onClick: () => router.push('/appointments') 
     },
     { 
       label: 'Physiotherapist', 
       icon: Users, 
-      bgColor: 'bg-purple-50',
+      bgColor: 'bg-purple-100',
       iconColor: 'text-purple-600',
       onClick: () => router.push('/doctors?specialty=Orthopedic') 
     },
     { 
       label: 'Add Patient', 
       icon: UserPlus, 
-      bgColor: 'bg-orange-50',
+      bgColor: 'bg-orange-100',
       iconColor: 'text-orange-600',
       onClick: () => router.push('/patients') 
     },
