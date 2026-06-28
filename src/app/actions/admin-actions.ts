@@ -4,6 +4,7 @@ import { query } from '@/lib/db';
 
 /**
  * Initializes all database tables in the correct order of dependency.
+ * Includes migrations for missing columns like token_number.
  */
 export async function initializeDatabase() {
   try {
@@ -52,7 +53,7 @@ export async function initializeDatabase() {
       );
     `);
 
-    // Migration: Add phone_number column if missing
+    // Migration: Add phone_number column to family_members if missing
     await query(`
       DO $$ 
       BEGIN 
@@ -250,7 +251,7 @@ export async function addDoctorDirectly(doc: any) {
       id, doc.name, doc.phone, doc.email, doc.specialty, doc.qualification, 
       parseInt(doc.experience || '0'), doc.address, parseInt(doc.fees || '500'),
       doc.startTime || '09:00', doc.endTime || '17:00', parseInt(doc.slotDuration || '15'),
-      doc.imageUrl || null, JSON.stringify(doc.schedule || {}), JSON.stringify(doc.workingDays || [])
+      doc.imageUrl || null, JSON.stringify(doc.schedule || {}), JSON.stringify(doc.working_days || [])
     ]);
     return { success: true, data: result.rows[0] };
   } catch (error: any) {
