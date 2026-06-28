@@ -151,7 +151,7 @@ export async function initializeDatabase() {
     await query(`
       CREATE TABLE IF NOT EXISTS admins (
         admin_id VARCHAR(50) PRIMARY KEY,
-        full_name VARCHAR(100) NOT NULL,
+        full_name VARCHAR(100),
         email VARCHAR(100) UNIQUE,
         role VARCHAR(50),
         permissions JSONB DEFAULT '{}',
@@ -159,13 +159,22 @@ export async function initializeDatabase() {
       );
     `);
 
-    // Migration: Rename 'name' to 'full_name' in admins table if legacy column exists AND target doesn't
+    // Migration: Resolve 'name' column conflict in admins table
     await query(`
       DO $$ 
       BEGIN 
-        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='admins' AND column_name='name') 
-           AND NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='admins' AND column_name='full_name') THEN 
-          ALTER TABLE admins RENAME COLUMN name TO full_name; 
+        -- If 'full_name' doesn't exist yet, rename 'name' or create it
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='admins' AND column_name='full_name') THEN
+          IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='admins' AND column_name='name') THEN
+            ALTER TABLE admins RENAME COLUMN name TO full_name;
+          ELSE
+            ALTER TABLE admins ADD COLUMN full_name VARCHAR(100);
+          END IF;
+        END IF;
+
+        -- If 'name' column still exists as a legacy column, make it nullable so it doesn't block inserts
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='admins' AND column_name='name') THEN
+          ALTER TABLE admins ALTER COLUMN name DROP NOT NULL;
         END IF;
       END $$;
     `);
@@ -318,9 +327,11 @@ export async function getAdminUsers() {
 export async function createAdminUser(data: any) {
   const id = `ADM-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
   try {
+    // We send the admin name to the full_name column
     await query('INSERT INTO admins (admin_id, full_name, email, role, permissions) VALUES ($1, $2, $3, $4, $5)', [id, data.name, data.email, data.role, JSON.stringify(data.permissions || {})]);
     return { success: true };
   } catch (error: any) {
+    console.error('createAdminUser Error:', error.message);
     return { success: false, error: error.message };
   }
 }
