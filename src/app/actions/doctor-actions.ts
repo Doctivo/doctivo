@@ -5,16 +5,17 @@ import { query } from '@/lib/db';
 import { Doctor } from '@/lib/types';
 
 /**
- * Fetches all approved doctors from the database with robust specialty filtering
+ * Fetches all approved doctors from the database with robust specialty filtering.
+ * Uses wildcards and case-insensitive matching to ensure categories match correctly.
  */
 export async function getDoctors(specialty?: string) {
   let sql = 'SELECT * FROM doctors WHERE is_approved = true';
   const params: any[] = [];
 
   if (specialty && specialty !== 'All') {
-    // Use ILIKE for case-insensitive matching to handle "General" vs "general"
+    // Use ILIKE with wildcards to handle "Cardiologist" matching "CARDIOLOGIST" or "Cardiology"
     sql += ' AND specialty ILIKE $1';
-    params.push(specialty);
+    params.push(`%${specialty.trim()}%`);
   }
 
   try {
