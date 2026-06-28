@@ -132,7 +132,7 @@ export default function PatientsPage() {
   };
 
   const handleSavePatient = async () => {
-    // Validation
+    // Strict Validation
     if (!currentMember.name || !currentMember.age || !currentMember.blood_group || !currentMember.gender || !currentMember.relation || !currentMember.height_cm) {
       toast({ variant: 'destructive', title: 'Missing Details', description: 'Please fill in all mandatory fields (*).' });
       return;

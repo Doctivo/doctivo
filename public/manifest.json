@@ -1,23 +1,22 @@
 {
-  "name": "DOCTIVO Healthcare",
+  "name": "DOCTIVO",
   "short_name": "DOCTIVO",
-  "description": "Book Doctor Appointments with Ease in Gorakhpur",
+  "description": "Book Doctor Appointments with Live Queue Tracking",
   "start_url": "/home",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#2563eb",
   "icons": [
     {
-      "src": "/562ca6c0e52711681283626.png",
+      "src": "/562ca6c0e52e41681283626.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/562ca6c0e52e41681283626.png",
+      "src": "/562ca6c0e52711681283626.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     }
   ]
 }
