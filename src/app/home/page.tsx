@@ -36,25 +36,29 @@ function HomeContent() {
     { 
       label: 'Book Appointment', 
       icon: Calendar, 
-      bgColor: 'bg-blue-600', 
+      bgColor: 'bg-blue-50',
+      iconColor: 'text-blue-600',
       onClick: () => router.push('/doctors') 
     },
     { 
       label: 'My Appointment', 
       icon: Stethoscope, 
-      bgColor: 'bg-emerald-600', 
+      bgColor: 'bg-green-50',
+      iconColor: 'text-green-600',
       onClick: () => router.push('/appointments') 
     },
     { 
       label: 'Physiotherapist', 
       icon: Users, 
-      bgColor: 'bg-indigo-600', 
+      bgColor: 'bg-purple-50',
+      iconColor: 'text-purple-600',
       onClick: () => router.push('/doctors?specialty=Orthopedic') 
     },
     { 
       label: 'Add Patient', 
       icon: UserPlus, 
-      bgColor: 'bg-orange-500', 
+      bgColor: 'bg-orange-50',
+      iconColor: 'text-orange-600',
       onClick: () => router.push('/patients') 
     },
   ];
@@ -87,21 +91,21 @@ function HomeContent() {
       </div>
 
       <div className="p-6 pt-10 space-y-8">
-        {/* Quick Actions Grid - Solid Color Cards */}
+        {/* Quick Actions Grid - Light Color Cards */}
         <div className="grid grid-cols-2 gap-4">
           {quickActions.map((action, idx) => (
             <button 
               key={idx}
               onClick={action.onClick}
               className={cn(
-                "flex flex-col items-center justify-center p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/40 hover:opacity-95 active:scale-95 transition-all group aspect-square border-none",
+                "flex flex-col items-center justify-center p-8 rounded-[2.5rem] shadow-sm hover:opacity-80 active:scale-95 transition-all group aspect-square border-none",
                 action.bgColor
               )}
             >
-              <div className="h-16 w-16 rounded-[1.5rem] bg-white/20 flex items-center justify-center mb-4 transition-transform group-active:scale-90">
-                <action.icon className="h-8 w-8 text-white" />
+              <div className="h-16 w-16 bg-transparent flex items-center justify-center mb-4 transition-transform group-active:scale-90">
+                <action.icon className={cn("h-10 w-10", action.iconColor)} />
               </div>
-              <span className="text-[11px] font-black uppercase tracking-widest text-white text-center leading-tight">
+              <span className={cn("text-[11px] font-black uppercase tracking-widest text-center leading-tight", action.iconColor)}>
                 {action.label}
               </span>
             </button>
