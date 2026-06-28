@@ -43,6 +43,21 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <link rel="apple-touch-icon" href="/562ca6c0e52e41681283626.png" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js').then(function(reg) {
+                    console.log('PWA ServiceWorker Registered');
+                  }).catch(function(err) {
+                    console.log('PWA ServiceWorker Registration Failed', err);
+                  });
+                });
+              }
+            `,
+          }}
+        />
       </head>
       <body className="font-body antialiased bg-slate-100">
         <BrowserGuard>
