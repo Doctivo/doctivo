@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Bell, Search, Loader2, Calendar, Users, Stethoscope, UserPlus } from 'lucide-react';
+import { Bell, Search, Loader2 } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { Input } from '@/components/ui/input';
 import { BottomNav } from '@/components/BottomNav';
@@ -35,30 +35,30 @@ function HomeContent() {
   const quickActions = [
     { 
       label: 'Book Appointment', 
-      icon: Calendar, 
+      image: '/562c71b5-1be4-415a-94dc-002e1889eb7c-4.jpg', 
       bgColor: 'bg-blue-200',
-      iconColor: 'text-blue-700',
+      textColor: 'text-blue-700',
       onClick: () => router.push('/doctors') 
     },
     { 
       label: 'My Appointment', 
-      icon: Stethoscope, 
+      image: '/562c71b5-1be4-415a-94dc-002e1889eb7c-5.jpg', 
       bgColor: 'bg-green-200',
-      iconColor: 'text-green-700',
+      textColor: 'text-green-700',
       onClick: () => router.push('/appointments') 
     },
     { 
       label: 'Physiotherapist', 
-      icon: Users, 
+      image: '/562c71b5-1be4-415a-94dc-002e1889eb7c-6.jpg', 
       bgColor: 'bg-purple-200',
-      iconColor: 'text-purple-700',
+      textColor: 'text-purple-700',
       onClick: () => router.push('/doctors?specialty=Orthopedic') 
     },
     { 
       label: 'Add Patient', 
-      icon: UserPlus, 
+      image: '/562c71b5-1be4-415a-94dc-002e1889eb7c-7.jpg', 
       bgColor: 'bg-orange-200',
-      iconColor: 'text-orange-700',
+      textColor: 'text-orange-700',
       onClick: () => router.push('/patients') 
     },
   ];
@@ -96,14 +96,14 @@ function HomeContent() {
               key={idx}
               onClick={action.onClick}
               className={cn(
-                "flex flex-col items-center justify-center p-8 rounded-[2.5rem] shadow-sm hover:opacity-80 active:scale-95 transition-all group aspect-square border-none",
+                "flex flex-col items-center justify-center p-6 rounded-[2.5rem] shadow-sm hover:opacity-80 active:scale-95 transition-all group aspect-square border-none",
                 action.bgColor
               )}
             >
-              <div className="h-16 w-16 bg-transparent flex items-center justify-center mb-4 transition-transform group-active:scale-90">
-                <action.icon className={cn("h-10 w-10", action.iconColor)} />
+              <div className="h-20 w-20 bg-transparent flex items-center justify-center mb-4 transition-transform group-active:scale-90 relative overflow-hidden rounded-2xl">
+                <Image src={action.image} alt={action.label} fill className="object-cover" />
               </div>
-              <span className={cn("text-[11px] font-black uppercase tracking-widest text-center leading-tight", action.iconColor)}>
+              <span className={cn("text-[11px] font-black uppercase tracking-widest text-center leading-tight", action.textColor)}>
                 {action.label}
               </span>
             </button>

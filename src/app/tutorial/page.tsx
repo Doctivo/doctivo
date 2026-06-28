@@ -1,36 +1,36 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Check, ShieldCheck, Calendar, Stethoscope, Zap } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useStore } from '@/lib/store';
+import Image from 'next/image';
 
 const TUTORIAL_STEPS = [
   {
     title: "Verify Yourself",
-    description: "Secure login with your mobile number and one-time password.",
-    icon: ShieldCheck,
+    description: "Secure login with your mobile number and direct access.",
+    image: "/562c71b5-1be4-415a-94dc-002e1889eb7c-0.jpg",
     color: "bg-blue-500"
   },
   {
     title: "Create Profile",
-    description: "Add your medical history and symptoms for smarter doctor matches.",
-    icon: Stethoscope,
+    description: "Add your medical history and symptoms for smarter matches.",
+    image: "/562c71b5-1be4-415a-94dc-002e1889eb7c-1.jpg",
     color: "bg-purple-500"
   },
   {
     title: "Book Instantly",
     description: "Choose specialists near you and book slots in seconds.",
-    icon: Calendar,
+    image: "/562c71b5-1be4-415a-94dc-002e1889eb7c-2.jpg",
     color: "bg-green-500"
   },
   {
     title: "Live Queue Tracking",
     description: "Track your turn in real-time. No more long waiting hours.",
-    icon: Zap,
+    image: "/562c71b5-1be4-415a-94dc-002e1889eb7c-3.jpg",
     color: "bg-orange-500"
   }
 ];
@@ -54,19 +54,22 @@ export default function TutorialPage() {
     }
   };
 
-  const StepIcon = TUTORIAL_STEPS[currentStep].icon;
-
   if (isAuthenticated) return null;
 
   return (
     <div className="mobile-container bg-white flex flex-col items-center justify-between p-8 pt-20">
       <div className="w-full flex flex-col items-center space-y-12">
-        {/* Animated Icon Container */}
+        {/* Step Visual */}
         <div className={cn(
-          "h-32 w-32 rounded-[2.5rem] flex items-center justify-center text-white shadow-2xl transition-all duration-500 transform",
+          "h-48 w-48 rounded-[2.5rem] flex items-center justify-center text-white shadow-2xl transition-all duration-500 transform relative overflow-hidden",
           TUTORIAL_STEPS[currentStep].color
         )}>
-          <StepIcon className="h-16 w-16" />
+          <Image 
+            src={TUTORIAL_STEPS[currentStep].image} 
+            alt={TUTORIAL_STEPS[currentStep].title} 
+            fill 
+            className="object-cover"
+          />
         </div>
 
         {/* Content */}

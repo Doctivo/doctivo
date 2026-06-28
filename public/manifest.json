@@ -1,22 +1,20 @@
 {
   "name": "DOCTIVO",
   "short_name": "DOCTIVO",
-  "description": "Book Doctor Appointments with Live Queue Tracking",
-  "start_url": "/home",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#2563eb",
   "icons": [
     {
-      "src": "/562ca6c0e52e41681283626.png",
+      "src": "/562c71b5-1be4-415a-94dc-002e1889eb7c-8.jpg",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/jpeg"
     },
     {
-      "src": "/562ca6c0e52711681283626.png",
+      "src": "/562c71b5-1be4-415a-94dc-002e1889eb7c-8.jpg",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/jpeg"
     }
   ]
 }

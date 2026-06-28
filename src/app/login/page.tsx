@@ -10,6 +10,7 @@ import { loginWithoutOtp } from '@/app/actions/auth-actions';
 import { useToast } from '@/hooks/use-toast';
 import { useStore } from '@/lib/store';
 import { Patient } from '@/lib/types';
+import Image from 'next/image';
 
 export default function LoginPage() {
   const [phone, setPhone] = useState('');
@@ -85,8 +86,8 @@ export default function LoginPage() {
     <div className="mobile-container flex flex-col p-6 bg-[#F8FAFF] min-h-screen overflow-hidden">
       {/* Logo Section */}
       <div className="flex flex-col items-center mt-12 mb-16 space-y-3 w-full">
-        <div className="bg-primary h-16 w-16 rounded-[1.2rem] flex items-center justify-center shadow-lg shadow-primary/20">
-          <span className="text-white text-3xl font-black">D</span>
+        <div className="h-20 w-20 rounded-[1.5rem] flex items-center justify-center shadow-lg relative overflow-hidden">
+          <Image src="/562c71b5-1be4-415a-94dc-002e1889eb7c-8.jpg" alt="Logo" fill className="object-cover" />
         </div>
         <div className="text-center">
           <h1 className="text-2xl font-black tracking-tight text-slate-800">DOCTIVO</h1>
@@ -103,13 +104,12 @@ export default function LoginPage() {
               <div className="space-y-1 px-1">
                 <label className="text-[11px] font-black text-primary uppercase tracking-widest">Mobile Number</label>
                 
-                {/* Fixed Underlined input with better visibility */}
                 <div className="flex items-center border-b-2 border-slate-200 focus-within:border-primary transition-all py-3">
                   <span className="text-slate-400 font-bold text-xl mr-3">+91</span>
-                  <Input 
+                  <input 
                     type="tel" 
                     placeholder="00000 00000" 
-                    className="border-none shadow-none focus-visible:ring-0 h-10 text-xl font-black text-slate-800 placeholder:text-slate-200 p-0 bg-transparent"
+                    className="border-none shadow-none outline-none focus:ring-0 h-10 text-xl font-black text-slate-800 placeholder:text-slate-200 p-0 bg-transparent w-full"
                     value={phone || ''}
                     onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
                     onKeyDown={(e) => e.key === 'Enter' && handleLogin()}

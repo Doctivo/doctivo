@@ -13,8 +13,8 @@ export const metadata: Metadata = {
     title: 'DOCTIVO',
   },
   icons: {
-    icon: '/562ca6c0e52711681283626.png',
-    apple: '/562ca6c0e52e41681283626.png',
+    icon: '/562c71b5-1be4-415a-94dc-002e1889eb7c-8.jpg',
+    apple: '/562c71b5-1be4-415a-94dc-002e1889eb7c-8.jpg',
   },
   formatDetection: {
     telephone: false,
@@ -42,7 +42,6 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <link rel="apple-touch-icon" href="/562ca6c0e52e41681283626.png" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
