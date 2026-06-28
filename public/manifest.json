@@ -1,24 +1,26 @@
-
 {
   "name": "DOCTIVO",
   "short_name": "DOCTIVO",
   "description": "Book Doctor Appointments With Ease",
-  "start_url": "/?utm_source=pwa",
+  "start_url": "/home",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#2563eb",
   "icons": [
     {
-      "src": "/icons/icon-192x192.png?v=2",
+      "src": "/562c71b5-1be4-415a-94dc-002e1889eb7c-0?v=2",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     },
     {
-      "src": "/icons/icon-512x512.png?v=2",
+      "src": "/562c71b5-1be4-415a-94dc-002e1889eb7c-1?v=2",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
+    },
+    {
+      "src": "/562c71b5-1be4-415a-94dc-002e1889eb7c-4?v=2",
+      "sizes": "180x180",
+      "type": "image/png"
     }
   ]
 }

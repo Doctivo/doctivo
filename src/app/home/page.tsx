@@ -30,13 +30,33 @@ function HomeContent() {
     });
   };
 
-  if (!hasHydrated) return <div className="flex justify-center items-center min-h-screen"><Loader2 className="animate-spin" /></div>;
+  if (!hasHydrated) return <div className="flex justify-center items-center min-h-screen"><Loader2 className="animate-spin text-primary" /></div>;
 
   const quickActions = [
-    { label: 'Book Appointment', icon: Calendar, color: 'bg-blue-50 text-blue-600', onClick: () => router.push('/doctors') },
-    { label: 'My Appointment', icon: Stethoscope, color: 'bg-green-50 text-green-600', onClick: () => router.push('/appointments') },
-    { label: 'Physiotherapist', icon: Users, color: 'bg-purple-50 text-purple-600', onClick: () => router.push('/doctors?specialty=Orthopedic') },
-    { label: 'Add Patient', icon: UserPlus, color: 'bg-orange-50 text-orange-600', onClick: () => router.push('/patients') },
+    { 
+      label: 'Book Appointment', 
+      icon: Calendar, 
+      bgColor: 'bg-blue-600', 
+      onClick: () => router.push('/doctors') 
+    },
+    { 
+      label: 'My Appointment', 
+      icon: Stethoscope, 
+      bgColor: 'bg-emerald-600', 
+      onClick: () => router.push('/appointments') 
+    },
+    { 
+      label: 'Physiotherapist', 
+      icon: Users, 
+      bgColor: 'bg-indigo-600', 
+      onClick: () => router.push('/doctors?specialty=Orthopedic') 
+    },
+    { 
+      label: 'Add Patient', 
+      icon: UserPlus, 
+      bgColor: 'bg-orange-500', 
+      onClick: () => router.push('/patients') 
+    },
   ];
 
   return (
@@ -67,18 +87,23 @@ function HomeContent() {
       </div>
 
       <div className="p-6 pt-10 space-y-8">
-        {/* Quick Actions Grid - Only cards as requested */}
+        {/* Quick Actions Grid - Solid Color Cards */}
         <div className="grid grid-cols-2 gap-4">
           {quickActions.map((action, idx) => (
             <button 
               key={idx}
               onClick={action.onClick}
-              className="flex flex-col items-center justify-center p-8 rounded-[2.5rem] bg-white border-2 border-slate-50 shadow-sm hover:border-primary/20 transition-all group aspect-square"
+              className={cn(
+                "flex flex-col items-center justify-center p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/40 hover:opacity-95 active:scale-95 transition-all group aspect-square border-none",
+                action.bgColor
+              )}
             >
-              <div className={cn("h-16 w-16 rounded-[1.5rem] flex items-center justify-center mb-4 transition-transform group-active:scale-90", action.color)}>
-                <action.icon className="h-8 w-8" />
+              <div className="h-16 w-16 rounded-[1.5rem] bg-white/20 flex items-center justify-center mb-4 transition-transform group-active:scale-90">
+                <action.icon className="h-8 w-8 text-white" />
               </div>
-              <span className="text-[11px] font-black uppercase tracking-widest text-slate-700 text-center">{action.label}</span>
+              <span className="text-[11px] font-black uppercase tracking-widest text-white text-center leading-tight">
+                {action.label}
+              </span>
             </button>
           ))}
         </div>
