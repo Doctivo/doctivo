@@ -159,11 +159,12 @@ export async function initializeDatabase() {
       );
     `);
 
-    // Migration: Rename 'name' to 'full_name' in admins table if legacy column exists
+    // Migration: Rename 'name' to 'full_name' in admins table if legacy column exists AND target doesn't
     await query(`
       DO $$ 
       BEGIN 
-        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='admins' AND column_name='name') THEN 
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='admins' AND column_name='name') 
+           AND NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='admins' AND column_name='full_name') THEN 
           ALTER TABLE admins RENAME COLUMN name TO full_name; 
         END IF;
       END $$;
