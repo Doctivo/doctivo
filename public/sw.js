@@ -1,20 +1,12 @@
-const CACHE_NAME = 'doctivo-cache-v1';
-const urlsToCache = [
-  '/',
-  '/manifest.json',
-  '/562c71b5-1be4-415a-94dc-002e1889eb7c-8.jpg'
-];
-
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(urlsToCache))
-  );
+self.addEventListener('install', (event) => {
+  self.skipWaiting();
 });
 
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => response || fetch(event.request))
-  );
+self.addEventListener('activate', (event) => {
+  event.waitUntil(clients.claim());
+});
+
+self.addEventListener('fetch', (event) => {
+  // basic fetch handler to allow PWA installability
+  event.respondWith(fetch(event.request));
 });

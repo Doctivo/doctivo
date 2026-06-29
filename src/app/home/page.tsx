@@ -65,23 +65,23 @@ function HomeContent() {
 
   return (
     <div className="max-w-[480px] mx-auto pb-24 bg-white min-h-screen">
-      <div className="bg-white sticky top-0 z-20 border-b border-border">
+      <div className="bg-white sticky top-0 z-20 border-b border-slate-100">
         <div className="p-4 flex items-center gap-3 bg-white">
-          <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center text-primary font-bold overflow-hidden relative shadow-sm border border-border">
+          <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center text-primary font-bold overflow-hidden relative shadow-sm border border-slate-100">
             {user?.imageUrl ? <Image src={user.imageUrl} alt="Me" fill className="object-cover" /> : <span>{user?.name?.charAt(0) || 'U'}</span>}
           </div>
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input 
               placeholder="Search doctor, clinic..." 
-              className="pl-9 h-11 bg-slate-50 border-border rounded-xl font-medium" 
+              className="pl-9 h-11 bg-slate-50 border-none rounded-xl font-medium" 
               onClick={() => router.push('/doctors')}
               readOnly
             />
           </div>
           <button 
             onClick={handleNotificationClick}
-            className="p-2.5 bg-slate-50 rounded-xl text-slate-500 relative border border-border"
+            className="p-2.5 bg-slate-50 rounded-xl text-slate-500 relative border border-slate-100"
           >
             <Bell className="h-5 w-5" />
             <span className="absolute top-2 right-2 h-2 w-2 bg-red-500 rounded-full border-2 border-white"></span>
@@ -100,7 +100,7 @@ function HomeContent() {
                 action.bgColor
               )}
             >
-              <div className="mb-4 transition-transform group-active:scale-90">
+              <div className="mb-4 transition-transform group-active:scale-90 bg-none p-0">
                 <action.icon className={cn("h-10 w-10", action.textColor)} strokeWidth={2} />
               </div>
               <span className={cn("text-[10px] font-black uppercase tracking-widest text-center leading-tight px-2", action.textColor)}>
@@ -117,7 +117,7 @@ function HomeContent() {
 
 export default function HomePage() { 
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div className="flex justify-center items-center min-h-screen"><Loader2 className="animate-spin text-primary" /></div>}>
       <HomeContent />
     </Suspense>
   ); 
