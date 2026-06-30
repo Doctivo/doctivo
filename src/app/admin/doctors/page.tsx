@@ -33,7 +33,24 @@ export default function DoctorCatalog() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  const [newDoc, setNewDoc] = useState<any>({ name: '', email: '', phone: '', specialty: 'General', fees: '500', imageUrl: '' });
+  const [newDoc, setNewDoc] = useState<any>({ 
+    name: '', 
+    email: '', 
+    phone: '', 
+    specialty: 'General', 
+    qualification: '',
+    experience: '',
+    address: '',
+    fees: '500', 
+    startTime: '09:00',
+    endTime: '17:00',
+    slotDuration: '15',
+    allowed_free_attendants: '1',
+    total_purchased_slots: '0',
+    allow_revenue_deduction: false,
+    current_active_campaign: '',
+    imageUrl: '' 
+  });
   const [isSaving, setIsSaving] = useState(false);
 
   async function load() {
@@ -111,22 +128,85 @@ export default function DoctorCatalog() {
                       <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageSelect} />
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-6">
-                    <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400">Name</Label><Input className="h-12 bg-slate-50 border-none font-bold" value={newDoc.name} onChange={e => setNewDoc({...newDoc, name: e.target.value})} /></div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-slate-400">Specialty</Label>
-                      <Select value={newDoc.specialty} onValueChange={v => setNewDoc({...newDoc, specialty: v})}>
-                        <SelectTrigger className="h-12 bg-slate-50 border-none font-bold">
-                          <SelectValue placeholder="Select" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {DOCTOR_CATEGORIES.filter(c => c.id !== 'all').map(cat => (
-                            <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
+                   <div className="grid grid-cols-2 gap-6 pt-4">
+                     <div className="space-y-2">
+                       <Label className="text-[10px] font-black uppercase text-slate-400">Full Name</Label>
+                       <Input className="h-12 bg-slate-50 border-none font-bold" value={newDoc.name} onChange={e => setNewDoc({...newDoc, name: e.target.value})} />
+                     </div>
+                     <div className="space-y-2">
+                       <Label className="text-[10px] font-black uppercase text-slate-400">Specialty</Label>
+                       <Select value={newDoc.specialty} onValueChange={v => setNewDoc({...newDoc, specialty: v})}>
+                         <SelectTrigger className="h-12 bg-slate-50 border-none font-bold">
+                           <SelectValue placeholder="Select" />
+                         </SelectTrigger>
+                         <SelectContent>
+                           {DOCTOR_CATEGORIES.filter(c => c.id !== 'all').map(cat => (
+                             <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
+                           ))}
+                         </SelectContent>
+                       </Select>
+                     </div>
+                     <div className="space-y-2">
+                       <Label className="text-[10px] font-black uppercase text-slate-400">Phone Number</Label>
+                       <Input className="h-12 bg-slate-50 border-none font-bold" value={newDoc.phone} onChange={e => setNewDoc({...newDoc, phone: e.target.value})} />
+                     </div>
+                     <div className="space-y-2">
+                       <Label className="text-[10px] font-black uppercase text-slate-400">Email Address</Label>
+                       <Input className="h-12 bg-slate-50 border-none font-bold" value={newDoc.email} onChange={e => setNewDoc({...newDoc, email: e.target.value})} />
+                     </div>
+                     <div className="space-y-2">
+                       <Label className="text-[10px] font-black uppercase text-slate-400">Qualification</Label>
+                       <Input className="h-12 bg-slate-50 border-none font-bold" placeholder="MBBS, MD" value={newDoc.qualification} onChange={e => setNewDoc({...newDoc, qualification: e.target.value})} />
+                     </div>
+                     <div className="space-y-2">
+                       <Label className="text-[10px] font-black uppercase text-slate-400">Experience (Years)</Label>
+                       <Input type="number" className="h-12 bg-slate-50 border-none font-bold" value={newDoc.experience} onChange={e => setNewDoc({...newDoc, experience: e.target.value})} />
+                     </div>
+                     <div className="space-y-2">
+                       <Label className="text-[10px] font-black uppercase text-slate-400">Consultation Fee (₹)</Label>
+                       <Input type="number" className="h-12 bg-slate-50 border-none font-bold" value={newDoc.fees} onChange={e => setNewDoc({...newDoc, fees: e.target.value})} />
+                     </div>
+                     <div className="space-y-2">
+                       <Label className="text-[10px] font-black uppercase text-slate-400">Slot Duration (Mins)</Label>
+                       <Input type="number" className="h-12 bg-slate-50 border-none font-bold" value={newDoc.slotDuration} onChange={e => setNewDoc({...newDoc, slotDuration: e.target.value})} />
+                     </div>
+                     <div className="space-y-2">
+                       <Label className="text-[10px] font-black uppercase text-slate-400">Start Time</Label>
+                       <Input className="h-12 bg-slate-50 border-none font-bold" placeholder="09:00" value={newDoc.startTime} onChange={e => setNewDoc({...newDoc, startTime: e.target.value})} />
+                     </div>
+                     <div className="space-y-2">
+                       <Label className="text-[10px] font-black uppercase text-slate-400">End Time</Label>
+                       <Input className="h-12 bg-slate-50 border-none font-bold" placeholder="17:00" value={newDoc.endTime} onChange={e => setNewDoc({...newDoc, endTime: e.target.value})} />
+                     </div>
+                     <div className="space-y-2">
+                       <Label className="text-[10px] font-black uppercase text-slate-400">Free Attendant Slots</Label>
+                       <Input type="number" className="h-12 bg-slate-50 border-none font-bold" value={newDoc.allowed_free_attendants} onChange={e => setNewDoc({...newDoc, allowed_free_attendants: e.target.value})} />
+                     </div>
+                     <div className="space-y-2">
+                       <Label className="text-[10px] font-black uppercase text-slate-400">Purchased Slots</Label>
+                       <Input type="number" className="h-12 bg-slate-50 border-none font-bold" value={newDoc.total_purchased_slots} onChange={e => setNewDoc({...newDoc, total_purchased_slots: e.target.value})} />
+                     </div>
+                     <div className="space-y-2">
+                       <Label className="text-[10px] font-black uppercase text-slate-400">Allow Revenue Deduction</Label>
+                       <Select value={String(newDoc.allow_revenue_deduction)} onValueChange={v => setNewDoc({...newDoc, allow_revenue_deduction: v === 'true'})}>
+                         <SelectTrigger className="h-12 bg-slate-50 border-none font-bold">
+                           <SelectValue />
+                         </SelectTrigger>
+                         <SelectContent>
+                           <SelectItem value="true">Yes</SelectItem>
+                           <SelectItem value="false">No</SelectItem>
+                         </SelectContent>
+                       </Select>
+                     </div>
+                     <div className="space-y-2">
+                       <Label className="text-[10px] font-black uppercase text-slate-400">Active Campaign</Label>
+                       <Input className="h-12 bg-slate-50 border-none font-bold" placeholder="None" value={newDoc.current_active_campaign} onChange={e => setNewDoc({...newDoc, current_active_campaign: e.target.value})} />
+                     </div>
+                     <div className="col-span-2 space-y-2">
+                       <Label className="text-[10px] font-black uppercase text-slate-400">Clinic Address</Label>
+                       <Input className="h-12 bg-slate-50 border-none font-bold" value={newDoc.address} onChange={e => setNewDoc({...newDoc, address: e.target.value})} />
+                     </div>
+                   </div>
                </ScrollArea>
                <DialogFooter className="p-8 bg-slate-50 border-t"><Button onClick={handleAdd} className="w-full h-14 bg-blue-600 font-bold rounded-2xl">Create Doctor</Button></DialogFooter>
             </DialogContent>
@@ -177,7 +257,7 @@ export default function DoctorCatalog() {
                 </div>
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-slate-400">Name</Label>
+                    <Label className="text-[10px] font-black uppercase text-slate-400">Full Name</Label>
                     <Input className="h-12 bg-slate-50 border-none font-bold" value={editingDoc.full_name} onChange={e => setEditingDoc({...editingDoc, full_name: e.target.value})} />
                   </div>
                   <div className="space-y-2">
@@ -194,12 +274,64 @@ export default function DoctorCatalog() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-slate-400">Phone</Label>
+                    <Label className="text-[10px] font-black uppercase text-slate-400">Phone Number</Label>
                     <Input className="h-12 bg-slate-50 border-none font-bold" value={editingDoc.phone_number || ''} onChange={e => setEditingDoc({...editingDoc, phone_number: e.target.value})} />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-slate-400">Consultation Fee</Label>
-                    <Input type="number" className="h-12 bg-slate-50 border-none font-bold" value={editingDoc.consultation_fee} onChange={e => setEditingDoc({...editingDoc, consultation_fee: e.target.value})} />
+                    <Label className="text-[10px] font-black uppercase text-slate-400">Email Address</Label>
+                    <Input className="h-12 bg-slate-50 border-none font-bold" value={editingDoc.email || ''} onChange={e => setEditingDoc({...editingDoc, email: e.target.value})} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-slate-400">Qualification</Label>
+                    <Input className="h-12 bg-slate-50 border-none font-bold" value={editingDoc.qualification || ''} onChange={e => setEditingDoc({...editingDoc, qualification: e.target.value})} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-slate-400">Experience (Years)</Label>
+                    <Input type="number" className="h-12 bg-slate-50 border-none font-bold" value={editingDoc.experience_years || 0} onChange={e => setEditingDoc({...editingDoc, experience_years: parseInt(e.target.value || '0')})} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-slate-400">Consultation Fee (₹)</Label>
+                    <Input type="number" className="h-12 bg-slate-50 border-none font-bold" value={editingDoc.consultation_fee || 500} onChange={e => setEditingDoc({...editingDoc, consultation_fee: parseInt(e.target.value || '500')})} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-slate-400">Slot Duration (Mins)</Label>
+                    <Input type="number" className="h-12 bg-slate-50 border-none font-bold" value={editingDoc.slot_duration || 15} onChange={e => setEditingDoc({...editingDoc, slot_duration: parseInt(e.target.value || '15')})} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-slate-400">Start Time</Label>
+                    <Input className="h-12 bg-slate-50 border-none font-bold" value={editingDoc.start_time || '09:00'} onChange={e => setEditingDoc({...editingDoc, start_time: e.target.value})} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-slate-400">End Time</Label>
+                    <Input className="h-12 bg-slate-50 border-none font-bold" value={editingDoc.end_time || '17:00'} onChange={e => setEditingDoc({...editingDoc, end_time: e.target.value})} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-slate-400">Free Attendant Slots</Label>
+                    <Input type="number" className="h-12 bg-slate-50 border-none font-bold" value={editingDoc.allowed_free_attendants || 1} onChange={e => setEditingDoc({...editingDoc, allowed_free_attendants: parseInt(e.target.value || '1')})} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-slate-400">Purchased Slots</Label>
+                    <Input type="number" className="h-12 bg-slate-50 border-none font-bold" value={editingDoc.total_purchased_slots || 0} onChange={e => setEditingDoc({...editingDoc, total_purchased_slots: parseInt(e.target.value || '0')})} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-slate-400">Allow Revenue Deduction</Label>
+                    <Select value={String(!!editingDoc.allow_revenue_deduction)} onValueChange={v => setEditingDoc({...editingDoc, allow_revenue_deduction: v === 'true'})}>
+                      <SelectTrigger className="h-12 bg-slate-50 border-none font-bold">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="true">Yes</SelectItem>
+                        <SelectItem value="false">No</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-slate-400">Active Campaign</Label>
+                    <Input className="h-12 bg-slate-50 border-none font-bold" value={editingDoc.current_active_campaign || ''} onChange={e => setEditingDoc({...editingDoc, current_active_campaign: e.target.value})} />
+                  </div>
+                  <div className="col-span-2 space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-slate-400">Clinic Address</Label>
+                    <Input className="h-12 bg-slate-50 border-none font-bold" value={editingDoc.clinic_address || ''} onChange={e => setEditingDoc({...editingDoc, clinic_address: e.target.value})} />
                   </div>
                 </div>
               </div>

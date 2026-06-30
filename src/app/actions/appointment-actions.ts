@@ -145,3 +145,56 @@ export async function getAppointmentById(id: string) {
     return null;
   }
 }
+
+/**
+ * Fetches all appointments for a specific doctor on a selected date, sorted by token number.
+ */
+export async function getDoctorAppointmentsForDate(doctorId: string, dateStr: string) {
+  try {
+    const result = await query(
+      'SELECT * FROM appointments WHERE doctor_id = $1 AND appointment_date = $2 ORDER BY token_number ASC',
+      [doctorId, dateStr]
+    );
+
+    return result.rows.map((r: any) => {
+      const d = r.appointment_date instanceof Date ? r.appointment_date : new Date(r.appointment_date);
+      const localDate = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+
+      return {
+        id: r.appointment_id,
+        doctorId: r.doctor_id,
+        doctorName: r.doctor_name,
+        patientId: r.booked_by_user_id,
+        patientName: r.patient_name,
+        patientType: r.patient_type,
+        date: localDate,
+        time: r.appointment_time_slot,
+        current_symptoms: r.current_symptoms,
+        consultation_fee_amount: r.consultation_fee_amount,
+        payment_status: r.payment_status,
+        transaction_id: r.transaction_id,
+        status: r.status,
+        tokenNumber: r.token_number || 1
+      };
+    });
+  } catch (error) {
+    console.error('Error fetching doctor appointments for date:', error);
+    return [];
+  }
+}
+
+/**
+ * Updates the status of an appointment in the database.
+ */
+export async function updateAppointmentStatus(appointmentId: string, status: string) {
+  try {
+    await query(
+      'UPDATE appointments SET status = $1 WHERE appointment_id = $2',
+      [status, appointmentId]
+    );
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error updating appointment status:', error.message);
+    return { success: false, error: error.message };
+  }
+}

@@ -98,6 +98,26 @@ export default function OnboardingPage() {
       return;
     }
 
+    const ageVal = parseInt(formData.age || '0');
+    if (ageVal > 150) {
+      toast({ variant: 'destructive', title: 'Invalid Age', description: 'Age cannot be greater than 150 years.' });
+      return;
+    }
+
+    const heightVal = parseFloat(formData.height_cm || '0');
+    if (heightVal > 243) {
+      toast({ variant: 'destructive', title: 'Invalid Height', description: 'Height cannot be greater than 243 cm (8 feet).' });
+      return;
+    }
+
+    if (formData.weight_kg) {
+      const weightVal = parseFloat(formData.weight_kg || '0');
+      if (weightVal > 200) {
+        toast({ variant: 'destructive', title: 'Invalid Weight', description: 'Weight cannot be greater than 200 kg.' });
+        return;
+      }
+    }
+
     if (formData.pincode && formData.pincode.length !== 6) {
       toast({ variant: 'destructive', title: 'Invalid Pincode', description: 'Pincode must be exactly 6 digits.' });
       return;

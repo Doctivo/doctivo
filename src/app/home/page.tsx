@@ -24,10 +24,7 @@ function HomeContent() {
   }, [isAuthenticated, user, router, hasHydrated]);
 
   const handleNotificationClick = () => {
-    toast({
-      title: "Notifications",
-      description: "No new alerts at the moment.",
-    });
+    router.push('/notifications');
   };
 
   if (!hasHydrated) return <div className="flex justify-center items-center min-h-screen"><Loader2 className="animate-spin text-primary" /></div>;

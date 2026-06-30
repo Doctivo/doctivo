@@ -253,15 +253,18 @@ export async function addDoctorDirectly(doc: any) {
       INSERT INTO doctors (
         doctor_id, full_name, phone_number, email, specialty, 
         qualification, experience_years, clinic_address, is_approved, consultation_fee,
-        start_time, end_time, slot_duration, image_url, schedule, working_days
+        start_time, end_time, slot_duration, image_url, schedule, working_days,
+        allowed_free_attendants, total_purchased_slots, allow_revenue_deduction, current_active_campaign
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true, $9, $10, $11, $12, $13, $14, $15)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
       RETURNING *;
     `, [
       id, doc.name, doc.phone, doc.email, doc.specialty, doc.qualification, 
       parseInt(doc.experience || '0'), doc.address, parseInt(doc.fees || '500'),
       doc.startTime || '09:00', doc.endTime || '17:00', parseInt(doc.slotDuration || '15'),
-      doc.imageUrl || null, JSON.stringify(doc.schedule || {}), JSON.stringify(doc.working_days || [])
+      doc.imageUrl || null, JSON.stringify(doc.schedule || {}), JSON.stringify(doc.working_days || []),
+      parseInt(doc.allowed_free_attendants || '1'), parseInt(doc.total_purchased_slots || '0'),
+      !!doc.allow_revenue_deduction, doc.current_active_campaign || null
     ]);
     return { success: true, data: result.rows[0] };
   } catch (error: any) {
@@ -276,14 +279,18 @@ export async function updateDoctor(doctorId: string, doc: any) {
         full_name = $1, phone_number = $2, email = $3, specialty = $4,
         qualification = $5, experience_years = $6, clinic_address = $7,
         consultation_fee = $8, start_time = $9, end_time = $10,
-        slot_duration = $11, image_url = $12, schedule = $13, working_days = $14
-      WHERE doctor_id = $15
+        slot_duration = $11, image_url = $12, schedule = $13, working_days = $14,
+        allowed_free_attendants = $15, total_purchased_slots = $16,
+        allow_revenue_deduction = $17, current_active_campaign = $18
+      WHERE doctor_id = $19
     `, [
       doc.full_name, doc.phone_number, doc.email, doc.specialty,
       doc.qualification, parseInt(String(doc.experience_years || '0')), doc.clinic_address,
       parseInt(String(doc.consultation_fee || '500')), doc.start_time, doc.end_time,
       parseInt(String(doc.slot_duration || '15')), doc.image_url, JSON.stringify(doc.schedule || {}),
-      JSON.stringify(doc.working_days || []), doctorId
+      JSON.stringify(doc.working_days || []), parseInt(String(doc.allowed_free_attendants || '1')),
+      parseInt(String(doc.total_purchased_slots || '0')), !!doc.allow_revenue_deduction,
+      doc.current_active_campaign || null, doctorId
     ]);
     return { success: true };
   } catch (error: any) {
