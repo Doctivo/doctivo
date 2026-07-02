@@ -56,11 +56,6 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  // If authenticated as Patient, block standard browser access and redirect to /download-app
-  if (!isMobileApp) {
-    return NextResponse.redirect(new URL('/download-app', request.url));
-  }
-
   return NextResponse.next();
 }
 

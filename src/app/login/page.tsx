@@ -43,13 +43,10 @@ export default function LoginPage() {
   useEffect(() => {
     if (isAuthenticated) {
       if (user?.id) {
-        // Only auto-redirect patient if they are on a mobile device/app
-        if (isMobile) {
-          if (user.isProfileComplete) {
-            router.push('/home');
-          } else {
-            router.push('/onboarding');
-          }
+        if (user.isProfileComplete) {
+          router.push('/home');
+        } else {
+          router.push('/onboarding');
         }
       } else if (admin?.role === 'Attendant' || admin?.role === 'Doctor') {
         router.push('/doctor/dashboard');
@@ -57,7 +54,7 @@ export default function LoginPage() {
         router.push('/admin');
       }
     }
-  }, [isAuthenticated, user, admin, router, isMobile]);
+  }, [isAuthenticated, user, admin, router]);
 
   const handleLogin = async () => {
     if (!loginInput.trim()) return;
