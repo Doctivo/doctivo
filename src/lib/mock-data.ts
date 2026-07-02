@@ -8,6 +8,7 @@ export const DOCTOR_CATEGORIES = [
   { id: 'den', name: 'Dentist', icon: '🦷' },
   { id: 'eye', name: 'Eye Specialist', icon: '👁️' },
   { id: 'cardio', name: 'Cardiologist', icon: '❤️' },
+  { id: 'physio', name: 'Physiotherapist', icon: '💆' },
   { id: 'ortho', name: 'Orthopedic', icon: '🦴' },
 ];
 

@@ -42,7 +42,7 @@ export function middleware(request: NextRequest) {
   }
 
   // 5. Doctor & Attendant Routing Rule
-  if (pathname.startsWith('/doctor')) {
+  if (pathname.startsWith('/doctor/') || pathname === '/doctor') {
     // If not authenticated as Attendant or Doctor, redirect to /login
     if (sessionRole !== 'Attendant' && sessionRole !== 'Doctor') {
       return NextResponse.redirect(new URL('/login', request.url));

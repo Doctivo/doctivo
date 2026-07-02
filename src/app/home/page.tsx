@@ -49,7 +49,7 @@ function HomeContent() {
       icon: Users, 
       bgColor: 'bg-purple-100',
       textColor: 'text-purple-600',
-      onClick: () => router.push('/doctors?specialty=Orthopedic') 
+      onClick: () => router.push('/doctors?specialty=Physiotherapist') 
     },
     { 
       label: 'Add Patient', 
