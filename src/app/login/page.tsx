@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowRight, Loader2 } from 'lucide-react';
-import { unifiedLogin } from '@/app/actions/auth-actions';
+import { unifiedLogin, verifyAdminOtp } from '@/app/actions/auth-actions';
 import { useToast } from '@/hooks/use-toast';
 import { useStore } from '@/lib/store';
 import { Patient } from '@/lib/types';
@@ -28,6 +28,10 @@ export default function LoginPage() {
   const setIsAuthenticated = useStore(state => state.setIsAuthenticated);
 
   const [isMobile, setIsMobile] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpEmail, setOtpEmail] = useState('');
+  const [otpInput, setOtpInput] = useState('');
+  const [isVerifying, setIsVerifying] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -70,6 +74,14 @@ export default function LoginPage() {
       const result = await unifiedLogin(loginInput.trim());
       
       if (result.success) {
+        if (result.requireOtp) {
+          setOtpSent(true);
+          setOtpEmail(result.email || '');
+          toast({ title: 'Verification Email Sent', description: 'Enter the 6-digit OTP code sent to your email.' });
+          setIsLoading(false);
+          return;
+        }
+
         if (result.role === 'Patient') {
           // Clear admin state
           setAdminStore(null);
@@ -161,6 +173,42 @@ export default function LoginPage() {
     }
   };
 
+  const handleVerifyOtp = async () => {
+    if (otpInput.length !== 6) {
+      toast({ variant: 'destructive', title: 'Invalid Code', description: 'Please enter a 6-digit OTP code.' });
+      return;
+    }
+    setIsVerifying(true);
+    try {
+      const result = await verifyAdminOtp(otpEmail, otpInput);
+      if (result.success) {
+        setUserStore(null);
+        setPatientsStore([]);
+        setAppointmentsStore([]);
+
+        setAdminStore(result.user as any);
+        setIsAuthenticated(true);
+        toast({ title: 'Welcome Admin!', description: 'Dashboard loaded successfully.' });
+        
+        if (result.user.admin_id === 'SUPER-1') {
+          router.push('/admin');
+        } else {
+          router.push(`/admin/${result.user.admin_id}`);
+        }
+      } else {
+        toast({ variant: "destructive", title: "Verification Failed", description: result.error });
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Something went wrong",
+      });
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
   return (
     <div className="flex min-h-screen bg-slate-50">
       {/* Left side panel (Desktop Only) */}
@@ -208,58 +256,115 @@ export default function LoginPage() {
            </div>
 
            <div>
-             <h2 className="text-3xl font-black text-slate-800 mb-2 px-1 tracking-tight">Login</h2>
+             <h2 className="text-3xl font-black text-slate-800 mb-2 px-1 tracking-tight">
+               {otpSent ? "Verify OTP" : "Login"}
+             </h2>
              <p className="text-slate-400 font-bold text-xs uppercase tracking-widest px-1 mb-8">
-               {isMobile ? "Enter your mobile number to continue" : "Access your portal using credentials"}
+               {otpSent 
+                 ? `Enter the 6-digit code sent to ${otpEmail}`
+                 : (isMobile ? "Enter your mobile number to continue" : "Access your portal using credentials")}
              </p>
 
              <Card className="w-full bg-white border-none shadow-[0_4px_25px_rgba(0,0,0,0.03)] rounded-[2.5rem] overflow-hidden">
                <CardContent className="pt-10 px-8 pb-10 space-y-10">
-                 <div className="space-y-6">
-                   <div className="space-y-1 px-1">
-                     <label className="text-[10px] font-black text-primary uppercase tracking-widest">
-                       {isMobile ? "Mobile Number" : "Identifier"}
-                     </label>
-                     
-                     <div className="flex items-center border-b-2 border-slate-200 focus-within:border-primary transition-all py-3">
-                       {isMobile && (
-                         <span className="text-slate-400 font-bold text-xl mr-3">+91</span>
+                 {otpSent ? (
+                   /* OTP input interface */
+                   <div className="space-y-6">
+                     <div className="space-y-1 px-1">
+                       <label className="text-[10px] font-black text-primary uppercase tracking-widest">
+                         Verification Code
+                       </label>
+                       
+                       <div className="flex items-center border-b-2 border-slate-200 focus-within:border-primary transition-all py-3">
+                         <input 
+                           type="tel"
+                           maxLength={6}
+                           placeholder="000000" 
+                           className="border-none shadow-none outline-none focus:ring-0 h-10 text-2xl font-black text-slate-800 placeholder:text-slate-200 p-0 bg-transparent w-full text-center tracking-[0.5em]"
+                           value={otpInput || ''}
+                           onChange={(e) => setOtpInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                           onKeyDown={(e) => e.key === 'Enter' && handleVerifyOtp()}
+                         />
+                       </div>
+                     </div>
+
+                     <Button 
+                       className="w-full h-16 text-lg font-black bg-primary text-white rounded-full transition-all flex items-center justify-center gap-2 group shadow-xl shadow-primary/20 hover:bg-primary/90"
+                       onClick={handleVerifyOtp}
+                       disabled={otpInput.length !== 6 || isVerifying}
+                     >
+                       {isVerifying ? (
+                         <Loader2 className="h-6 w-6 animate-spin" />
+                       ) : (
+                         <>Verify Code <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" /></>
                        )}
-                       <input 
-                         type={isMobile ? "tel" : "text"}
-                         placeholder={isMobile ? "00000 00000" : "Mobile, email, or attendant ID"} 
-                         className="border-none shadow-none outline-none focus:ring-0 h-10 text-lg font-black text-slate-800 placeholder:text-slate-200 p-0 bg-transparent w-full"
-                         value={loginInput || ''}
-                         onChange={(e) => {
-                           const val = e.target.value;
-                           if (isMobile) {
-                             setLoginInput(val.replace(/\D/g, '').slice(0, 10));
-                           } else {
-                             if (/^\d+$/.test(val)) {
-                               setLoginInput(val.slice(0, 10));
-                             } else {
-                               setLoginInput(val);
-                             }
-                           }
-                         }}
-                         onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-                       />
+                     </Button>
+
+                     <div className="flex justify-between items-center px-1 pt-2 text-xs font-bold">
+                       <button 
+                         onClick={handleLogin}
+                         className="text-primary hover:underline"
+                       >
+                         Resend Code
+                       </button>
+                       <button 
+                         onClick={() => { setOtpSent(false); setOtpInput(''); }}
+                         className="text-slate-400 hover:text-slate-600"
+                       >
+                         Change Email
+                       </button>
                      </div>
                    </div>
-                 </div>
-      
-                 {(!isMobile || loginInput.length === 10) && (
-                   <Button 
-                     className="w-full h-16 text-lg font-black bg-primary text-white rounded-full transition-all flex items-center justify-center gap-2 group shadow-xl shadow-primary/20 hover:bg-primary/90"
-                     onClick={handleLogin}
-                     disabled={isLoading}
-                   >
-                     {isLoading ? (
-                       <Loader2 className="h-6 w-6 animate-spin" />
-                     ) : (
-                       <>Continue <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" /></>
+                 ) : (
+                   /* Standard login interface */
+                   <div className="space-y-10">
+                     <div className="space-y-6">
+                       <div className="space-y-1 px-1">
+                         <label className="text-[10px] font-black text-primary uppercase tracking-widest">
+                           {isMobile ? "Mobile Number" : "Identifier"}
+                         </label>
+                         
+                         <div className="flex items-center border-b-2 border-slate-200 focus-within:border-primary transition-all py-3">
+                           {isMobile && (
+                             <span className="text-slate-400 font-bold text-xl mr-3">+91</span>
+                           )}
+                           <input 
+                             type={isMobile ? "tel" : "text"}
+                             placeholder={isMobile ? "00000 00000" : "Mobile, email, or attendant ID"} 
+                             className="border-none shadow-none outline-none focus:ring-0 h-10 text-lg font-black text-slate-800 placeholder:text-slate-200 p-0 bg-transparent w-full"
+                             value={loginInput || ''}
+                             onChange={(e) => {
+                               const val = e.target.value;
+                               if (isMobile) {
+                                 setLoginInput(val.replace(/\D/g, '').slice(0, 10));
+                               } else {
+                                 if (/^\d+$/.test(val)) {
+                                   setLoginInput(val.slice(0, 10));
+                                 } else {
+                                   setLoginInput(val);
+                                 }
+                               }
+                             }}
+                             onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+                           />
+                         </div>
+                       </div>
+                     </div>
+          
+                     {(!isMobile || loginInput.length === 10) && (
+                       <Button 
+                         className="w-full h-16 text-lg font-black bg-primary text-white rounded-full transition-all flex items-center justify-center gap-2 group shadow-xl shadow-primary/20 hover:bg-primary/90"
+                         onClick={handleLogin}
+                         disabled={isLoading}
+                       >
+                         {isLoading ? (
+                           <Loader2 className="h-6 w-6 animate-spin" />
+                         ) : (
+                           <>Continue <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" /></>
+                         )}
+                       </Button>
                      )}
-                   </Button>
+                   </div>
                  )}
                </CardContent>
              </Card>

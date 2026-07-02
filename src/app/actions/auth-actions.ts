@@ -74,41 +74,24 @@ export async function unifiedLogin(identifier: string) {
 
     // 2. Check if Email (Admin or Doctor)
     if (identifier.includes('@')) {
-      // Check Super Admin bypass
-      if (identifier === 'admin@doctivo.com') {
-        const superAdminData = {
-          admin_id: 'SUPER-1',
-          full_name: 'Super Administrator',
-          email: 'admin@doctivo.com',
-          role: 'Super Admin',
-          permissions: {
-            dashboard: { view: true, view_financials: true },
-            doctors: { view: true, approve: true, suspend: true },
-            bookings: { view: true, modify: true },
-            payroll: { view: true, adjust: true, settle: true },
-            exporter: { allow_export: true }
-          }
-        };
-        cookieStore.set('session_role', 'Admin', { path: '/', maxAge: 30 * 60 }); // 30 minutes
-        cookieStore.set('session_id', 'SUPER-1', { path: '/', maxAge: 30 * 60 });
-        return {
-          success: true,
-          role: 'Admin',
-          user: superAdminData
-        };
-      }
+      const adminMails = (process.env.admin_mails || '').split(',').map(m => m.trim().toLowerCase());
+      const emailLower = identifier.trim().toLowerCase();
 
-      // Check Admin Database
-      const adminRes = await query('SELECT * FROM admins WHERE email = $1', [identifier]);
-      if (adminRes.rows.length > 0) {
-        const adminData = adminRes.rows[0];
-        cookieStore.set('session_role', 'Admin', { path: '/', maxAge: 30 * 60 }); // 30 minutes
-        cookieStore.set('session_id', adminData.admin_id || adminData.id || 'admin', { path: '/', maxAge: 30 * 60 });
-        return {
-          success: true,
-          role: 'Admin',
-          user: adminData
-        };
+      // Check if it exists in admins table or super admin email or admin_mails list
+      const adminRes = await query('SELECT 1 FROM admins WHERE email = $1', [emailLower]);
+      const isAdmin = adminRes.rows.length > 0 || emailLower === 'admin@doctivo.com' || adminMails.includes(emailLower);
+
+      if (isAdmin) {
+        const otpRes = await sendAdminOtp(emailLower);
+        if (otpRes.success) {
+          return {
+            success: true,
+            requireOtp: true,
+            email: emailLower
+          };
+        } else {
+          return { success: false, error: otpRes.error || 'Failed to send OTP' };
+        }
       }
 
       // Check Doctor Database
@@ -167,4 +150,130 @@ export async function logoutSession() {
   const cookieStore = await cookies();
   cookieStore.delete('session_role');
   cookieStore.delete('session_id');
+}
+
+export async function sendAdminOtp(email: string) {
+  try {
+    // 1. Purge expired OTPs
+    await query("DELETE FROM otp_verifications WHERE expires_at < NOW();", []);
+
+    // 2. Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // 3. Save to database (Expires in 10 minutes)
+    await query(`
+      INSERT INTO otp_verifications (email, otp, expires_at)
+      VALUES ($1, $2, NOW() + INTERVAL '10 minutes')
+      ON CONFLICT (email)
+      DO UPDATE SET otp = EXCLUDED.otp, expires_at = EXCLUDED.expires_at, created_at = CURRENT_TIMESTAMP;
+    `, [email, otp]);
+
+    // 4. Send email via Brevo API
+    const apiKey = process.env.Brevo_api_key;
+    if (!apiKey) {
+      console.error('Brevo API key is not configured in environment variables.');
+      return { success: false, error: 'Mail server configuration missing.' };
+    }
+
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'api-key': apiKey,
+        'content-type': 'application/json',
+        'accept': 'application/json'
+      },
+      body: JSON.stringify({
+        sender: { name: 'Doctivo Admin Portal', email: 'no-reply@doctivo.in' },
+        to: [{ email: email, name: 'Admin' }],
+        subject: 'Doctivo Admin Verification OTP',
+        htmlContent: `
+          <div style="font-family: Arial, sans-serif; padding: 30px; max-width: 500px; margin: auto; border: 1px solid #e2e8f0; border-radius: 20px; background-color: #ffffff; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+            <div style="text-align: center; margin-bottom: 20px;">
+              <h2 style="color: #2563eb; margin: 0; font-weight: 900; letter-spacing: -0.5px;">Doctivo Admin</h2>
+              <p style="color: #94a3b8; font-size: 10px; text-transform: uppercase; font-weight: bold; letter-spacing: 2px; margin-top: 4px;">Security Verification</p>
+            </div>
+            <p style="font-size: 14px; color: #334155; line-height: 1.6;">Hello Admin,</p>
+            <p style="font-size: 14px; color: #334155; line-height: 1.6;">Use the following One-Time Password (OTP) to complete your login session. This code is valid for 10 minutes:</p>
+            <div style="font-size: 32px; font-weight: 900; letter-spacing: 6px; padding: 20px; background-color: #f8fafc; text-align: center; color: #2563eb; border-radius: 16px; margin: 25px 0; border: 2px dashed #e2e8f0;">
+              \${otp}
+            </div>
+            <p style="color: #ef4444; font-size: 11px; font-weight: bold; text-align: center; margin-bottom: 0;">Do not share this OTP with anyone for security reasons.</p>
+          </div>
+        `
+      })
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error('Brevo API request failed:', errText);
+      return { success: false, error: 'Failed to deliver verification email.' };
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('sendAdminOtp Error:', error.message);
+    return { success: false, error: 'Mail delivery failed. Please check connection.' };
+  }
+}
+
+export async function verifyAdminOtp(email: string, otp: string) {
+  const cookieStore = await cookies();
+  try {
+    // 1. Purge expired OTPs
+    await query("DELETE FROM otp_verifications WHERE expires_at < NOW();", []);
+
+    // 2. Validate OTP
+    const res = await query("SELECT * FROM otp_verifications WHERE email = $1 AND otp = $2 AND expires_at >= NOW();", [email, otp]);
+    if (res.rows.length === 0) {
+      return { success: false, error: 'Invalid or expired OTP code' };
+    }
+
+    // 3. Delete verified OTP record
+    await query("DELETE FROM otp_verifications WHERE email = $1;", [email]);
+
+    // 4. Authenticate admin
+    const emailLower = email.trim().toLowerCase();
+    
+    // Super Admin check
+    if (emailLower === 'admin@doctivo.com') {
+      const superAdminData = {
+        admin_id: 'SUPER-1',
+        full_name: 'Super Administrator',
+        email: 'admin@doctivo.com',
+        role: 'Super Admin',
+        permissions: {
+          dashboard: { view: true, view_financials: true },
+          doctors: { view: true, approve: true, suspend: true },
+          bookings: { view: true, modify: true },
+          payroll: { view: true, adjust: true, settle: true },
+          exporter: { allow_export: true }
+        }
+      };
+      cookieStore.set('session_role', 'Admin', { path: '/', maxAge: 30 * 60 });
+      cookieStore.set('session_id', 'SUPER-1', { path: '/', maxAge: 30 * 60 });
+      return {
+        success: true,
+        role: 'Admin',
+        user: superAdminData
+      };
+    }
+
+    // Sub-Admin Database lookup
+    const adminRes = await query('SELECT * FROM admins WHERE email = $1', [emailLower]);
+    if (adminRes.rows.length > 0) {
+      const adminData = adminRes.rows[0];
+      cookieStore.set('session_role', 'Admin', { path: '/', maxAge: 30 * 60 });
+      cookieStore.set('session_id', adminData.admin_id || adminData.id || 'admin', { path: '/', maxAge: 30 * 60 });
+      return {
+        success: true,
+        role: 'Admin',
+        user: adminData
+      };
+    }
+
+    return { success: false, error: 'Admin account record not found in database.' };
+  } catch (error: any) {
+    console.error('verifyAdminOtp Error:', error.message);
+    return { success: false, error: 'Database verification failed.' };
+  }
 }

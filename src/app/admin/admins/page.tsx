@@ -138,13 +138,17 @@ export default function AdminManagement() {
   };
 
   const togglePermission = (category: string, action: string) => {
-    setPermissions(prev => ({
-      ...prev,
-      [category]: {
-        ...prev[category as keyof typeof prev],
-        [action]: !prev[category as keyof typeof prev][action as keyof any]
-      }
-    }));
+    setPermissions(prev => {
+      const catKey = category as keyof typeof prev;
+      const catObj = prev[catKey] as any;
+      return {
+        ...prev,
+        [category]: {
+          ...catObj,
+          [action]: !catObj?.[action]
+        }
+      };
+    });
   };
 
   const handleCreate = async () => {
