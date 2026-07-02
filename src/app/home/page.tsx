@@ -1,14 +1,15 @@
 'use client';
 
-import { Suspense, useEffect } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Bell, Search, Loader2, Stethoscope, Calendar, Users, UserPlus } from 'lucide-react';
+import { Bell, Search, Loader2, Stethoscope, Calendar, Users, UserPlus, Home as HomeIcon, Building2, ChevronRight } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { Input } from '@/components/ui/input';
 import { BottomNav } from '@/components/BottomNav';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 function HomeContent() {
   const router = useRouter();
@@ -16,6 +17,7 @@ function HomeContent() {
   const isAuthenticated = useStore(state => state.isAuthenticated);
   const hasHydrated = useStore(state => state._hasHydrated);
   const { toast } = useToast();
+  const [isPhysioOpen, setIsPhysioOpen] = useState(false);
   
   useEffect(() => {
     if (!hasHydrated) return;
@@ -49,7 +51,7 @@ function HomeContent() {
       icon: Users, 
       bgColor: 'bg-purple-100',
       textColor: 'text-purple-600',
-      onClick: () => router.push('/doctors?specialty=Physiotherapist') 
+      onClick: () => setIsPhysioOpen(true) 
     },
     { 
       label: 'Add Patient', 
@@ -107,6 +109,50 @@ function HomeContent() {
           ))}
         </div>
       </div>
+      <Dialog open={isPhysioOpen} onOpenChange={setIsPhysioOpen}>
+        <DialogContent className="max-w-[90vw] sm:max-w-md rounded-[2.5rem] p-6 border-none shadow-2xl bg-white">
+          <DialogHeader className="text-center pb-4 border-b border-slate-50">
+            <DialogTitle className="text-xl font-black text-slate-800">Physiotherapy Visit</DialogTitle>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Select Consultation Mode</p>
+          </DialogHeader>
+
+          <div className="space-y-4 py-6">
+            <button 
+              onClick={() => {
+                setIsPhysioOpen(false);
+                router.push('/doctors?specialty=Physiotherapist&mode=Clinic');
+              }}
+              className="w-full p-5 rounded-[2rem] border-2 border-slate-100 hover:border-primary bg-white flex items-center group active:scale-98 transition-all"
+            >
+              <div className="h-14 w-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                <Building2 className="h-7 w-7" />
+              </div>
+              <div className="ml-5 text-left flex-1">
+                <p className="text-base font-black text-slate-800 leading-none">Visit Clinic</p>
+                <p className="text-xs text-slate-400 font-bold mt-1.5 uppercase tracking-tight">क्लिनिक पर जाएँ</p>
+              </div>
+              <ChevronRight className="h-5 w-5 text-slate-300 group-hover:text-primary transition-colors" />
+            </button>
+
+            <button 
+              onClick={() => {
+                setIsPhysioOpen(false);
+                router.push('/doctors?specialty=Physiotherapist&mode=Home');
+              }}
+              className="w-full p-5 rounded-[2rem] border-2 border-slate-100 hover:border-primary bg-white flex items-center group active:scale-98 transition-all"
+            >
+              <div className="h-14 w-14 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                <HomeIcon className="h-7 w-7" />
+              </div>
+              <div className="ml-5 text-left flex-1">
+                <p className="text-base font-black text-slate-800 leading-none">Home Visit</p>
+                <p className="text-xs text-slate-400 font-bold mt-1.5 uppercase tracking-tight">घर पर बुलाएँ</p>
+              </div>
+              <ChevronRight className="h-5 w-5 text-slate-300 group-hover:text-primary transition-colors" />
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
       <BottomNav />
     </div>
   );

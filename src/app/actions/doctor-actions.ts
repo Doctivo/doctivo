@@ -33,9 +33,10 @@ export async function getDoctors(specialty?: string) {
       imageUrl: row.image_url || '',
       startTime: row.start_time || '09:00',
       endTime: row.end_time || '17:00',
-      slot_duration: row.slot_duration || 15,
+      slotDuration: row.slot_duration || 15,
       availableSlots: [], 
-      categoryIcon: '🏥'
+      categoryIcon: '🏥',
+      reasonsForVisit: row.reasons_for_visit ? JSON.parse(row.reasons_for_visit) : []
     })) as Doctor[];
   } catch (error) {
     console.error('Error fetching doctors:', error);
@@ -68,7 +69,8 @@ export async function getDoctorById(id: string) {
       endTime: row.end_time || '17:00',
       slotDuration: row.slot_duration || 15,
       availableSlots: [],
-      categoryIcon: '🏥'
+      categoryIcon: '🏥',
+      reasonsForVisit: row.reasons_for_visit ? JSON.parse(row.reasons_for_visit) : []
     } as Doctor;
   } catch (error) {
     console.error('Error fetching doctor by id:', error);

@@ -1,10 +1,21 @@
 'use client';
 
-import { Smartphone, ShieldCheck, Zap, BellRing, ArrowRight } from 'lucide-react';
+import { Smartphone, ShieldCheck, Zap, BellRing, ArrowRight, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 export default function DownloadAppPage() {
+  const router = useRouter();
+  const [isApp, setIsApp] = useState(false);
+
+  useEffect(() => {
+    if (typeof navigator !== 'undefined') {
+      setIsApp(navigator.userAgent.includes('DoctivoApp'));
+    }
+  }, []);
+
   const features = [
     {
       icon: ShieldCheck,
@@ -37,8 +48,7 @@ export default function DownloadAppPage() {
           </div>
           <div>
             <h1 className="text-3xl font-black tracking-tight text-slate-800 leading-tight">
-              Doctivo App <br />
-              <span className="text-primary">Available Now!</span>
+              {isApp ? "Doctivo App Active" : "Doctivo App Available Now!"}
             </h1>
             <p className="text-xs font-black text-slate-400 uppercase tracking-widest mt-2">
               Healthcare Simplified
@@ -49,7 +59,9 @@ export default function DownloadAppPage() {
         {/* Value Proposition */}
         <div className="w-full space-y-8">
           <p className="text-slate-500 text-sm font-bold leading-relaxed max-w-xs mx-auto">
-            To book appointments, track live queue status, and receive real-time updates, please install our official app.
+            {isApp 
+              ? "You are running the official Doctivo App. Enjoy real-time tracking and secure healthcare management!"
+              : "To book appointments, track live queue status, and receive real-time updates, please install our official app."}
           </p>
 
           <div className="grid grid-cols-1 gap-3 text-left">
@@ -71,14 +83,24 @@ export default function DownloadAppPage() {
       </div>
 
       {/* Action Footer */}
-      <div className="pb-8 pt-10 space-y-6">
-        <Button 
-          className="w-full h-16 bg-primary hover:bg-primary/95 text-white font-black text-lg rounded-2xl shadow-xl shadow-primary/20 flex items-center justify-center gap-3 group transition-all duration-300"
-          onClick={() => window.open('https://play.google.com/store', '_blank')}
-        >
-          Download on Play Store
-          <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-        </Button>
+      <div className="pb-8 pt-10 space-y-4">
+        {isApp ? (
+          <Button 
+            className="w-full h-16 bg-slate-900 hover:bg-slate-800 text-white font-black text-lg rounded-2xl shadow-xl flex items-center justify-center gap-3 transition-all duration-300"
+            onClick={() => router.push('/home')}
+          >
+            <Home className="h-5 w-5" />
+            Open Home Screen
+          </Button>
+        ) : (
+          <Button 
+            className="w-full h-16 bg-primary hover:bg-primary/95 text-white font-black text-lg rounded-2xl shadow-xl shadow-primary/20 flex items-center justify-center gap-3 group transition-all duration-300"
+            onClick={() => window.open('https://play.google.com/store', '_blank')}
+          >
+            Download on Play Store
+            <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+          </Button>
+        )}
         
         <p className="text-[10px] text-center text-slate-400 font-black uppercase tracking-[0.25em]">
           Optimized for Android & iOS

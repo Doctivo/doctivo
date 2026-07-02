@@ -71,6 +71,7 @@ function DoctorsContent() {
               className="pl-9 h-11 bg-slate-50 border-border rounded-xl font-medium" 
               value={search} 
               onChange={(e) => setSearch(e.target.value)} 
+              autoFocus
             />
           </div>
         </div>

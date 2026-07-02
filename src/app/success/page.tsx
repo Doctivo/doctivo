@@ -45,8 +45,30 @@ function SuccessContent() {
     load();
   }, [id, storeAppointments]);
 
+
+
+  const getShareText = () => {
+    if (!appointment) return '';
+    return `🏥 *Doctivo Appointment Confirmation*\n\n` +
+      `*Token Number:* #${appointment.tokenNumber || 1}\n` +
+      `*Booking ID:* #${appointment.id.slice(-6)}\n` +
+      `*Patient Name:* ${appointment.patientName}\n` +
+      `*Doctor:* ${appointment.doctorName}\n` +
+      `*Date:* ${displayDate}\n` +
+      `*Time Slot:* ${appointment.time}\n\n` +
+      `Track your live queue here: ${window.location.origin}/appointments`;
+  };
+
   const handleDownloadPDF = async () => {
     if (!receiptRef.current || !appointment) return;
+    
+    if (typeof window !== 'undefined' && (window as any).DoctivoAppChannel) {
+      (window as any).DoctivoAppChannel.postMessage(JSON.stringify({
+        action: 'share',
+        text: getShareText()
+      }));
+      return;
+    }
     
     setIsDownloading(true);
     try {
@@ -90,11 +112,28 @@ function SuccessContent() {
   };
 
   const handlePrint = () => {
+    if (typeof window !== 'undefined' && (window as any).DoctivoAppChannel) {
+      (window as any).DoctivoAppChannel.postMessage(JSON.stringify({
+        action: 'share',
+        text: getShareText()
+      }));
+      return;
+    }
     window.print();
   };
 
   const handleShare = async () => {
     if (!appointment) return;
+    const shareText = getShareText();
+    
+    if (typeof window !== 'undefined' && (window as any).DoctivoAppChannel) {
+      (window as any).DoctivoAppChannel.postMessage(JSON.stringify({
+        action: 'share',
+        text: shareText
+      }));
+      return;
+    }
+
     const shareData = {
       title: 'Doctivo Appointment Confirmation',
       text: `My appointment with ${appointment.doctorName} is confirmed! Token: #${appointment.tokenNumber}. Booking ID: ${appointment.id}`,
@@ -152,8 +191,8 @@ function SuccessContent() {
     );
   }
 
-  const displayDate = appointment.date instanceof Date 
-    ? appointment.date.toLocaleDateString() 
+  const displayDate = typeof appointment.date === 'object' && appointment.date 
+    ? (appointment.date as any).toLocaleDateString() 
     : String(appointment.date);
 
   return (

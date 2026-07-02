@@ -48,10 +48,16 @@ export default function LoginPage() {
         } else {
           router.push('/onboarding');
         }
-      } else if (admin?.role === 'Attendant' || admin?.role === 'Doctor') {
-        router.push('/doctor/dashboard');
+      } else if (admin?.role === 'Attendant') {
+        router.push(`/attendant/${admin.admin_id}`);
+      } else if (admin?.role === 'Doctor') {
+        router.push(`/doctor/${admin.admin_id}`);
       } else if (admin) {
-        router.push('/admin');
+        if (admin.admin_id === 'SUPER-1') {
+          router.push('/admin');
+        } else {
+          router.push(`/admin/${admin.admin_id}`);
+        }
       }
     }
   }, [isAuthenticated, user, admin, router]);
@@ -102,7 +108,12 @@ export default function LoginPage() {
           setAdminStore(result.user as any);
           setIsAuthenticated(true);
           toast({ title: 'Welcome Admin!', description: 'Dashboard loaded successfully.' });
-          router.push('/admin');
+          
+          if (result.user.admin_id === 'SUPER-1') {
+            router.push('/admin');
+          } else {
+            router.push(`/admin/${result.user.admin_id}`);
+          }
         } else if (result.role === 'Doctor') {
           // Clear patient state
           setUserStore(null);
@@ -118,7 +129,7 @@ export default function LoginPage() {
           });
           setIsAuthenticated(true);
           toast({ title: 'Welcome Doctor!', description: 'Your Clinic Dashboard loaded successfully.' });
-          router.push('/doctor/dashboard');
+          router.push(`/doctor/${result.user.doctor_id}`);
         } else if (result.role === 'Attendant') {
           // Clear patient state
           setUserStore(null);
@@ -134,7 +145,7 @@ export default function LoginPage() {
           });
           setIsAuthenticated(true);
           toast({ title: 'Welcome Attendant!', description: 'Queue Dashboard loaded successfully.' });
-          router.push('/doctor/dashboard');
+          router.push(`/attendant/${result.user.attendant_id}`);
         }
       } else {
         toast({ variant: "destructive", title: "Login Failed", description: result.error });
@@ -151,77 +162,116 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="mobile-container flex flex-col p-6 bg-[#F8FAFF] min-h-screen overflow-hidden">
-      {/* Logo Section (Using high-quality Image 8) */}
-      <div className="flex flex-col items-center mt-12 mb-16 space-y-3 w-full">
-        <div className="h-20 w-20 rounded-[1.5rem] flex items-center justify-center shadow-lg relative overflow-hidden">
-          <Image src="/562c71b5-1be4-415a-94dc-002e1889eb7c-8.jpg" alt="Logo" fill className="object-cover" priority />
+    <div className="flex min-h-screen bg-slate-50">
+      {/* Left side panel (Desktop Only) */}
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-tr from-blue-600 via-blue-700 to-indigo-900 p-16 flex-col justify-between text-white relative overflow-hidden">
+        {/* Background pattern */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.1),transparent)] pointer-events-none" />
+        
+        <div className="flex items-center space-x-4 z-10">
+          <div className="h-12 w-12 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20">
+            <span className="font-black text-2xl tracking-tighter text-white">D</span>
+          </div>
+          <div>
+            <h1 className="text-2xl font-black tracking-wider text-white">DOCTIVO</h1>
+            <p className="text-[9px] text-white/50 font-bold uppercase tracking-widest leading-none">Healthcare Simplified</p>
+          </div>
         </div>
-        <div className="text-center">
-          <h1 className="text-2xl font-black tracking-tight text-slate-800">DOCTIVO</h1>
-          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em]">Healthcare Simplified</p>
+
+        <div className="space-y-6 z-10 max-w-md">
+          <h2 className="text-4xl lg:text-5xl font-black leading-tight tracking-tight">
+            Experience Premium Medical Management.
+          </h2>
+          <p className="text-white/70 font-medium leading-relaxed">
+            Track live OPD queue status, manage family health records, and schedule consultations in seconds.
+          </p>
+        </div>
+
+        <div className="text-xs font-bold text-white/40 z-10">
+          © {new Date().getFullYear()} Doctivo Inc. All rights reserved.
         </div>
       </div>
 
-      <div className="flex-1">
-        <h2 className="text-2xl font-bold text-slate-700 mb-6 px-2">Login</h2>
+      {/* Right side login form (Mobile & Desktop) */}
+      <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-6 bg-[#F8FAFF]">
+        <div className="w-full max-w-[440px] flex flex-col min-h-[85vh] lg:min-h-0 justify-between lg:justify-center lg:space-y-10 py-8">
+          
+          {/* Logo (Shown on mobile, hidden on desktop) */}
+          <div className="flex flex-col items-center space-y-3 lg:hidden">
+            <div className="h-16 w-16 rounded-2xl flex items-center justify-center shadow-lg relative overflow-hidden">
+              <Image src="/562c71b5-1be4-415a-94dc-002e1889eb7c-8.jpg" alt="Logo" fill className="object-cover" priority />
+             </div>
+             <div className="text-center">
+               <h1 className="text-xl font-black tracking-tight text-slate-800">DOCTIVO</h1>
+               <p className="text-[9px] text-slate-400 font-bold uppercase tracking-[0.2em]">Healthcare Simplified</p>
+             </div>
+           </div>
 
-        <Card className="w-full bg-white border-none shadow-[0_4px_25px_rgba(0,0,0,0.05)] rounded-[2rem] overflow-hidden">
-          <CardContent className="pt-10 px-8 pb-10 space-y-10">
-            <div className="space-y-6">
-              <div className="space-y-1 px-1">
-                <label className="text-[11px] font-black text-primary uppercase tracking-widest">
-                  {isMobile ? "Mobile Number" : "Identifier"}
-                </label>
-                
-                <div className="flex items-center border-b-2 border-slate-200 focus-within:border-primary transition-all py-3">
-                  {isMobile && (
-                    <span className="text-slate-400 font-bold text-xl mr-3">+91</span>
-                  )}
-                  <input 
-                    type={isMobile ? "tel" : "text"}
-                    placeholder={isMobile ? "00000 00000" : "Mobile, email, or attendant ID"} 
-                    className="border-none shadow-none outline-none focus:ring-0 h-10 text-lg font-black text-slate-800 placeholder:text-slate-200 p-0 bg-transparent w-full"
-                    value={loginInput || ''}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      if (isMobile) {
-                        setLoginInput(val.replace(/\D/g, '').slice(0, 10));
-                      } else {
-                        // On desktop, if input consists only of digits, restrict to 10
-                        if (/^\d+$/.test(val)) {
-                          setLoginInput(val.slice(0, 10));
-                        } else {
-                          setLoginInput(val);
-                        }
-                      }
-                    }}
-                    onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-                  />
-                </div>
-              </div>
-            </div>
- 
-            <Button 
-              className="w-full h-16 text-lg font-black bg-primary text-white rounded-full transition-all flex items-center justify-center gap-2 group shadow-xl shadow-primary/20 hover:bg-primary/90"
-              onClick={handleLogin}
-              disabled={!loginInput.trim() || isLoading}
-            >
-              {isLoading ? (
-                <Loader2 className="h-6 w-6 animate-spin" />
-              ) : (
-                <>Continue <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" /></>
-              )}
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+           <div>
+             <h2 className="text-3xl font-black text-slate-800 mb-2 px-1 tracking-tight">Login</h2>
+             <p className="text-slate-400 font-bold text-xs uppercase tracking-widest px-1 mb-8">
+               {isMobile ? "Enter your mobile number to continue" : "Access your portal using credentials"}
+             </p>
 
-      <div className="pb-10 text-center px-6">
-        <p className="text-[10px] text-slate-400 font-bold leading-relaxed uppercase tracking-wider">
-          Secure, direct access to <br/> Gorakhpur's top specialists.
-        </p>
-      </div>
-    </div>
-  );
+             <Card className="w-full bg-white border-none shadow-[0_4px_25px_rgba(0,0,0,0.03)] rounded-[2.5rem] overflow-hidden">
+               <CardContent className="pt-10 px-8 pb-10 space-y-10">
+                 <div className="space-y-6">
+                   <div className="space-y-1 px-1">
+                     <label className="text-[10px] font-black text-primary uppercase tracking-widest">
+                       {isMobile ? "Mobile Number" : "Identifier"}
+                     </label>
+                     
+                     <div className="flex items-center border-b-2 border-slate-200 focus-within:border-primary transition-all py-3">
+                       {isMobile && (
+                         <span className="text-slate-400 font-bold text-xl mr-3">+91</span>
+                       )}
+                       <input 
+                         type={isMobile ? "tel" : "text"}
+                         placeholder={isMobile ? "00000 00000" : "Mobile, email, or attendant ID"} 
+                         className="border-none shadow-none outline-none focus:ring-0 h-10 text-lg font-black text-slate-800 placeholder:text-slate-200 p-0 bg-transparent w-full"
+                         value={loginInput || ''}
+                         onChange={(e) => {
+                           const val = e.target.value;
+                           if (isMobile) {
+                             setLoginInput(val.replace(/\D/g, '').slice(0, 10));
+                           } else {
+                             if (/^\d+$/.test(val)) {
+                               setLoginInput(val.slice(0, 10));
+                             } else {
+                               setLoginInput(val);
+                             }
+                           }
+                         }}
+                         onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+                       />
+                     </div>
+                   </div>
+                 </div>
+      
+                 {(!isMobile || loginInput.length === 10) && (
+                   <Button 
+                     className="w-full h-16 text-lg font-black bg-primary text-white rounded-full transition-all flex items-center justify-center gap-2 group shadow-xl shadow-primary/20 hover:bg-primary/90"
+                     onClick={handleLogin}
+                     disabled={isLoading}
+                   >
+                     {isLoading ? (
+                       <Loader2 className="h-6 w-6 animate-spin" />
+                     ) : (
+                       <>Continue <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" /></>
+                     )}
+                   </Button>
+                 )}
+               </CardContent>
+             </Card>
+           </div>
+
+           {/* Mobile Footer */}
+           <div className="text-center text-[10px] text-slate-400 font-medium lg:hidden">
+             © {new Date().getFullYear()} Doctivo Inc.
+           </div>
+
+         </div>
+       </div>
+     </div>
+   );
 }

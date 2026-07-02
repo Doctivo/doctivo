@@ -1,9 +1,9 @@
 'use client';
 
-import { use, useState, useMemo, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { use, useState, useMemo, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
-import { ChevronLeft, Star, MapPin, Loader2, Plus, CheckCircle2, Calendar as CalendarIcon, Clock as ClockIcon, MessageSquare, AlertCircle } from 'lucide-react';
+import { ChevronLeft, Star, MapPin, Loader2, Plus, CheckCircle2, Calendar as CalendarIcon, Clock as ClockIcon, MessageSquare, AlertCircle, Check } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { createAppointment, getBookedSlots } from '@/app/actions/appointment-actions';
@@ -35,7 +35,7 @@ const generateTimeSlots = (start: string, end: string, duration: number) => {
   return slots;
 };
 
-export default function BookingPage({ params }: { params: Promise<{ id: string }> }) {
+function BookingContent({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const { id } = use(params);
   const user = useStore(state => state.user);
@@ -51,9 +51,28 @@ export default function BookingPage({ params }: { params: Promise<{ id: string }
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
   const [selectedSlot, setSelectedSlot] = useState('');
   const [symptoms, setSymptoms] = useState('');
+  const [selectedReasons, setSelectedReasons] = useState<string[]>([]);
+  const [showCustomSymptom, setShowCustomSymptom] = useState(false);
   const [isBooking, setIsBooking] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
   const [showMockAlert, setShowMockAlert] = useState(false);
+
+  const searchParams = useSearchParams();
+  const mode = searchParams.get('mode');
+
+  const doctorReasons = useMemo(() => {
+    const list = [...(doc?.reasonsForVisit || [])];
+    if (mode === 'Home' && !list.includes('Home Visit Request')) {
+      list.unshift('Home Visit Request');
+    }
+    return list;
+  }, [doc?.reasonsForVisit, mode]);
+
+  useEffect(() => {
+    if (mode === 'Home') {
+      setSelectedReasons(['Home Visit Request']);
+    }
+  }, [mode]);
   
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isSavingPatient, setIsSavingPatient] = useState(false);
@@ -179,7 +198,10 @@ export default function BookingPage({ params }: { params: Promise<{ id: string }
       patientType: (patient?.id === user.id || patient?.relation === 'Self') ? 'Self' as const : 'Family_Member' as const,
       date: selectedDate,
       time: selectedSlot,
-      current_symptoms: symptoms,
+      current_symptoms: [
+        ...selectedReasons,
+        ...(showCustomSymptom && symptoms.trim() ? [symptoms.trim()] : (!doc?.reasonsForVisit || doc.reasonsForVisit.length === 0 ? [symptoms.trim()] : []))
+      ].join(', '),
       consultation_fee_amount: doc.fees,
       payment_status: 'Paid' as const,
       transaction_id: txnId,
@@ -367,15 +389,79 @@ export default function BookingPage({ params }: { params: Promise<{ id: string }
 
         <div className="space-y-4">
           <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 px-1">Reason for Visit</h3>
-          <div className="relative">
-            <MessageSquare className="absolute left-4 top-4 h-5 w-5 text-slate-400" />
-            <Textarea 
-              placeholder="Briefly describe your current symptoms..." 
-              className="min-h-[100px] rounded-2xl bg-white border-2 border-border p-5 pl-12 font-bold placeholder:text-slate-300"
-              value={symptoms || ''}
-              onChange={e => setSymptoms(e.target.value)}
-            />
-          </div>
+          
+          {doctorReasons && doctorReasons.length > 0 ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-white p-5 rounded-[2rem] border-2 border-border shadow-sm">
+                {doctorReasons.map((reason) => {
+                  const isChecked = selectedReasons.includes(reason);
+                  return (
+                    <div 
+                      key={reason} 
+                      onClick={() => {
+                        if (isChecked) {
+                          setSelectedReasons(selectedReasons.filter(r => r !== reason));
+                        } else {
+                          setSelectedReasons([...selectedReasons, reason]);
+                        }
+                      }}
+                      className={cn(
+                        "flex items-center space-x-3 p-3.5 rounded-2xl border-2 transition-all cursor-pointer",
+                        isChecked ? "bg-blue-50/50 border-primary text-slate-900" : "bg-slate-50/20 border-slate-100 hover:border-slate-200 text-slate-600"
+                      )}
+                    >
+                      <div className={cn(
+                        "h-5 w-5 rounded-md border flex items-center justify-center shrink-0 transition-all",
+                        isChecked ? "bg-primary border-primary text-white" : "border-slate-300"
+                      )}>
+                        {isChecked && <Check className="h-3 w-3 stroke-[3px]" />}
+                      </div>
+                      <span className="text-xs font-bold leading-tight">{reason}</span>
+                    </div>
+                  );
+                })}
+
+                {/* Other/Custom Checkbox */}
+                <div 
+                  onClick={() => setShowCustomSymptom(!showCustomSymptom)}
+                  className={cn(
+                    "flex items-center space-x-3 p-3.5 rounded-2xl border-2 transition-all cursor-pointer",
+                    showCustomSymptom ? "bg-blue-50/50 border-primary text-slate-900" : "bg-slate-50/20 border-slate-100 hover:border-slate-200 text-slate-600"
+                  )}
+                >
+                  <div className={cn(
+                    "h-5 w-5 rounded-md border flex items-center justify-center shrink-0 transition-all",
+                    showCustomSymptom ? "bg-primary border-primary text-white" : "border-slate-300"
+                  )}>
+                    {showCustomSymptom && <Check className="h-3 w-3 stroke-[3px]" />}
+                  </div>
+                  <span className="text-xs font-bold leading-tight">Other (Please describe)</span>
+                </div>
+              </div>
+
+              {showCustomSymptom && (
+                <div className="relative animate-in fade-in slide-in-from-top-2 duration-200">
+                  <MessageSquare className="absolute left-4 top-4 h-5 w-5 text-slate-400" />
+                  <Textarea 
+                    placeholder="Briefly describe your current symptoms..." 
+                    className="min-h-[100px] rounded-2xl bg-white border-2 border-border p-5 pl-12 font-bold placeholder:text-slate-300 focus:border-primary"
+                    value={symptoms || ''}
+                    onChange={e => setSymptoms(e.target.value)}
+                  />
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="relative">
+              <MessageSquare className="absolute left-4 top-4 h-5 w-5 text-slate-400" />
+              <Textarea 
+                placeholder="Briefly describe your current symptoms..." 
+                className="min-h-[100px] rounded-2xl bg-white border-2 border-border p-5 pl-12 font-bold placeholder:text-slate-300 focus:border-primary"
+                value={symptoms || ''}
+                onChange={e => setSymptoms(e.target.value)}
+              />
+            </div>
+          )}
         </div>
 
         <div className="space-y-4">
@@ -450,5 +536,13 @@ export default function BookingPage({ params }: { params: Promise<{ id: string }
         </div>
       </div>
     </div>
+  );
+}
+
+export default function BookingPage({ params }: { params: Promise<{ id: string }> }) {
+  return (
+    <Suspense fallback={<div className="flex justify-center items-center min-h-screen"><Loader2 className="animate-spin text-primary" /></div>}>
+      <BookingContent params={params} />
+    </Suspense>
   );
 }

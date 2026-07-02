@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Users, UserCheck, Stethoscope, CheckCircle, RefreshCw, LogOut, ArrowLeft } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Users, UserCheck, Stethoscope, CheckCircle, RefreshCw, LogOut } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
@@ -14,7 +14,12 @@ import { getDoctorAppointmentsForDate, updateAppointmentStatus } from '@/app/act
 import { getDoctorsCatalog } from '@/app/actions/admin-actions';
 import { logoutSession } from '@/app/actions/auth-actions';
 
-export default function DoctorDashboard() {
+interface OPDQueueDashboardProps {
+  mode: 'Doctor' | 'Attendant';
+  targetId: string;
+}
+
+export function OPDQueueDashboard({ mode, targetId }: OPDQueueDashboardProps) {
   const router = useRouter();
   const { toast } = useToast();
   const logout = useStore(state => state.logout);
@@ -38,13 +43,13 @@ export default function DoctorDashboard() {
     }
   }, [isAuthenticated, admin, router]);
 
-  // 2. Load doctors catalog (for attendants) and set initial doctor ID
+  // 2. Initialize Doctor selection
   useEffect(() => {
     async function init() {
       if (!admin) return;
       
-      if (admin.role === 'Doctor') {
-        setSelectedDoctorId(admin.admin_id);
+      if (mode === 'Doctor') {
+        setSelectedDoctorId(targetId);
       } else {
         // If Attendant, load list of doctors to manage
         try {
@@ -59,9 +64,9 @@ export default function DoctorDashboard() {
       }
     }
     init();
-  }, [admin]);
+  }, [admin, mode, targetId]);
 
-  // 3. Load appointments when doctor ID or date changes
+  // 3. Load appointments
   async function loadQueue() {
     if (!selectedDoctorId || !selectedDate) return;
     setLoading(true);
@@ -129,7 +134,7 @@ export default function DoctorDashboard() {
             />
           </div>
 
-          {admin.role === 'Attendant' && doctors.length > 0 && (
+          {mode === 'Attendant' && doctors.length > 0 && (
             <div className="flex items-center space-x-2">
               <span className="text-xs font-black uppercase text-slate-400">Doctor:</span>
               <Select value={selectedDoctorId} onValueChange={setSelectedDoctorId}>
@@ -160,7 +165,7 @@ export default function DoctorDashboard() {
       {/* Metrics Summary */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-6">
         <Card className="border-none shadow-sm rounded-3xl bg-white overflow-hidden">
-          <CardContent className="p-6 flex items-center space-x-4">
+          <div className="p-6 flex items-center space-x-4">
             <div className="h-14 w-14 rounded-2xl bg-blue-50 text-blue-500 flex items-center justify-center">
               <Users className="h-7 w-7" />
             </div>
@@ -168,11 +173,11 @@ export default function DoctorDashboard() {
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Booked</p>
               <p className="text-2xl font-black text-slate-800">{totalBooked}</p>
             </div>
-          </CardContent>
+          </div>
         </Card>
 
         <Card className="border-none shadow-sm rounded-3xl bg-white overflow-hidden">
-          <CardContent className="p-6 flex items-center space-x-4">
+          <div className="p-6 flex items-center space-x-4">
             <div className="h-14 w-14 rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center">
               <UserCheck className="h-7 w-7" />
             </div>
@@ -180,11 +185,11 @@ export default function DoctorDashboard() {
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Waiting Room</p>
               <p className="text-2xl font-black text-amber-600">{waitingRoom}</p>
             </div>
-          </CardContent>
+          </div>
         </Card>
 
         <Card className="border-none shadow-sm rounded-3xl bg-white overflow-hidden">
-          <CardContent className="p-6 flex items-center space-x-4">
+          <div className="p-6 flex items-center space-x-4">
             <div className="h-14 w-14 rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center">
               <Stethoscope className="h-7 w-7" />
             </div>
@@ -192,11 +197,11 @@ export default function DoctorDashboard() {
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">In Cabin</p>
               <p className="text-2xl font-black text-indigo-600">{withDoctor}</p>
             </div>
-          </CardContent>
+          </div>
         </Card>
 
         <Card className="border-none shadow-sm rounded-3xl bg-white overflow-hidden">
-          <CardContent className="p-6 flex items-center space-x-4">
+          <div className="p-6 flex items-center space-x-4">
             <div className="h-14 w-14 rounded-2xl bg-green-50 text-green-500 flex items-center justify-center">
               <CheckCircle className="h-7 w-7" />
             </div>
@@ -204,7 +209,7 @@ export default function DoctorDashboard() {
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Completed</p>
               <p className="text-2xl font-black text-green-600">{completed}</p>
             </div>
-          </CardContent>
+          </div>
         </Card>
       </section>
 

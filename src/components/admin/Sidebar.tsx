@@ -28,14 +28,16 @@ export function AdminSidebar() {
   const logout = useStore(state => state.logout);
 
   useEffect(() => {
-    if (!isAuthenticated || (pathname !== '/admin/login' && !admin)) {
-      router.push('/admin/login');
+    if (!isAuthenticated || !admin) {
+      router.push('/login');
     }
-  }, [isAuthenticated, admin, router, pathname]);
+  }, [isAuthenticated, admin, router]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    const { logoutSession } = await import('@/app/actions/auth-actions');
+    await logoutSession();
     logout();
-    router.push('/admin/login');
+    router.push('/login');
   };
 
   const filteredMenuItems = ALL_MENU_ITEMS.filter(item => {
@@ -57,7 +59,7 @@ export function AdminSidebar() {
   });
 
   // Render logic without early returns to avoid hook mismatch
-  const shouldShowSidebar = admin || pathname === '/admin/login';
+  const shouldShowSidebar = !!admin;
 
   if (!shouldShowSidebar) return null;
 

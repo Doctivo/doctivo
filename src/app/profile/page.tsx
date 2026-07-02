@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { 
   UserCircle, MapPin, Edit3, Users, History, 
   Settings, LogOut, ChevronRight,
-  HeartPulse, MessageCircleQuestion
+  HeartPulse, MessageCircleQuestion, Download
 } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { BottomNav } from '@/components/BottomNav';
@@ -37,6 +37,7 @@ export default function ProfilePage() {
     { label: 'Manage Family', subLabel: 'Add Mother, Father or Spouse', icon: Users, color: 'bg-indigo-50 text-indigo-500', href: '/patients' },
     { label: 'Medical History Log', subLabel: 'Vitals: Blood Group, Height, Weight', icon: HeartPulse, color: 'bg-purple-50 text-purple-500', href: '/onboarding' },
     { label: 'Past Appointments', subLabel: 'View your booking history', icon: History, color: 'bg-green-50 text-green-500', href: '/appointments' },
+    { label: 'My Downloads', subLabel: 'Access saved tickets & receipts', icon: Download, color: 'bg-orange-50 text-orange-500', href: '/profile/downloads' },
     { label: 'Help & Support', subLabel: 'Contact clinic support', icon: MessageCircleQuestion, color: 'bg-yellow-50 text-yellow-500', href: '#' },
     { label: 'Settings', subLabel: 'App Preferences', icon: Settings, color: 'bg-slate-50 text-slate-500', href: '#' },
   ];

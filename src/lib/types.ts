@@ -48,6 +48,7 @@ export interface Doctor {
   workingDays?: string[]; 
   categoryIcon?: string;
   schedule?: any;
+  reasonsForVisit?: string[];
 }
 
 export interface UserProfile extends Patient {
