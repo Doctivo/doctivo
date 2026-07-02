@@ -124,10 +124,28 @@ export default function BookingPage({ params }: { params: Promise<{ id: string }
   }, [displayPatients, selectedPatientId]);
 
   const handleAddQuickPatient = async () => {
-    if (!newPatient.name || !newPatient.age || !newPatient.height_cm || !newPatient.blood_group) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Mandatory fields missing.' });
+    if (!newPatient.name || !newPatient.age || !newPatient.height_cm || !newPatient.weight_kg || !newPatient.gender || !newPatient.relation || !newPatient.blood_group) {
+      toast({ variant: 'destructive', title: 'Error', description: 'All mandatory fields are required.' });
       return;
     }
+
+    const ageNum = parseInt(newPatient.age);
+    const heightNum = parseInt(newPatient.height_cm);
+    const weightNum = parseInt(newPatient.weight_kg);
+
+    if (isNaN(ageNum) || ageNum <= 0 || ageNum > 150) {
+      toast({ variant: 'destructive', title: 'Invalid Age', description: 'Age must be between 1 and 150.' });
+      return;
+    }
+    if (isNaN(heightNum) || heightNum <= 0 || heightNum > 243) {
+      toast({ variant: 'destructive', title: 'Invalid Height', description: 'Height must be between 1 and 243 cm (8 feet).' });
+      return;
+    }
+    if (isNaN(weightNum) || weightNum <= 0 || weightNum > 200) {
+      toast({ variant: 'destructive', title: 'Invalid Weight', description: 'Weight must be between 1 and 200 kg.' });
+      return;
+    }
+
     setIsSavingPatient(true);
     const memberId = `DOC-MEM-${Date.now()}`;
     const memberData = { ...newPatient, id: memberId } as Patient;
@@ -254,32 +272,77 @@ export default function BookingPage({ params }: { params: Promise<{ id: string }
                   <Plus className="h-3 w-3 mr-1" /> Add Family Member
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-[95vw] sm:max-w-md rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl">
-                <DialogHeader className="p-8 bg-slate-50 border-b border-border">
+              <DialogContent className="max-w-[95vw] sm:max-w-md rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl bg-white">
+                <DialogHeader className="px-6 py-5 bg-slate-50 border-b border-border flex items-center justify-between">
                   <DialogTitle className="text-2xl font-black">Add Family Profile</DialogTitle>
                 </DialogHeader>
-                <div className="p-8 space-y-5">
+                
+                <div className="p-6 space-y-5 max-h-[60vh] overflow-y-auto scroll-hide">
                   <div className="space-y-1.5">
-                    <Label className="text-[10px] font-black text-slate-900 uppercase">Full Name</Label>
+                    <Label className="text-[10px] font-black text-slate-900 uppercase">Full Name <span className="text-red-500">*</span></Label>
                     <Input placeholder="Enter Name" value={newPatient.name || ''} onChange={e => setNewPatient({...newPatient, name: e.target.value})} className="h-12 rounded-xl bg-slate-50 border-border font-bold" />
                   </div>
+
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <Label className="text-[10px] font-black text-slate-900 uppercase">Age <span className="text-red-500">*</span></Label>
-                      <Input type="number" placeholder="Enter Your Age" value={newPatient.age || ''} onChange={e => setNewPatient({...newPatient, age: e.target.value})} className="h-12 rounded-xl bg-slate-50 border-border font-bold" />
+                      <Input type="number" placeholder="Enter Age" value={newPatient.age || ''} onChange={e => setNewPatient({...newPatient, age: e.target.value})} className="h-12 rounded-xl bg-slate-50 border-border font-bold" />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-[10px] font-black text-slate-900 uppercase">Blood Group</Label>
-                      <Select onValueChange={v => setNewPatient({...newPatient, blood_group: v})}>
+                      <Label className="text-[10px] font-black text-slate-900 uppercase">Gender <span className="text-red-500">*</span></Label>
+                      <Select value={newPatient.gender} onValueChange={v => setNewPatient({...newPatient, gender: v as any})}>
+                        <SelectTrigger className="h-12 bg-slate-50 border-border rounded-xl font-bold"><SelectValue placeholder="Select" /></SelectTrigger>
+                        <SelectContent className="rounded-xl">
+                          {['Male', 'Female', 'Other'].map(g => (<SelectItem key={g} value={g}>{g}</SelectItem>))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-black text-slate-900 uppercase">Height (cm) <span className="text-red-500">*</span></Label>
+                      <Input type="number" placeholder="Height in cm" value={newPatient.height_cm || ''} onChange={e => setNewPatient({...newPatient, height_cm: e.target.value})} className="h-12 rounded-xl bg-slate-50 border-border font-bold" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-black text-slate-900 uppercase">Weight (kg) <span className="text-red-500">*</span></Label>
+                      <Input type="number" placeholder="Weight in kg" value={newPatient.weight_kg || ''} onChange={e => setNewPatient({...newPatient, weight_kg: e.target.value})} className="h-12 rounded-xl bg-slate-50 border-border font-bold" />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-black text-slate-900 uppercase">Blood Group <span className="text-red-500">*</span></Label>
+                      <Select value={newPatient.blood_group} onValueChange={v => setNewPatient({...newPatient, blood_group: v})}>
                         <SelectTrigger className="h-12 bg-slate-50 border-border rounded-xl font-bold"><SelectValue placeholder="Select" /></SelectTrigger>
                         <SelectContent className="rounded-xl">
                           {['A+', 'B+', 'O+', 'AB+', 'A-', 'B-', 'O-', 'AB-'].map(bg => (<SelectItem key={bg} value={bg}>{bg}</SelectItem>))}
                         </SelectContent>
                       </Select>
                     </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-black text-slate-900 uppercase">Relation <span className="text-red-500">*</span></Label>
+                      <Select value={newPatient.relation} onValueChange={v => setNewPatient({...newPatient, relation: v})}>
+                        <SelectTrigger className="h-12 bg-slate-50 border-border rounded-xl font-bold"><SelectValue placeholder="Select" /></SelectTrigger>
+                        <SelectContent className="rounded-xl">
+                          {['Spouse', 'Child', 'Parent', 'Sibling', 'Other'].map(rel => (<SelectItem key={rel} value={rel}>{rel}</SelectItem>))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-black text-slate-900 uppercase">Medical History</Label>
+                    <Textarea placeholder="Any chronic illnesses, past surgeries..." value={newPatient.medicalHistory || ''} onChange={e => setNewPatient({...newPatient, medicalHistory: e.target.value})} className="rounded-xl bg-slate-50 border-border font-bold min-h-[80px]" />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-black text-slate-900 uppercase">Allergies</Label>
+                    <Textarea placeholder="Food, drug, or environmental allergies..." value={newPatient.allergies || ''} onChange={e => setNewPatient({...newPatient, allergies: e.target.value})} className="rounded-xl bg-slate-50 border-border font-bold min-h-[80px]" />
                   </div>
                 </div>
-                <DialogFooter className="p-8 border-t border-border bg-white">
+
+                <DialogFooter className="px-6 py-5 border-t border-border bg-white">
                   <Button onClick={handleAddQuickPatient} disabled={isSavingPatient} className="w-full h-14 bg-primary font-black text-lg rounded-2xl">
                     {isSavingPatient ? <Loader2 className="animate-spin" /> : 'Confirm Profile'}
                   </Button>
