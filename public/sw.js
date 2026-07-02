@@ -7,6 +7,14 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // basic fetch handler to allow PWA installability
-  event.respondWith(fetch(event.request));
+  // Only intercept http/https requests to avoid chrome-extension:// or other protocols throwing errors
+  if (event.request.url.startsWith('http')) {
+    event.respondWith(
+      fetch(event.request).catch((err) => {
+        console.warn('Service worker fetch failed:', err);
+        // Return a custom network error response instead of throwing uncaught rejection
+        return new Response('Network error', { status: 480, statusText: 'Network Error' });
+      })
+    );
+  }
 });
