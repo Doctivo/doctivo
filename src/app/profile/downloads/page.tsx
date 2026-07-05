@@ -110,6 +110,15 @@ export default function DownloadsPage() {
                       <User className="h-4 w-4 text-slate-400" />
                       <span>Patient: {app.patientName}</span>
                     </div>
+                    {app.visit_otp && (
+                      <div className="flex items-center space-x-2 col-span-2 bg-blue-50/50 p-3 rounded-2xl border border-blue-100/30 justify-between mt-2 print:hidden">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-slate-400 text-[10px] font-black uppercase">Visit OTP:</span>
+                          <span className="font-black text-sm text-blue-700 tracking-wider leading-none">{app.visit_otp}</span>
+                        </div>
+                        <span className="text-[8px] text-slate-400 font-bold">Provide at clinic</span>
+                      </div>
+                    )}
                   </div>
 
                   <Button 

@@ -17,13 +17,14 @@ export async function createAppointment(app: Partial<Appointment>) {
     const tokenNumber = parseInt(tokenResult.rows[0].count || '0') + 1;
 
     // 2. Insert the appointment
+    const visitOtp = Math.floor(100000 + Math.random() * 900000).toString();
     const sql = `
       INSERT INTO appointments (
         appointment_id, doctor_id, doctor_name, booked_by_user_id, 
         patient_type, patient_name, appointment_date, appointment_time_slot,
         current_symptoms, consultation_fee_amount, payment_status, 
-        payment_mode, transaction_id, status, token_number
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+        payment_mode, transaction_id, status, token_number, visit_otp
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
       RETURNING *;
     `;
 
@@ -42,7 +43,8 @@ export async function createAppointment(app: Partial<Appointment>) {
       app.payment_mode || 'Online_UPI',
       app.transaction_id || 'TXN-' + Date.now(),
       app.status || 'Confirmed',
-      tokenNumber
+      tokenNumber,
+      visitOtp
     ];
 
     const result = await query(sql, values);
@@ -90,7 +92,8 @@ export async function getUserAppointments(userId: string) {
         payment_status: r.payment_status,
         transaction_id: r.transaction_id,
         status: status,
-        tokenNumber: r.token_number || 1
+        tokenNumber: r.token_number || 1,
+        visit_otp: r.visit_otp
       };
     }) as Appointment[];
   } catch (error) {
@@ -157,7 +160,8 @@ export async function getAppointmentById(id: string) {
       payment_status: r.payment_status,
       transaction_id: r.transaction_id,
       status: r.status,
-      tokenNumber: r.token_number || 1
+      tokenNumber: r.token_number || 1,
+      visit_otp: r.visit_otp
     } as Appointment;
   } catch (error) {
     console.error('Error fetching appointment by ID:', error);
@@ -193,7 +197,8 @@ export async function getDoctorAppointmentsForDate(doctorId: string, dateStr: st
         payment_status: r.payment_status,
         transaction_id: r.transaction_id,
         status: r.status,
-        tokenNumber: r.token_number || 1
+        tokenNumber: r.token_number || 1,
+        visit_otp: r.visit_otp
       };
     });
   } catch (error) {
@@ -214,6 +219,29 @@ export async function updateAppointmentStatus(appointmentId: string, status: str
     return { success: true };
   } catch (error: any) {
     console.error('Error updating appointment status:', error.message);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Verifies the visit verification OTP and marks the appointment as Completed/Visited.
+ * If the user chose to Pay at Clinic, this also marks their payment as Paid.
+ */
+export async function verifyVisitOtp(appointmentId: string, otp: string) {
+  try {
+    const res = await query('SELECT visit_otp FROM appointments WHERE appointment_id = $1', [appointmentId]);
+    if (res.rowCount === 0) {
+      return { success: false, error: 'Appointment record not found.' };
+    }
+    const app = res.rows[0];
+    if (app.visit_otp !== otp) {
+      return { success: false, error: 'Incorrect Verification OTP. Please check the patient ticket or SMS/Email.' };
+    }
+    
+    // Mark status as Completed and ensure payment is marked Paid
+    await query("UPDATE appointments SET status = 'Completed', payment_status = 'Paid' WHERE appointment_id = $1", [appointmentId]);
+    return { success: true };
+  } catch (error: any) {
     return { success: false, error: error.message };
   }
 }

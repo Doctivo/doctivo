@@ -60,33 +60,157 @@ function SuccessContent() {
   };
 
   const handleDownloadPDF = async () => {
-    if (!receiptRef.current || !appointment) return;
+    if (!appointment) return;
     
-    if (typeof window !== 'undefined' && (window as any).DoctivoAppChannel) {
-      setIsDownloading(true);
-      try {
-        const element = receiptRef.current;
-        const canvas = await html2canvas(element, {
-          scale: 3,
-          useCORS: true,
-          logging: false,
-          backgroundColor: '#ffffff'
-        });
-        
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF({
-          orientation: 'portrait',
-          unit: 'mm',
-          format: 'a4'
-        });
-        
-        const imgProps = pdf.getImageProperties(imgData);
-        const pdfWidth = pdf.internal.pageSize.getWidth() - 20; // 10mm margin on each side
-        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-        
-        pdf.text('Doctivo Appointment Receipt', 10, 15);
-        pdf.addImage(imgData, 'PNG', 10, 25, pdfWidth, pdfHeight);
-        
+    setIsDownloading(true);
+    try {
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      // Colors
+      const primaryColor = '#2563eb'; // Blue
+      const darkColor = '#1e293b'; // Slate 800
+      const lightColor = '#64748b'; // Slate 500
+      const bgColor = '#f8fafc'; // Slate 50
+      
+      // Page background card border
+      pdf.setDrawColor(226, 232, 240); // Slate 200
+      pdf.setFillColor(255, 255, 255);
+      pdf.roundedRect(15, 15, 180, 240, 5, 5, 'FD');
+
+      // Top color bar
+      pdf.setFillColor(37, 99, 235); // Blue 600
+      pdf.rect(15, 15, 180, 5, 'F');
+
+      // Header logo / title
+      pdf.setTextColor(primaryColor);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(28);
+      pdf.text('DOCTIVO', 25, 40);
+
+      pdf.setTextColor(lightColor);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(9);
+      pdf.text('HEALTHCARE SIMPLIFIED', 25, 46);
+
+      // Ticket Title
+      pdf.setTextColor(darkColor);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(16);
+      pdf.text('APPOINTMENT TICKET', 115, 42);
+
+      // Divider line
+      pdf.setDrawColor(241, 245, 249); // Slate 100
+      pdf.line(25, 55, 185, 55);
+
+      // Token Number (Big Box)
+      pdf.setFillColor(bgColor);
+      pdf.roundedRect(25, 65, 75, 40, 4, 4, 'F');
+      
+      pdf.setTextColor(lightColor);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(9);
+      pdf.text('YOUR TOKEN NUMBER', 35, 76);
+
+      pdf.setTextColor(primaryColor);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(36);
+      pdf.text(`#${appointment.tokenNumber || 1}`, 35, 96);
+
+      // Booking ID / visit_otp box
+      pdf.setFillColor(bgColor);
+      pdf.roundedRect(110, 65, 75, 40, 4, 4, 'F');
+
+      pdf.setTextColor(lightColor);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(9);
+      pdf.text('BOOKING ID', 120, 76);
+      pdf.setTextColor(darkColor);
+      pdf.setFontSize(12);
+      pdf.text(`#${appointment.id.slice(-6)}`, 120, 83);
+
+      pdf.setTextColor(lightColor);
+      pdf.setFontSize(9);
+      pdf.text('VISIT VERIFICATION OTP', 120, 93);
+      pdf.setTextColor(primaryColor);
+      pdf.setFontSize(14);
+      pdf.text(`${appointment.visit_otp || '123456'}`, 120, 100);
+
+      // Divider
+      pdf.line(25, 120, 185, 120);
+
+      // Details grid
+      pdf.setFontSize(10);
+      
+      // Row 1
+      pdf.setTextColor(lightColor);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('Patient Name', 25, 132);
+      pdf.setTextColor(darkColor);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(appointment.patientName, 25, 138);
+
+      pdf.setTextColor(lightColor);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('Patient Type', 110, 132);
+      pdf.setTextColor(darkColor);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(appointment.patientType.replace('_', ' ').toUpperCase(), 110, 138);
+
+      // Row 2
+      pdf.setTextColor(lightColor);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('Appointment Date', 25, 154);
+      pdf.setTextColor(darkColor);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(displayDate, 25, 160);
+
+      pdf.setTextColor(lightColor);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('Time Slot', 110, 154);
+      pdf.setTextColor(darkColor);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(appointment.time, 110, 160);
+
+      // Row 3
+      pdf.setTextColor(lightColor);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('Consultation Fee', 25, 176);
+      pdf.setTextColor(darkColor);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(`Rs. ${appointment.consultation_fee_amount}`, 25, 182);
+
+      pdf.setTextColor(lightColor);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('Payment Status', 110, 176);
+      pdf.setTextColor(appointment.payment_status === 'Paid' ? '#16a34a' : '#d97706'); // Green or Amber
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(appointment.payment_status.toUpperCase(), 110, 182);
+
+      // Doctor Details Banner
+      pdf.setFillColor(bgColor);
+      pdf.roundedRect(25, 195, 150, 22, 3, 3, 'F');
+      pdf.setTextColor(lightColor);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(9);
+      pdf.text('ASSIGNED DOCTOR / THERAPIST', 32, 204);
+      pdf.setTextColor(darkColor);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(11);
+      pdf.text(appointment.doctorName, 32, 211);
+
+      // Footer notice
+      pdf.setTextColor(lightColor);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(8);
+      pdf.text('Please arrive 10 minutes prior to your selected slot.', 25, 235);
+      pdf.text('For cancellations or rescheduling, please contact support.', 25, 240);
+
+      // Output handle
+      if (typeof window !== 'undefined' && (window as any).DoctivoAppChannel) {
         const pdfDataUri = pdf.output('datauri' as any) as unknown as string;
         const pdfBase64 = pdfDataUri.split(',')[1] || '';
         
@@ -101,67 +225,29 @@ function SuccessContent() {
           title: "Download Started",
           description: "Receipt download initiated inside app.",
         });
-      } catch (error) {
-        console.error('App PDF Generation Error:', error);
+      } else {
+        const blob = pdf.output('blob');
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = `Doctivo_Booking_${appointment.id.slice(-6)}.pdf`;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        setTimeout(() => {
+          try {
+            window.open(blobUrl, '_blank');
+          } catch (e) {}
+          URL.revokeObjectURL(blobUrl);
+        }, 500);
+        
         toast({
-          variant: "destructive",
-          title: "Download Failed",
-          description: "Could not generate PDF.",
+          title: "Success",
+          description: "PDF Ticket generated and downloaded.",
         });
-      } finally {
-        setIsDownloading(false);
       }
-      return;
-    }
-    
-    setIsDownloading(true);
-    try {
-      const element = receiptRef.current;
-      const canvas = await html2canvas(element, {
-        scale: 3,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff'
-      });
-      
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
-      });
-      
-      const imgProps = pdf.getImageProperties(imgData);
-      const pdfWidth = pdf.internal.pageSize.getWidth() - 20; // 10mm margin on each side
-      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-      
-      pdf.text('Doctivo Appointment Receipt', 10, 15);
-      pdf.addImage(imgData, 'PNG', 10, 25, pdfWidth, pdfHeight);
-      
-      // Mobile-friendly blob URL download
-      const blob = pdf.output('blob');
-      const blobUrl = URL.createObjectURL(blob);
-      
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = `Doctivo_Booking_${appointment.id.slice(-6)}.pdf`;
-      link.target = '_blank';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      // Fallback: Open in new tab for manual save
-      setTimeout(() => {
-        try {
-          window.open(blobUrl, '_blank');
-        } catch (e) {}
-        URL.revokeObjectURL(blobUrl);
-      }, 500);
-      
-      toast({
-        title: "Success",
-        description: "PDF Downloaded successfully.",
-      });
     } catch (error) {
       console.error('PDF Generation Error:', error);
       toast({
@@ -299,6 +385,12 @@ function SuccessContent() {
                   <p className="text-slate-400 text-[9px] uppercase font-black tracking-tighter">Booking ID</p>
                   <p className="text-xs font-black text-slate-800">#{appointment.id.slice(-6)}</p>
                 </div>
+              </div>
+
+              <div className="p-5 rounded-3xl bg-blue-50 border border-blue-100/50 flex flex-col items-center justify-center space-y-1 text-center print:hidden">
+                <p className="text-blue-500 text-[10px] font-black uppercase tracking-wider">Visit Verification OTP</p>
+                <p className="text-2xl font-black text-blue-700 tracking-widest leading-none">{appointment.visit_otp || '123456'}</p>
+                <p className="text-[9px] text-blue-400 font-bold">Show this OTP to the doctor/attendant at the clinic</p>
               </div>
 
               <div className="h-px w-full border-t border-dashed border-slate-200"></div>

@@ -92,4 +92,5 @@ export interface Appointment {
   tokenNumber?: number;
   current_symptoms?: string;
   payment_mode?: string;
+  visit_otp?: string;
 }

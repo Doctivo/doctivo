@@ -59,6 +59,7 @@ function BookingContent({ id }: { id: string }) {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
   const [rangeBookedSlots, setRangeBookedSlots] = useState<{ appointment_date: string; appointment_time_slot: string }[]>([]);
+  const [paymentMode, setPaymentMode] = useState<'Online' | 'Clinic'>('Online');
   const [selectedSlot, setSelectedSlot] = useState('');
   const [symptoms, setSymptoms] = useState('');
   const [selectedReasons, setSelectedReasons] = useState<string[]>([]);
@@ -199,34 +200,55 @@ function BookingContent({ id }: { id: string }) {
   }, [displayPatients, selectedPatientId, queryPatientId]);
 
   const handleAddQuickPatient = async () => {
-    if (!newPatient.name || !newPatient.age || !newPatient.height_cm || !newPatient.weight_kg || !newPatient.gender || !newPatient.relation || !newPatient.blood_group) {
-      toast({ variant: 'destructive', title: 'Error', description: 'All mandatory fields are required.' });
+    if (!newPatient.name || !newPatient.age || !newPatient.gender || !newPatient.relation || !newPatient.height_cm || !newPatient.weight_kg || !newPatient.blood_group) {
+      toast({ variant: 'destructive', title: 'Validation Alert', description: 'All fields marked * are required.' });
       return;
     }
-
-    const ageNum = parseInt(newPatient.age);
-    const heightNum = parseInt(newPatient.height_cm);
-    const weightNum = parseInt(newPatient.weight_kg);
-
-    if (isNaN(ageNum) || ageNum <= 0 || ageNum > 200) {
-      toast({ variant: 'destructive', title: 'Invalid Age', description: 'Age must be between 1 and 200.' });
+    const ageVal = parseInt(newPatient.age);
+    const heightVal = parseFloat(newPatient.height_cm);
+    const weightVal = parseFloat(newPatient.weight_kg);
+    if (isNaN(ageVal) || ageVal <= 0 || ageVal > 200) {
+      toast({ variant: 'destructive', title: 'Validation Alert', description: 'Please enter a valid age (max 200).' });
       return;
     }
-    if (isNaN(heightNum) || heightNum <= 0 || heightNum > 250) {
-      toast({ variant: 'destructive', title: 'Invalid Height', description: 'Height must be between 1 and 250 cm.' });
+    if (isNaN(heightVal) || heightVal <= 0 || heightVal > 250) {
+      toast({ variant: 'destructive', title: 'Validation Alert', description: 'Please enter a valid height (max 250 cm).' });
       return;
     }
-    if (isNaN(weightNum) || weightNum <= 0 || weightNum > 200) {
-      toast({ variant: 'destructive', title: 'Invalid Weight', description: 'Weight must be between 1 and 200 kg.' });
+    if (isNaN(weightVal) || weightVal <= 0 || weightVal > 200) {
+      toast({ variant: 'destructive', title: 'Validation Alert', description: 'Please enter a valid weight (max 200 kg).' });
       return;
     }
 
     setIsSavingPatient(true);
-    const memberId = `DOC-MEM-${Date.now()}`;
-    const memberData = { ...newPatient, id: memberId } as Patient;
+    const memberId = `MBR-${Math.floor(100000 + Math.random() * 900000)}`;
+    const memberData = {
+      id: memberId,
+      name: newPatient.name,
+      age: newPatient.age,
+      gender: newPatient.gender,
+      relation: newPatient.relation,
+      height_cm: newPatient.height_cm,
+      weight_kg: newPatient.weight_kg,
+      blood_group: newPatient.blood_group,
+      medicalHistory: newPatient.medicalHistory || '',
+      allergies: newPatient.allergies || ''
+    } as Patient;
     const result = await addFamilyMember(memberData, user?.id || '');
+
     if (result.success) {
-      addPatientStore(memberData);
+      addPatientStore({
+        id: memberId,
+        name: newPatient.name,
+        age: newPatient.age,
+        gender: newPatient.gender,
+        relation: newPatient.relation,
+        height_cm: newPatient.height_cm,
+        weight_kg: newPatient.weight_kg,
+        blood_group: newPatient.blood_group,
+        medicalHistory: newPatient.medicalHistory || '',
+        allergies: newPatient.allergies || ''
+      } as any);
       setSelectedPatientId(memberId);
       setIsAddOpen(false);
       setNewPatient({ name: '', age: '', gender: 'Male', relation: 'Other', height_cm: '', weight_kg: '', blood_group: '', medicalHistory: '', allergies: '', secondaryPhone: '' });
@@ -238,8 +260,12 @@ function BookingContent({ id }: { id: string }) {
   const processPayment = async () => {
     if (!selectedSlot || !selectedPatientId) return;
     setIsBooking(true);
-    setShowMockAlert(true);
-    setTimeout(() => finalizeBooking('TXN_' + Date.now()), 1200);
+    if (paymentMode === 'Clinic') {
+      await finalizeBooking('PAY_AT_CLINIC');
+    } else {
+      setShowMockAlert(true);
+      setTimeout(() => finalizeBooking('TXN_' + Date.now()), 1200);
+    }
   };
 
   const finalizeBooking = async (txnId: string) => {
@@ -259,13 +285,14 @@ function BookingContent({ id }: { id: string }) {
         ...(showCustomSymptom && symptoms.trim() ? [symptoms.trim()] : (!doc?.reasonsForVisit || doc.reasonsForVisit.length === 0 ? [symptoms.trim()] : []))
       ].join(', '),
       consultation_fee_amount: doc.fees,
-      payment_status: 'Paid' as const,
+      payment_status: paymentMode === 'Clinic' ? 'Pending' as const : 'Paid' as const,
+      payment_mode: paymentMode === 'Clinic' ? 'Pay_at_Clinic' as const : 'Online_UPI' as const,
       transaction_id: txnId,
       status: 'Confirmed' as const
     };
     const result = await createAppointment(appData);
     if (result.success) {
-      addAppointmentStore({ ...appData, tokenNumber: result.data.token_number } as any);
+      addAppointmentStore({ ...appData, tokenNumber: result.data.token_number, visit_otp: result.data.visit_otp } as any);
       router.push(`/success?id=${appData.id}`);
     } else {
       setIsBooking(false);
@@ -578,6 +605,32 @@ function BookingContent({ id }: { id: string }) {
                 </button>
               );
             })}
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 px-1">Payment Method</h3>
+          <div className="grid grid-cols-2 gap-4 bg-white p-5 rounded-[2rem] border-2 border-border shadow-sm">
+            <div 
+              onClick={() => setPaymentMode('Online')}
+              className={cn(
+                "flex flex-col items-center justify-center p-5 rounded-2xl border-2 transition-all cursor-pointer space-y-1 text-center",
+                paymentMode === 'Online' ? "bg-blue-50/50 border-primary text-slate-900" : "bg-slate-50/20 border-slate-100 hover:border-slate-200 text-slate-600"
+              )}
+            >
+              <span className="text-xs font-black">Pay Online</span>
+              <span className="text-[9px] font-bold opacity-60">UPI / Cards / Netbanking</span>
+            </div>
+            <div 
+              onClick={() => setPaymentMode('Clinic')}
+              className={cn(
+                "flex flex-col items-center justify-center p-5 rounded-2xl border-2 transition-all cursor-pointer space-y-1 text-center",
+                paymentMode === 'Clinic' ? "bg-blue-50/50 border-primary text-slate-900" : "bg-slate-50/20 border-slate-100 hover:border-slate-200 text-slate-600"
+              )}
+            >
+              <span className="text-xs font-black">Pay at Clinic</span>
+              <span className="text-[9px] font-bold opacity-60">Cash or UPI at counter</span>
+            </div>
           </div>
         </div>
 

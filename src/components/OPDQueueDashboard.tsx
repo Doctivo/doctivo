@@ -10,9 +10,10 @@ import { useToast } from '@/hooks/use-toast';
 import { useStore } from '@/lib/store';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { getDoctorAppointmentsForDate, updateAppointmentStatus } from '@/app/actions/appointment-actions';
+import { getDoctorAppointmentsForDate, updateAppointmentStatus, verifyVisitOtp } from '@/app/actions/appointment-actions';
 import { getDoctorsCatalog } from '@/app/actions/admin-actions';
 import { logoutSession } from '@/app/actions/auth-actions';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 
 interface OPDQueueDashboardProps {
   mode: 'Doctor' | 'Attendant';
@@ -35,6 +36,9 @@ export function OPDQueueDashboard({ mode, targetId }: OPDQueueDashboardProps) {
   });
   const [appointments, setAppointments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [otpVerifyAppId, setOtpVerifyAppId] = useState<string | null>(null);
+  const [enteredOtp, setEnteredOtp] = useState<string>('');
+  const [verifying, setVerifying] = useState<boolean>(false);
 
   // 1. Authenticate check
   useEffect(() => {
@@ -95,6 +99,33 @@ export function OPDQueueDashboard({ mode, targetId }: OPDQueueDashboardProps) {
       }
     } catch (e: any) {
       toast({ variant: 'destructive', title: 'Error', description: e.message });
+    }
+  };
+
+  const handleOpenOtpVerification = (appId: string) => {
+    setOtpVerifyAppId(appId);
+    setEnteredOtp('');
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!otpVerifyAppId || enteredOtp.length !== 6) {
+      toast({ variant: 'destructive', title: 'Invalid OTP', description: 'Please enter a valid 6-digit code.' });
+      return;
+    }
+    setVerifying(true);
+    try {
+      const res = await verifyVisitOtp(otpVerifyAppId, enteredOtp);
+      if (res.success) {
+        toast({ title: 'Visit Verified', description: 'Patient marked as completed/visited successfully!' });
+        setOtpVerifyAppId(null);
+        loadQueue();
+      } else {
+        toast({ variant: 'destructive', title: 'Verification Failed', description: res.error });
+      }
+    } catch (e: any) {
+      toast({ variant: 'destructive', title: 'Error', description: e.message });
+    } finally {
+      setVerifying(false);
     }
   };
 
@@ -282,7 +313,7 @@ export function OPDQueueDashboard({ mode, targetId }: OPDQueueDashboardProps) {
                           </Button>
                         )}
                         {app.status === 'With Doctor' && (
-                          <Button onClick={() => handleStatusChange(app.id, 'Completed')} size="sm" className="bg-green-600 text-white font-bold h-9 hover:bg-green-700">
+                          <Button onClick={() => handleOpenOtpVerification(app.id)} size="sm" className="bg-green-600 text-white font-bold h-9 hover:bg-green-700">
                             Complete
                           </Button>
                         )}
@@ -300,6 +331,33 @@ export function OPDQueueDashboard({ mode, targetId }: OPDQueueDashboardProps) {
           </table>
         </div>
       </section>
+
+      <Dialog open={!!otpVerifyAppId} onOpenChange={(open) => { if (!open) setOtpVerifyAppId(null); }}>
+        <DialogContent className="max-w-md rounded-[2rem] p-8 border-none shadow-2xl bg-white">
+          <DialogHeader className="text-center space-y-3">
+            <DialogTitle className="text-2xl font-black text-slate-800">Visit Verification OTP</DialogTitle>
+            <p className="text-sm font-bold text-slate-400">Please ask the patient for the 6-digit visit OTP shown on their receipt or ticket.</p>
+          </DialogHeader>
+          <div className="py-6 space-y-4">
+            <Input 
+              type="text" 
+              maxLength={6} 
+              placeholder="Enter 6-digit OTP" 
+              value={enteredOtp} 
+              onChange={e => setEnteredOtp(e.target.value.replace(/\D/g, ''))} 
+              className="h-16 text-center text-2xl font-black tracking-widest bg-slate-50 border-none rounded-2xl placeholder:text-slate-300"
+            />
+          </div>
+          <DialogFooter className="flex gap-4">
+            <Button variant="ghost" onClick={() => setOtpVerifyAppId(null)} className="flex-1 h-14 rounded-2xl font-bold border-slate-200 text-slate-500">
+              Cancel
+            </Button>
+            <Button onClick={handleVerifyOtp} disabled={verifying || enteredOtp.length !== 6} className="flex-1 h-14 rounded-2xl font-black bg-green-600 hover:bg-green-700 text-white">
+              {verifying ? <RefreshCw className="animate-spin h-5 w-5" /> : 'Verify & Complete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
