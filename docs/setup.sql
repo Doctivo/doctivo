@@ -1,4 +1,4 @@
-
+ 
 -- DOCTIVO PLATFORM - POSTGRESQL SCHEMA SETUP
 -- Run this in your Postgres SQL Editor
 

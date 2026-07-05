@@ -99,14 +99,14 @@ export default function OnboardingPage() {
     }
 
     const ageVal = parseInt(formData.age || '0');
-    if (ageVal > 150) {
-      toast({ variant: 'destructive', title: 'Invalid Age', description: 'Age cannot be greater than 150 years.' });
+    if (ageVal > 200) {
+      toast({ variant: 'destructive', title: 'Invalid Age', description: 'Age cannot be greater than 200 years.' });
       return;
     }
 
     const heightVal = parseFloat(formData.height_cm || '0');
-    if (heightVal > 243) {
-      toast({ variant: 'destructive', title: 'Invalid Height', description: 'Height cannot be greater than 243 cm (8 feet).' });
+    if (heightVal > 250) {
+      toast({ variant: 'destructive', title: 'Invalid Height', description: 'Height cannot be greater than 250 cm.' });
       return;
     }
 

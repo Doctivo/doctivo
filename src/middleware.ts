@@ -18,8 +18,8 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 3. Always allow direct access to /login page
-  if (pathname === '/login') {
+  // 3. Always allow direct access to /login page and root landing page
+  if (pathname === '/login' || pathname === '/') {
     return NextResponse.next();
   }
 

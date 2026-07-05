@@ -49,6 +49,10 @@ export interface Doctor {
   categoryIcon?: string;
   schedule?: any;
   reasonsForVisit?: string[];
+  latitude?: number;
+  longitude?: number;
+  distance?: number;
+  consultationModes?: string;
 }
 
 export interface UserProfile extends Patient {
@@ -84,7 +88,8 @@ export interface Appointment {
   consultation_fee_amount: number;
   payment_status: 'Paid' | 'Pending';
   transaction_id: string;
-  status: 'Confirmed' | 'Cancelled' | 'Completed' | 'Waiting' | 'In Consultation';
+  status: 'Confirmed' | 'Cancelled' | 'Completed' | 'Waiting' | 'In Consultation' | 'Missed';
   tokenNumber?: number;
   current_symptoms?: string;
+  payment_mode?: string;
 }

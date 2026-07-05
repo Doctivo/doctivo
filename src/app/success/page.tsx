@@ -63,10 +63,52 @@ function SuccessContent() {
     if (!receiptRef.current || !appointment) return;
     
     if (typeof window !== 'undefined' && (window as any).DoctivoAppChannel) {
-      (window as any).DoctivoAppChannel.postMessage(JSON.stringify({
-        action: 'share',
-        text: getShareText()
-      }));
+      setIsDownloading(true);
+      try {
+        const element = receiptRef.current;
+        const canvas = await html2canvas(element, {
+          scale: 3,
+          useCORS: true,
+          logging: false,
+          backgroundColor: '#ffffff'
+        });
+        
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a4'
+        });
+        
+        const imgProps = pdf.getImageProperties(imgData);
+        const pdfWidth = pdf.internal.pageSize.getWidth() - 20; // 10mm margin on each side
+        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+        
+        pdf.text('Doctivo Appointment Receipt', 10, 15);
+        pdf.addImage(imgData, 'PNG', 10, 25, pdfWidth, pdfHeight);
+        
+        const pdfBase64 = pdf.output('datauristring');
+        
+        (window as any).DoctivoAppChannel.postMessage(JSON.stringify({
+          action: 'download',
+          base64: pdfBase64,
+          filename: `Doctivo_Booking_${appointment.id.slice(-6)}.pdf`
+        }));
+        
+        toast({
+          title: "Download Started",
+          description: "Receipt is being downloaded to your device.",
+        });
+      } catch (error) {
+        console.error('App PDF Generation Error:', error);
+        toast({
+          variant: "destructive",
+          title: "Download Failed",
+          description: "Could not generate PDF.",
+        });
+      } finally {
+        setIsDownloading(false);
+      }
       return;
     }
     

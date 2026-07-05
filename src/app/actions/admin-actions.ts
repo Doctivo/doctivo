@@ -1,6 +1,7 @@
 'use server';
 
 import { query } from '@/lib/db';
+import { cookies } from 'next/headers';
 
 /**
  * Initializes all database tables in the correct order of dependency.
@@ -246,17 +247,53 @@ export async function getDoctorsByStatus(status: 'pending' | 'approved') {
   }
 }
 
+async function checkEmailUniqueness(email: string, excludeId?: string): Promise<{ success: boolean; error?: string }> {
+  const emailLower = (email || '').trim().toLowerCase();
+  if (!emailLower) return { success: true };
+
+  // 1. Block super admin email reuse
+  if (emailLower === 'admin@doctivo.com') {
+    return { success: false, error: 'This email is reserved for Super Administrator.' };
+  }
+
+  // 2. Check admins database
+  const adminQuery = excludeId 
+    ? 'SELECT 1 FROM admins WHERE LOWER(email) = $1 AND admin_id != $2' 
+    : 'SELECT 1 FROM admins WHERE LOWER(email) = $1';
+  const adminParams = excludeId ? [emailLower, excludeId] : [emailLower];
+  const adminRes = await query(adminQuery, adminParams);
+  if (adminRes.rows.length > 0) {
+    return { success: false, error: 'This email is already in use by an Administrator.' };
+  }
+
+  // 3. Check doctors database
+  const doctorQuery = excludeId 
+    ? 'SELECT 1 FROM doctors WHERE LOWER(email) = $1 AND doctor_id != $2' 
+    : 'SELECT 1 FROM doctors WHERE LOWER(email) = $1';
+  const doctorParams = excludeId ? [emailLower, excludeId] : [emailLower];
+  const doctorRes = await query(doctorQuery, doctorParams);
+  if (doctorRes.rows.length > 0) {
+    return { success: false, error: 'This email is already in use by a Doctor.' };
+  }
+
+  return { success: true };
+}
+
 export async function addDoctorDirectly(doc: any) {
   const id = `DOC-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
   try {
+    const check = await checkEmailUniqueness(doc.email);
+    if (!check.success) return { success: false, error: check.error };
+
     const result = await query(`
       INSERT INTO doctors (
         doctor_id, full_name, phone_number, email, specialty, 
         qualification, experience_years, clinic_address, is_approved, consultation_fee,
         start_time, end_time, slot_duration, image_url, schedule, working_days,
-        allowed_free_attendants, total_purchased_slots, allow_revenue_deduction, current_active_campaign
+        allowed_free_attendants, total_purchased_slots, allow_revenue_deduction, current_active_campaign,
+        consultation_modes
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
       RETURNING *;
     `, [
       id, doc.name, doc.phone, doc.email, doc.specialty, doc.qualification, 
@@ -264,7 +301,8 @@ export async function addDoctorDirectly(doc: any) {
       doc.startTime || '09:00', doc.endTime || '17:00', parseInt(doc.slotDuration || '15'),
       doc.imageUrl || null, JSON.stringify(doc.schedule || {}), JSON.stringify(doc.working_days || []),
       parseInt(doc.allowed_free_attendants || '1'), parseInt(doc.total_purchased_slots || '0'),
-      !!doc.allow_revenue_deduction, doc.current_active_campaign || null
+      !!doc.allow_revenue_deduction, doc.current_active_campaign || null,
+      doc.consultation_modes || 'Clinic,Home'
     ]);
     return { success: true, data: result.rows[0] };
   } catch (error: any) {
@@ -274,6 +312,9 @@ export async function addDoctorDirectly(doc: any) {
 
 export async function updateDoctor(doctorId: string, doc: any) {
   try {
+    const check = await checkEmailUniqueness(doc.email, doctorId);
+    if (!check.success) return { success: false, error: check.error };
+
     await query(`
       UPDATE doctors SET
         full_name = $1, phone_number = $2, email = $3, specialty = $4,
@@ -281,8 +322,9 @@ export async function updateDoctor(doctorId: string, doc: any) {
         consultation_fee = $8, start_time = $9, end_time = $10,
         slot_duration = $11, image_url = $12, schedule = $13, working_days = $14,
         allowed_free_attendants = $15, total_purchased_slots = $16,
-        allow_revenue_deduction = $17, current_active_campaign = $18
-      WHERE doctor_id = $19
+        allow_revenue_deduction = $17, current_active_campaign = $18,
+        consultation_modes = $19
+      WHERE doctor_id = $20
     `, [
       doc.full_name, doc.phone_number, doc.email, doc.specialty,
       doc.qualification, parseInt(String(doc.experience_years || '0')), doc.clinic_address,
@@ -290,7 +332,7 @@ export async function updateDoctor(doctorId: string, doc: any) {
       parseInt(String(doc.slot_duration || '15')), doc.image_url, JSON.stringify(doc.schedule || {}),
       JSON.stringify(doc.working_days || []), parseInt(String(doc.allowed_free_attendants || '1')),
       parseInt(String(doc.total_purchased_slots || '0')), !!doc.allow_revenue_deduction,
-      doc.current_active_campaign || null, doctorId
+      doc.current_active_campaign || null, doc.consultation_modes || 'Clinic,Home', doctorId
     ]);
     return { success: true };
   } catch (error: any) {
@@ -324,6 +366,9 @@ export async function getAdminUsers() {
 export async function createAdminUser(data: any) {
   const id = `ADM-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
   try {
+    const check = await checkEmailUniqueness(data.email);
+    if (!check.success) return { success: false, error: check.error };
+
     await query('INSERT INTO admins (admin_id, full_name, email, role, permissions) VALUES ($1, $2, $3, $4, $5)', [id, data.name, data.email, data.role, JSON.stringify(data.permissions || {})]);
     return { success: true };
   } catch (error: any) {
@@ -334,6 +379,12 @@ export async function createAdminUser(data: any) {
 
 export async function deleteAdminUser(adminId: string) {
   try {
+    const cookieStore = await cookies();
+    const sessionId = cookieStore.get('session_id')?.value;
+    if (sessionId === adminId) {
+      return { success: false, error: 'You cannot revoke your own administrator account.' };
+    }
+
     await query('DELETE FROM admins WHERE admin_id = $1', [adminId]);
     return { success: true };
   } catch (error) {

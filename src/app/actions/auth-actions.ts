@@ -5,6 +5,10 @@ import { query } from '@/lib/db';
 import { getPatientByPhone, getFamilyMembers } from './patient-actions';
 import { getUserAppointments } from './appointment-actions';
 import { cookies } from 'next/headers';
+import dns from 'dns';
+
+// Force all DNS requests to resolve IPv4 addresses first (avoids unrecognized IPv6 block from Brevo)
+dns.setDefaultResultOrder('ipv4first');
 
 /**
  * Unified Login without OTP for Prototype/Speed.
@@ -153,12 +157,10 @@ export async function logoutSession() {
 }
 
 export async function sendAdminOtp(email: string) {
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
   try {
     // 1. Purge expired OTPs
     await query("DELETE FROM otp_verifications WHERE expires_at < NOW();", []);
-
-    // 2. Generate 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
     // 3. Save to database (Expires in 10 minutes)
     await query(`
@@ -183,7 +185,7 @@ export async function sendAdminOtp(email: string) {
         'accept': 'application/json'
       },
       body: JSON.stringify({
-        sender: { name: 'Doctivo Admin Portal', email: 'no-reply@doctivo.in' },
+        sender: { name: 'Doctivo', email: 'gaurav@doctivo.in' },
         to: [{ email: email, name: 'Admin' }],
         subject: 'Doctivo Admin Verification OTP',
         htmlContent: `
@@ -195,7 +197,7 @@ export async function sendAdminOtp(email: string) {
             <p style="font-size: 14px; color: #334155; line-height: 1.6;">Hello Admin,</p>
             <p style="font-size: 14px; color: #334155; line-height: 1.6;">Use the following One-Time Password (OTP) to complete your login session. This code is valid for 10 minutes:</p>
             <div style="font-size: 32px; font-weight: 900; letter-spacing: 6px; padding: 20px; background-color: #f8fafc; text-align: center; color: #2563eb; border-radius: 16px; margin: 25px 0; border: 2px dashed #e2e8f0;">
-              \${otp}
+              ${otp}
             </div>
             <p style="color: #ef4444; font-size: 11px; font-weight: bold; text-align: center; margin-bottom: 0;">Do not share this OTP with anyone for security reasons.</p>
           </div>
@@ -206,13 +208,31 @@ export async function sendAdminOtp(email: string) {
     if (!response.ok) {
       const errText = await response.text();
       console.error('Brevo API request failed:', errText);
-      return { success: false, error: 'Failed to deliver verification email.' };
+      
+      // Local testing fallback: Print OTP to command line and allow login
+      console.log("\n==========================================");
+      console.log("🔑 [LOCAL OTP FALLBACK FOR TESTING] 🔑");
+      console.log(`Email: ${email}`);
+      console.log(`OTP Code: ${otp}`);
+      console.log("👉 Please copy this code and paste it on the screen!");
+      console.log("==========================================\n");
+
+      return { success: true, localFallback: true };
     }
 
     return { success: true };
   } catch (error: any) {
     console.error('sendAdminOtp Error:', error.message);
-    return { success: false, error: 'Mail delivery failed. Please check connection.' };
+    
+    // Local testing fallback: Print OTP on connection error
+    console.log("\n==========================================");
+    console.log("🔑 [LOCAL OTP FALLBACK FOR TESTING] 🔑");
+    console.log(`Email: ${email}`);
+    console.log(`OTP Code: ${otp}`);
+    console.log("👉 Please copy this code and paste it on the screen!");
+    console.log("==========================================\n");
+    
+    return { success: true, localFallback: true };
   }
 }
 
@@ -235,11 +255,12 @@ export async function verifyAdminOtp(email: string, otp: string) {
     const emailLower = email.trim().toLowerCase();
     
     // Super Admin check
-    if (emailLower === 'admin@doctivo.com') {
+    const adminMails = (process.env.admin_mails || '').split(',').map(m => m.trim().toLowerCase());
+    if (emailLower === 'admin@doctivo.com' || adminMails.includes(emailLower)) {
       const superAdminData = {
         admin_id: 'SUPER-1',
         full_name: 'Super Administrator',
-        email: 'admin@doctivo.com',
+        email: emailLower,
         role: 'Super Admin',
         permissions: {
           dashboard: { view: true, view_financials: true },

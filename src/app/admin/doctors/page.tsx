@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DOCTOR_CATEGORIES } from '@/lib/mock-data';
 import Image from 'next/image';
@@ -49,7 +50,8 @@ export default function DoctorCatalog() {
     total_purchased_slots: '0',
     allow_revenue_deduction: false,
     current_active_campaign: '',
-    imageUrl: '' 
+    imageUrl: '',
+    consultation_modes: 'Clinic,Home'
   });
   const [isSaving, setIsSaving] = useState(false);
 
@@ -202,11 +204,52 @@ export default function DoctorCatalog() {
                        <Label className="text-[10px] font-black uppercase text-slate-400">Active Campaign</Label>
                        <Input className="h-12 bg-slate-50 border-none font-bold" placeholder="None" value={newDoc.current_active_campaign} onChange={e => setNewDoc({...newDoc, current_active_campaign: e.target.value})} />
                      </div>
-                     <div className="col-span-2 space-y-2">
-                       <Label className="text-[10px] font-black uppercase text-slate-400">Clinic Address</Label>
-                       <Input className="h-12 bg-slate-50 border-none font-bold" value={newDoc.address} onChange={e => setNewDoc({...newDoc, address: e.target.value})} />
-                     </div>
-                   </div>
+                      {newDoc.specialty === 'Physiotherapist' && (
+                        <div className="col-span-2 p-6 rounded-3xl bg-slate-50 border border-slate-100 space-y-4">
+                          <Label className="text-[10px] font-black uppercase text-slate-400">Consultation Modes (परामर्श के तरीके)</Label>
+                          <div className="flex gap-8">
+                            <div className="flex items-center space-x-3">
+                              <Checkbox 
+                                id="mode-clinic" 
+                                checked={(newDoc.consultation_modes || '').includes('Clinic')} 
+                                onCheckedChange={(checked) => {
+                                  const modes = (newDoc.consultation_modes || '').split(',').filter(Boolean);
+                                  if (checked) {
+                                    if (!modes.includes('Clinic')) modes.push('Clinic');
+                                  } else {
+                                    const index = modes.indexOf('Clinic');
+                                    if (index > -1) modes.splice(index, 1);
+                                  }
+                                  setNewDoc({...newDoc, consultation_modes: modes.join(',')});
+                                }}
+                              />
+                              <Label htmlFor="mode-clinic" className="text-sm font-bold text-slate-700 cursor-pointer">Therapy at Clinic</Label>
+                            </div>
+                            <div className="flex items-center space-x-3">
+                              <Checkbox 
+                                id="mode-home" 
+                                checked={(newDoc.consultation_modes || '').includes('Home')} 
+                                onCheckedChange={(checked) => {
+                                  const modes = (newDoc.consultation_modes || '').split(',').filter(Boolean);
+                                  if (checked) {
+                                    if (!modes.includes('Home')) modes.push('Home');
+                                  } else {
+                                    const index = modes.indexOf('Home');
+                                    if (index > -1) modes.splice(index, 1);
+                                  }
+                                  setNewDoc({...newDoc, consultation_modes: modes.join(',')});
+                                }}
+                              />
+                              <Label htmlFor="mode-home" className="text-sm font-bold text-slate-700 cursor-pointer">Therapy at Home</Label>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      <div className="col-span-2 space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-slate-400">Clinic Address</Label>
+                        <Input className="h-12 bg-slate-50 border-none font-bold" value={newDoc.address} onChange={e => setNewDoc({...newDoc, address: e.target.value})} />
+                      </div>
+                    </div>
                </ScrollArea>
                <DialogFooter className="p-8 bg-slate-50 border-t"><Button onClick={handleAdd} className="w-full h-14 bg-blue-600 font-bold rounded-2xl">Create Doctor</Button></DialogFooter>
             </DialogContent>
@@ -329,6 +372,47 @@ export default function DoctorCatalog() {
                     <Label className="text-[10px] font-black uppercase text-slate-400">Active Campaign</Label>
                     <Input className="h-12 bg-slate-50 border-none font-bold" value={editingDoc.current_active_campaign || ''} onChange={e => setEditingDoc({...editingDoc, current_active_campaign: e.target.value})} />
                   </div>
+                  {editingDoc.specialty === 'Physiotherapist' && (
+                    <div className="col-span-2 p-6 rounded-3xl bg-slate-50 border border-slate-100 space-y-4">
+                      <Label className="text-[10px] font-black uppercase text-slate-400">Consultation Modes (परामर्श के तरीके)</Label>
+                      <div className="flex gap-8">
+                        <div className="flex items-center space-x-3">
+                          <Checkbox 
+                            id="edit-mode-clinic" 
+                            checked={(editingDoc.consultation_modes || '').includes('Clinic')} 
+                            onCheckedChange={(checked) => {
+                              const modes = (editingDoc.consultation_modes || '').split(',').filter(Boolean);
+                              if (checked) {
+                                if (!modes.includes('Clinic')) modes.push('Clinic');
+                              } else {
+                                const index = modes.indexOf('Clinic');
+                                if (index > -1) modes.splice(index, 1);
+                              }
+                              setEditingDoc({...editingDoc, consultation_modes: modes.join(',')});
+                            }}
+                          />
+                          <Label htmlFor="edit-mode-clinic" className="text-sm font-bold text-slate-700 cursor-pointer">Therapy at Clinic</Label>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <Checkbox 
+                            id="edit-mode-home" 
+                            checked={(editingDoc.consultation_modes || '').includes('Home')} 
+                            onCheckedChange={(checked) => {
+                              const modes = (editingDoc.consultation_modes || '').split(',').filter(Boolean);
+                              if (checked) {
+                                  if (!modes.includes('Home')) modes.push('Home');
+                              } else {
+                                  const index = modes.indexOf('Home');
+                                  if (index > -1) modes.splice(index, 1);
+                              }
+                              setEditingDoc({...editingDoc, consultation_modes: modes.join(',')});
+                            }}
+                          />
+                          <Label htmlFor="edit-mode-home" className="text-sm font-bold text-slate-700 cursor-pointer">Therapy at Home</Label>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   <div className="col-span-2 space-y-2">
                     <Label className="text-[10px] font-black uppercase text-slate-400">Clinic Address</Label>
                     <Input className="h-12 bg-slate-50 border-none font-bold" value={editingDoc.clinic_address || ''} onChange={e => setEditingDoc({...editingDoc, clinic_address: e.target.value})} />

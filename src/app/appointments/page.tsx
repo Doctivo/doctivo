@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { differenceInDays, parseISO, isWithinInterval, subDays, subMonths } from 'date-fns';
+import Image from 'next/image';
 
 type TimeFilter = 'All' | 'This Week' | 'Last Month' | 'Last 3 Months';
 
@@ -90,7 +91,12 @@ export default function AppointmentsPage() {
     <div className="mobile-container pb-32 bg-slate-50 min-h-screen overflow-y-auto">
       <div className="bg-white px-6 pt-8 pb-4 sticky top-0 z-20 border-b border-slate-300">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Bookings</h1>
+          <div className="flex items-center space-x-3">
+            <div className="h-9 w-9 rounded-xl overflow-hidden relative shadow-sm border border-slate-100 shrink-0">
+              <Image src="/562c71b5-1be4-415a-94dc-002e1889eb7c-8.jpg" alt="Logo" fill className="object-cover" />
+            </div>
+            <h1 className="text-2xl font-black text-slate-900 tracking-tight">Bookings</h1>
+          </div>
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

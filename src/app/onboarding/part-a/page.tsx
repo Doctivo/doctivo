@@ -46,7 +46,7 @@ export default function PartAPage() {
     const result = await upsertPatientProfile(profileData);
 
     if (result.success) {
-      setUserStore(profileData);
+      setUserStore(profileData as any);
       router.push('/onboarding/part-b');
     } else {
       toast({ variant: 'destructive', title: 'Database Error', description: result.error });

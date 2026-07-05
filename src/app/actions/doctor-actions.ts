@@ -36,7 +36,10 @@ export async function getDoctors(specialty?: string) {
       slotDuration: row.slot_duration || 15,
       availableSlots: [], 
       categoryIcon: '🏥',
-      reasonsForVisit: row.reasons_for_visit ? JSON.parse(row.reasons_for_visit) : []
+      reasonsForVisit: row.reasons_for_visit ? JSON.parse(row.reasons_for_visit) : [],
+      latitude: row.latitude ? parseFloat(row.latitude) : 26.7606,
+      longitude: row.longitude ? parseFloat(row.longitude) : 83.3731,
+      consultationModes: row.consultation_modes || 'Clinic,Home'
     })) as Doctor[];
   } catch (error) {
     console.error('Error fetching doctors:', error);
@@ -70,7 +73,10 @@ export async function getDoctorById(id: string) {
       slotDuration: row.slot_duration || 15,
       availableSlots: [],
       categoryIcon: '🏥',
-      reasonsForVisit: row.reasons_for_visit ? JSON.parse(row.reasons_for_visit) : []
+      reasonsForVisit: row.reasons_for_visit ? JSON.parse(row.reasons_for_visit) : [],
+      latitude: row.latitude ? parseFloat(row.latitude) : 26.7606,
+      longitude: row.longitude ? parseFloat(row.longitude) : 83.3731,
+      consultationModes: row.consultation_modes || 'Clinic,Home'
     } as Doctor;
   } catch (error) {
     console.error('Error fetching doctor by id:', error);

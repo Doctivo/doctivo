@@ -37,6 +37,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useStore } from '@/lib/store';
 
 const INITIAL_PERMISSIONS = {
   dashboard: { view: true, view_financials: true },
@@ -88,6 +89,8 @@ const ROLE_TEMPLATES = {
 };
 
 export default function AdminManagement() {
+  const currentAdmin = useStore(state => state.admin);
+  const hasHydrated = useStore(state => state._hasHydrated);
   const [admins, setAdmins] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -170,11 +173,17 @@ export default function AdminManagement() {
   };
 
   const handleDelete = async (id: string) => {
+    if (currentAdmin && currentAdmin.admin_id === id) {
+      toast({ variant: 'destructive', title: 'Action Denied', description: 'You cannot revoke your own admin account.' });
+      return;
+    }
     if (!confirm('Revoke administrator access?')) return;
     const res = await deleteAdminUser(id);
     if (res.success) {
       toast({ title: 'Removed', description: 'Admin access revoked.' });
       load();
+    } else {
+      toast({ variant: 'destructive', title: 'Action Failed', description: String(res.error || 'Failed to delete sub-admin.') });
     }
   };
 
@@ -186,6 +195,27 @@ export default function AdminManagement() {
       return String(dateVal);
     }
   };
+
+  if (!hasHydrated) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-3">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Syncing credentials...</p>
+      </div>
+    );
+  }
+
+  if (currentAdmin?.role !== 'Super Admin') {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
+        <ShieldAlert className="h-16 w-16 text-red-500" />
+        <h2 className="text-xl font-black text-slate-800">Access Denied</h2>
+        <p className="text-sm text-slate-400 font-bold max-w-xs text-center leading-relaxed">
+          Only the Super Administrator is authorized to view or manage access control parameters.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -337,9 +367,11 @@ export default function AdminManagement() {
                     {safeFormatDate(admin.created_at)}
                   </td>
                   <td className="px-10 py-8 text-right">
-                    <Button onClick={() => handleDelete(admin.admin_id)} variant="ghost" className="text-red-500 hover:bg-red-50 h-12 w-12 p-0 rounded-2xl">
-                      <Trash2 className="h-6 w-6" />
-                    </Button>
+                    {currentAdmin?.admin_id !== admin.admin_id && (
+                      <Button onClick={() => handleDelete(admin.admin_id)} variant="ghost" className="text-red-500 hover:bg-red-50 h-12 w-12 p-0 rounded-2xl">
+                        <Trash2 className="h-6 w-6" />
+                      </Button>
+                    )}
                   </td>
                 </tr>
               )) : (

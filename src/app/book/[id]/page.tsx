@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { ChevronLeft, Star, MapPin, Loader2, Plus, CheckCircle2, Calendar as CalendarIcon, Clock as ClockIcon, MessageSquare, AlertCircle, Check } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
-import { createAppointment, getBookedSlots } from '@/app/actions/appointment-actions';
+import { createAppointment, getBookedSlots, getBookedSlotsForDateRange } from '@/app/actions/appointment-actions';
 import { getDoctorById } from '@/app/actions/doctor-actions';
 import { addFamilyMember, getFamilyMembers } from '@/app/actions/patient-actions';
 import { useToast } from '@/hooks/use-toast';
@@ -23,32 +23,42 @@ import { Card, CardContent } from '@/components/ui/card';
 const generateTimeSlots = (start: string, end: string, duration: number) => {
   const slots = [];
   try {
-    let current = new Date(`2024-01-01T${start}:00`);
-    const stop = new Date(`2024-01-01T${end}:00`);
+    const [startH, startM] = start.split(':').map(Number);
+    const [endH, endM] = end.split(':').map(Number);
+    const startTime = new Date();
+    startTime.setHours(startH, startM, 0, 0);
+    const endTime = new Date();
+    endTime.setHours(endH, endM, 0, 0);
 
-    while (current < stop) {
-      const timeString = current.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-      slots.push(timeString);
-      current = new Date(current.getTime() + duration * 60000);
+    let current = new Date(startTime);
+    while (current < endTime) {
+      let hours = current.getHours();
+      const minutes = current.getMinutes();
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+      const minStr = minutes < 10 ? '0' + minutes : minutes;
+      slots.push(`${hours}:${minStr} ${ampm}`);
+      current.setMinutes(current.getMinutes() + duration);
     }
   } catch (e) {}
   return slots;
 };
 
-function BookingContent({ params }: { params: Promise<{ id: string }> }) {
+function BookingContent({ id }: { id: string }) {
   const router = useRouter();
-  const { id } = use(params);
-  const user = useStore(state => state.user);
   const patients = useStore(state => state.patients);
   const setPatientsStore = useStore(state => state.setPatients);
   const addPatientStore = useStore(state => state.addPatient);
   const addAppointmentStore = useStore(state => state.addAppointment);
+  const user = useStore(state => state.user);
   const { toast } = useToast();
 
   const [doc, setDoc] = useState<Doctor | null>(null);
   const [selectedPatientId, setSelectedPatientId] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
+  const [rangeBookedSlots, setRangeBookedSlots] = useState<{ appointment_date: string; appointment_time_slot: string }[]>([]);
   const [selectedSlot, setSelectedSlot] = useState('');
   const [symptoms, setSymptoms] = useState('');
   const [selectedReasons, setSelectedReasons] = useState<string[]>([]);
@@ -130,6 +140,47 @@ function BookingContent({ params }: { params: Promise<{ id: string }> }) {
     fetchBooked();
   }, [doc, selectedDate]);
 
+  useEffect(() => {
+    async function fetchRangeBookings() {
+      if (!doc || dayRange.length === 0) return;
+      const startDate = dayRange[0].fullDate;
+      const endDate = dayRange[dayRange.length - 1].fullDate;
+      const data = await getBookedSlotsForDateRange(doc.id, startDate, endDate);
+      setRangeBookedSlots(data);
+    }
+    fetchRangeBookings();
+  }, [doc, dayRange, selectedDate]);
+
+  const getAvailableSlotsCount = (fullDate: string) => {
+    const bookedForDay = rangeBookedSlots.filter(r => {
+      const rDate = r.appointment_date.split('T')[0];
+      return rDate === fullDate;
+    }).map(r => r.appointment_time_slot);
+
+    const now = new Date();
+    const isToday = fullDate === now.toISOString().split('T')[0];
+
+    let count = 0;
+    for (const slot of timeSlots) {
+      const isBooked = bookedForDay.includes(slot);
+      let isPast = false;
+      if (isToday) {
+        const [hourStr, minutePart] = slot.split(':');
+        const [minuteStr, period] = minutePart.split(' ');
+        let h = parseInt(hourStr);
+        if (period === 'PM' && h !== 12) h += 12;
+        if (period === 'AM' && h === 12) h = 0;
+        const slotTime = new Date();
+        slotTime.setHours(h, parseInt(minuteStr), 0, 0);
+        isPast = slotTime < now;
+      }
+      if (!isBooked && !isPast) {
+        count++;
+      }
+    }
+    return count;
+  };
+
   const displayPatients = useMemo(() => {
     const list = [...patients];
     const hasSelf = list.some(p => p.id === user?.id || p.relation === 'Self');
@@ -138,9 +189,14 @@ function BookingContent({ params }: { params: Promise<{ id: string }> }) {
     return unique.sort((a, b) => a.relation === 'Self' ? -1 : 1);
   }, [patients, user]);
 
+  const queryPatientId = searchParams.get('patientId') || '';
+
   useEffect(() => {
-    if (displayPatients.length > 0 && !selectedPatientId) setSelectedPatientId(displayPatients[0].id);
-  }, [displayPatients, selectedPatientId]);
+    if (displayPatients.length > 0 && !selectedPatientId) {
+      const match = displayPatients.find(p => p.id === queryPatientId);
+      setSelectedPatientId(match ? match.id : displayPatients[0].id);
+    }
+  }, [displayPatients, selectedPatientId, queryPatientId]);
 
   const handleAddQuickPatient = async () => {
     if (!newPatient.name || !newPatient.age || !newPatient.height_cm || !newPatient.weight_kg || !newPatient.gender || !newPatient.relation || !newPatient.blood_group) {
@@ -152,12 +208,12 @@ function BookingContent({ params }: { params: Promise<{ id: string }> }) {
     const heightNum = parseInt(newPatient.height_cm);
     const weightNum = parseInt(newPatient.weight_kg);
 
-    if (isNaN(ageNum) || ageNum <= 0 || ageNum > 150) {
-      toast({ variant: 'destructive', title: 'Invalid Age', description: 'Age must be between 1 and 150.' });
+    if (isNaN(ageNum) || ageNum <= 0 || ageNum > 200) {
+      toast({ variant: 'destructive', title: 'Invalid Age', description: 'Age must be between 1 and 200.' });
       return;
     }
-    if (isNaN(heightNum) || heightNum <= 0 || heightNum > 243) {
-      toast({ variant: 'destructive', title: 'Invalid Height', description: 'Height must be between 1 and 243 cm (8 feet).' });
+    if (isNaN(heightNum) || heightNum <= 0 || heightNum > 250) {
+      toast({ variant: 'destructive', title: 'Invalid Height', description: 'Height must be between 1 and 250 cm.' });
       return;
     }
     if (isNaN(weightNum) || weightNum <= 0 || weightNum > 200) {
@@ -240,11 +296,16 @@ function BookingContent({ params }: { params: Promise<{ id: string }> }) {
 
   return (
     <div className="mobile-container pb-60 bg-slate-50 min-h-screen overflow-y-auto">
-      <div className="bg-white p-4 flex items-center gap-4 sticky top-0 z-30 border-b border-border shadow-sm">
-        <button onClick={() => router.back()} className="h-10 w-10 flex items-center justify-center bg-slate-100 rounded-full border border-border">
-          <ChevronLeft className="h-6 w-6 text-slate-700" />
-        </button>
-        <h1 className="text-xl font-black text-slate-800 tracking-tight">Schedule Appointment</h1>
+      <div className="bg-white p-4 flex items-center justify-between sticky top-0 z-30 border-b border-border shadow-sm">
+        <div className="flex items-center gap-4">
+          <button onClick={() => router.back()} className="h-10 w-10 flex items-center justify-center bg-slate-100 rounded-full border border-border">
+            <ChevronLeft className="h-6 w-6 text-slate-700" />
+          </button>
+          <h1 className="text-xl font-black text-slate-800 tracking-tight">Schedule Appointment</h1>
+        </div>
+        <div className="h-9 w-9 rounded-xl overflow-hidden relative shadow-sm border border-slate-100 shrink-0">
+          <Image src="/562c71b5-1be4-415a-94dc-002e1889eb7c-8.jpg" alt="Logo" fill className="object-cover" />
+        </div>
       </div>
 
       <div className="p-6 space-y-8">
@@ -467,19 +528,30 @@ function BookingContent({ params }: { params: Promise<{ id: string }> }) {
         <div className="space-y-4">
           <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 px-1">Select Date</h3>
           <div className="flex space-x-3 overflow-x-auto pb-4 scroll-hide -mx-6 px-6">
-            {dayRange.map(day => (
-              <div 
-                key={day.fullDate} 
-                onClick={() => { setSelectedDate(day.fullDate); setSelectedSlot(''); }}
-                className={cn(
-                  "min-w-[65px] py-4 rounded-2xl border-2 transition-all cursor-pointer flex flex-col items-center",
-                  selectedDate === day.fullDate ? "bg-slate-900 border-slate-900 text-white" : "bg-white border-border text-slate-900"
-                )}
-              >
-                <span className="text-[9px] font-black uppercase mb-1 opacity-60">{day.dayName}</span>
-                <span className="text-base font-black">{day.dateNum}</span>
-              </div>
-            ))}
+            {dayRange.map(day => {
+              const count = getAvailableSlotsCount(day.fullDate);
+              const isSelected = selectedDate === day.fullDate;
+              return (
+                <div 
+                  key={day.fullDate} 
+                  onClick={() => { setSelectedDate(day.fullDate); setSelectedSlot(''); }}
+                  className={cn(
+                    "min-w-[78px] py-3.5 rounded-2xl border-2 transition-all cursor-pointer flex flex-col items-center justify-between",
+                    isSelected ? "bg-slate-900 border-slate-900 text-white" : "bg-white border-border text-slate-900"
+                  )}
+                >
+                  <span className="text-[9px] font-black uppercase mb-0.5 opacity-60">{day.dayName}</span>
+                  <span className="text-base font-black leading-none">{day.dateNum}</span>
+                  <span className={cn(
+                    "text-[8px] font-extrabold mt-1.5 px-1.5 py-0.5 rounded-md leading-none",
+                    count === 0 ? "bg-red-50 text-red-500" :
+                    isSelected ? "bg-white/10 text-white" : "bg-blue-50 text-blue-600"
+                  )}>
+                    {count === 0 ? 'Full' : `${count} Left`}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -540,9 +612,10 @@ function BookingContent({ params }: { params: Promise<{ id: string }> }) {
 }
 
 export default function BookingPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   return (
     <Suspense fallback={<div className="flex justify-center items-center min-h-screen"><Loader2 className="animate-spin text-primary" /></div>}>
-      <BookingContent params={params} />
+      <BookingContent id={id} />
     </Suspense>
   );
 }

@@ -116,6 +116,25 @@ export async function getBookedSlots(doctorId: string, date: string) {
 }
 
 /**
+ * Fetches already booked slots for a specific doctor between a range of dates
+ */
+export async function getBookedSlotsForDateRange(doctorId: string, startDate: string, endDate: string) {
+  try {
+    const result = await query(
+      "SELECT appointment_date, appointment_time_slot FROM appointments WHERE doctor_id = $1 AND appointment_date >= $2 AND appointment_date <= $3 AND status IN ('Confirmed', 'Waiting')",
+      [doctorId, startDate, endDate]
+    );
+    return result.rows.map(r => ({
+      appointment_date: String(r.appointment_date),
+      appointment_time_slot: r.appointment_time_slot
+    })) as { appointment_date: string; appointment_time_slot: string }[];
+  } catch (error) {
+    console.error('Error fetching booked slots for range:', error);
+    return [];
+  }
+}
+
+/**
  * Fetches a single appointment by its unique ID
  */
 export async function getAppointmentById(id: string) {

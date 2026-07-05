@@ -63,7 +63,6 @@ export default function PartBPage() {
       if (result.success) {
         setUserStore(updatedUser);
         
-        // Ensure Self is in patients list
         addPatient({
           id: user.id || 'USER-SELF',
           name: user.name,
@@ -71,8 +70,11 @@ export default function PartBPage() {
           gender: user.gender,
           relation: 'Self',
           medicalHistory: history,
-          allergies: allergies
-        });
+          allergies: allergies,
+          height_cm: user.height_cm || '',
+          weight_kg: user.weight_kg || '',
+          blood_group: user.blood_group || ''
+        } as any);
 
         const params = new URLSearchParams();
         recommendation.specializations.forEach(s => params.append('rec', s));

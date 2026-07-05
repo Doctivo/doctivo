@@ -12,6 +12,7 @@ import { getEmployeePayroll, adjustPayroll, settlePayroll, getPayrollLogs } from
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils';
 
 export default function PayrollConsole() {
   const [employees, setEmployees] = useState<any[]>([]);
