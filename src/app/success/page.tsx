@@ -87,17 +87,19 @@ function SuccessContent() {
         pdf.text('Doctivo Appointment Receipt', 10, 15);
         pdf.addImage(imgData, 'PNG', 10, 25, pdfWidth, pdfHeight);
         
-        const pdfBase64 = pdf.output('datauristring');
+        const pdfDataUri = pdf.output('datauri' as any) as unknown as string;
+        const pdfBase64 = pdfDataUri.split(',')[1] || '';
         
         (window as any).DoctivoAppChannel.postMessage(JSON.stringify({
           action: 'download',
           base64: pdfBase64,
+          dataUri: pdfDataUri,
           filename: `Doctivo_Booking_${appointment.id.slice(-6)}.pdf`
         }));
         
         toast({
           title: "Download Started",
-          description: "Receipt is being downloaded to your device.",
+          description: "Receipt download initiated inside app.",
         });
       } catch (error) {
         console.error('App PDF Generation Error:', error);
@@ -135,7 +137,26 @@ function SuccessContent() {
       
       pdf.text('Doctivo Appointment Receipt', 10, 15);
       pdf.addImage(imgData, 'PNG', 10, 25, pdfWidth, pdfHeight);
-      pdf.save(`Doctivo_Booking_${appointment.id.slice(-6)}.pdf`);
+      
+      // Mobile-friendly blob URL download
+      const blob = pdf.output('blob');
+      const blobUrl = URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `Doctivo_Booking_${appointment.id.slice(-6)}.pdf`;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Fallback: Open in new tab for manual save
+      setTimeout(() => {
+        try {
+          window.open(blobUrl, '_blank');
+        } catch (e) {}
+        URL.revokeObjectURL(blobUrl);
+      }, 500);
       
       toast({
         title: "Success",

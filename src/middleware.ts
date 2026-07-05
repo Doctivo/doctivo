@@ -18,12 +18,23 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 3. Always allow direct access to /login page and root landing page
-  if (pathname === '/login' || pathname === '/') {
+  const sessionRole = request.cookies.get('session_role')?.value;
+  const sessionId = request.cookies.get('session_id')?.value;
+
+  // Redirect authenticated users away from landing page and login page directly to their dashboards
+  if (pathname === '/' || pathname === '/login') {
+    if (sessionRole === 'Patient' && sessionId) {
+      return NextResponse.redirect(new URL('/home', request.url));
+    }
+    if (sessionRole === 'Admin' && sessionId) {
+      return NextResponse.redirect(new URL('/admin', request.url));
+    }
+    if ((sessionRole === 'Doctor' || sessionRole === 'Attendant') && sessionId) {
+      return NextResponse.redirect(new URL(`/doctor/${sessionId}`, request.url));
+    }
     return NextResponse.next();
   }
 
-  const sessionRole = request.cookies.get('session_role')?.value;
   const userAgent = request.headers.get('user-agent') || '';
   const isMobileApp = userAgent.includes('DoctivoApp');
 
