@@ -2,6 +2,7 @@
 
 import { query } from '@/lib/db';
 import { cookies } from 'next/headers';
+import { sendTransactionalEmail } from './auth-actions';
 
 /**
  * Initializes all database tables in the correct order of dependency.
@@ -304,6 +305,51 @@ export async function addDoctorDirectly(doc: any) {
       !!doc.allow_revenue_deduction, doc.current_active_campaign || null,
       doc.consultation_modes || 'Clinic,Home'
     ]);
+
+    // Send doctor onboarding welcome email
+    if (doc.email) {
+      try {
+        const welcomeHtml = `
+          <div style="font-family: Arial, sans-serif; padding: 30px; max-width: 500px; margin: auto; border: 1px solid #e2e8f0; border-radius: 24px; background-color: #ffffff; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+            <div style="text-align: center; margin-bottom: 25px;">
+              <h2 style="color: #2563eb; margin: 0; font-weight: 900; letter-spacing: -0.5px;">Welcome to Doctivo</h2>
+              <p style="color: #64748b; font-size: 11px; text-transform: uppercase; font-weight: bold; letter-spacing: 1.5px; margin-top: 6px;">Doctor Profile Activated</p>
+            </div>
+            <p style="font-size: 14px; color: #334155; line-height: 1.6;">Hello Dr. <strong>${doc.name}</strong>,</p>
+            <p style="font-size: 14px; color: #334155; line-height: 1.6;">Your professional catalog profile has been approved and activated. Here are your credentials to log in to the Doctor dashboard:</p>
+            
+            <div style="background-color: #f8fafc; padding: 20px; border-radius: 16px; margin: 20px 0; border: 1px solid #e2e8f0;">
+              <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                <tr>
+                  <td style="padding: 6px 0; color: #64748b; font-weight: bold; width: 120px;">Doctor ID:</td>
+                  <td style="padding: 6px 0; color: #0f172a; font-weight: 800;">${id}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 6px 0; color: #64748b; font-weight: bold;">Phone:</td>
+                  <td style="padding: 6px 0; color: #0f172a; font-weight: 700;">${doc.phone}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 6px 0; color: #64748b; font-weight: bold;">Specialty:</td>
+                  <td style="padding: 6px 0; color: #0f172a; font-weight: 700;">${doc.specialty}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 6px 0; color: #64748b; font-weight: bold;">Address:</td>
+                  <td style="padding: 6px 0; color: #0f172a; font-weight: 700;">${doc.address}</td>
+                </tr>
+              </table>
+            </div>
+
+            <p style="font-size: 14px; color: #334155; line-height: 1.6;">You can log in to your <strong>OPD Queue Control Console</strong> at any time by visiting <a href="https://doctivo.in/login" style="color: #2563eb; text-decoration: none; font-weight: bold;">doctivo.in/login</a> using either your Doctor ID or phone number.</p>
+            <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 25px 0;" />
+            <p style="font-size: 11px; color: #94a3b8; text-align: center; margin: 0;">This is an automated system notification. Please do not reply directly to this message.</p>
+          </div>
+        `;
+        await sendTransactionalEmail(doc.email, doc.name, 'Welcome to Doctivo - Your Doctor Account is Active!', welcomeHtml);
+      } catch (emailErr) {
+        console.error('Failed to send onboarding doctor email:', emailErr);
+      }
+    }
+
     return { success: true, data: result.rows[0] };
   } catch (error: any) {
     return { success: false, error: error.message };

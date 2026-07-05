@@ -7,6 +7,10 @@ import { useStore } from '@/lib/store';
 import { Card, CardContent } from '@/components/ui/card';
 import { BottomNav } from '@/components/BottomNav';
 import { cn } from '@/lib/utils';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import jsPDF from 'jspdf';
+import { Download, Info, CheckCircle2 } from 'lucide-react';
 import { getUserAppointments } from '@/app/actions/appointment-actions';
 import { 
   DropdownMenu, 
@@ -29,6 +33,170 @@ export default function AppointmentsPage() {
   const [activeTab, setActiveTab] = useState<'Upcoming' | 'Past'>('Upcoming');
   const [loading, setLoading] = useState(true);
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('All');
+  const [selectedApp, setSelectedApp] = useState<any | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownloadPDF = async (appointment: any) => {
+    if (!appointment) return;
+    setIsDownloading(true);
+    try {
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      const primaryColor = '#2563eb';
+      const darkColor = '#1e293b';
+      const lightColor = '#64748b';
+      const bgColor = '#f8fafc';
+      
+      pdf.setDrawColor(226, 232, 240);
+      pdf.setFillColor(255, 255, 255);
+      pdf.roundedRect(15, 15, 180, 240, 5, 5, 'FD');
+
+      pdf.setFillColor(37, 99, 235);
+      pdf.rect(15, 15, 180, 5, 'F');
+
+      pdf.setTextColor(primaryColor);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(28);
+      pdf.text('DOCTIVO', 25, 40);
+
+      pdf.setTextColor(lightColor);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(9);
+      pdf.text('HEALTHCARE SIMPLIFIED', 25, 46);
+
+      pdf.setTextColor(darkColor);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(16);
+      pdf.text('APPOINTMENT TICKET', 115, 42);
+
+      pdf.setDrawColor(241, 245, 249);
+      pdf.line(25, 55, 185, 55);
+
+      // Token Box
+      pdf.setFillColor(bgColor);
+      pdf.roundedRect(25, 65, 75, 40, 4, 4, 'F');
+      
+      pdf.setTextColor(lightColor);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(9);
+      pdf.text('YOUR TOKEN NUMBER', 35, 76);
+
+      pdf.setTextColor(primaryColor);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(36);
+      pdf.text(`#${appointment.tokenNumber || 1}`, 35, 96);
+
+      // OTP / ID Box
+      pdf.setFillColor(bgColor);
+      pdf.roundedRect(110, 65, 75, 40, 4, 4, 'F');
+
+      pdf.setTextColor(lightColor);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(9);
+      pdf.text('BOOKING ID', 120, 76);
+      pdf.setTextColor(darkColor);
+      pdf.setFontSize(12);
+      pdf.text(`#${String(appointment.id).slice(-6).toUpperCase()}`, 120, 83);
+
+      pdf.setTextColor(lightColor);
+      pdf.setFontSize(9);
+      pdf.text('VISIT VERIFICATION OTP', 120, 93);
+      pdf.setTextColor(primaryColor);
+      pdf.setFontSize(14);
+      pdf.text(`${appointment.visit_otp || '123456'}`, 120, 100);
+
+      pdf.line(25, 120, 185, 120);
+
+      pdf.setFontSize(10);
+      
+      pdf.setTextColor(lightColor);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('Patient Name', 25, 132);
+      pdf.setTextColor(darkColor);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(appointment.patientName, 25, 138);
+
+      pdf.setTextColor(lightColor);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('Patient Type', 110, 132);
+      pdf.setTextColor(darkColor);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(String(appointment.patientType || 'Other').replace('_', ' ').toUpperCase(), 110, 138);
+
+      pdf.setTextColor(lightColor);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('Appointment Date', 25, 154);
+      pdf.setTextColor(darkColor);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(formatDate(appointment.date), 25, 160);
+
+      pdf.setTextColor(lightColor);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('Time Slot', 110, 154);
+      pdf.setTextColor(darkColor);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(appointment.time, 110, 160);
+
+      pdf.setTextColor(lightColor);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('Consultation Fee', 25, 176);
+      pdf.setTextColor(darkColor);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(`Rs. ${appointment.consultation_fee_amount || 500}`, 25, 182);
+
+      pdf.setTextColor(lightColor);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('Payment Status', 110, 176);
+      pdf.setTextColor(appointment.payment_status === 'Paid' ? '#16a34a' : '#d97706');
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(String(appointment.payment_status || 'Unpaid').toUpperCase(), 110, 182);
+
+      // Doctor details
+      pdf.setFillColor(bgColor);
+      pdf.roundedRect(25, 195, 150, 22, 3, 3, 'F');
+      pdf.setTextColor(lightColor);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(9);
+      pdf.text('ASSIGNED DOCTOR / THERAPIST', 32, 204);
+      pdf.setTextColor(darkColor);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(11);
+      pdf.text(appointment.doctorName, 32, 211);
+
+      pdf.setTextColor(lightColor);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(8);
+      pdf.text('Please arrive 10 minutes prior to your selected slot.', 25, 235);
+      pdf.text('For cancellations or rescheduling, please contact support.', 25, 240);
+
+      // Trigger download inside webview context or standard browser
+      if (typeof window !== 'undefined' && (window as any).DoctivoAppChannel) {
+        try {
+          const pdfDataUri = pdf.output('datauri' as any) as unknown as string;
+          const pdfBase64 = pdfDataUri.split(',')[1] || '';
+          
+          (window as any).DoctivoAppChannel.postMessage(JSON.stringify({
+            action: 'download',
+            base64: pdfBase64,
+            filename: `Doctivo_Booking_${appointment.id.slice(-6).toUpperCase()}.pdf`
+          }));
+        } catch (webviewErr) {
+          console.error(webviewErr);
+          pdf.save(`Doctivo_Booking_${appointment.id.slice(-6).toUpperCase()}.pdf`);
+        }
+      } else {
+        pdf.save(`Doctivo_Booking_${appointment.id.slice(-6).toUpperCase()}.pdf`);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -155,10 +323,14 @@ export default function AppointmentsPage() {
               const isMissed = app.status === 'Missed';
               
               return (
-                <Card key={app.id} className={cn(
-                  "border-slate-300 shadow-lg rounded-[2.5rem] overflow-hidden bg-white border-2",
-                  isMissed && "opacity-75 border-slate-200 grayscale-[0.5]"
-                )}>
+                <Card 
+                  key={app.id} 
+                  onClick={() => setSelectedApp(app)}
+                  className={cn(
+                    "border-slate-300 shadow-lg rounded-[2.5rem] overflow-hidden bg-white border-2 cursor-pointer hover:border-blue-500/50 active:scale-[0.98] transition-all",
+                    isMissed && "opacity-75 border-slate-200 grayscale-[0.5]"
+                  )}
+                >
                   <CardContent className="p-6 space-y-5">
                     <div className="flex justify-between items-center px-1">
                       <p className="text-[11px] font-black text-slate-500 tracking-tight">ID: #APT-{app.id.slice(-6).toUpperCase()}</p>
@@ -244,6 +416,75 @@ export default function AppointmentsPage() {
       </div>
 
       <BottomNav />
+
+      <Dialog open={!!selectedApp} onOpenChange={(open) => { if (!open) setSelectedApp(null); }}>
+        <DialogContent className="max-w-md rounded-[2.5rem] p-8 border-none shadow-2xl bg-white">
+          <DialogHeader className="text-center space-y-2 pb-4 border-b border-slate-100">
+            <DialogTitle className="text-2xl font-black text-slate-800">Booking Ticket</DialogTitle>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+              ID: #APT-{selectedApp?.id?.slice(-6).toUpperCase()}
+            </p>
+          </DialogHeader>
+
+          {selectedApp && (
+            <div className="py-6 space-y-6">
+              {/* Token and OTP Row */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-slate-50 p-4 rounded-2xl text-center border border-slate-100">
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">Your Token</p>
+                  <p className="text-3xl font-black text-blue-600">#{selectedApp.tokenNumber || 1}</p>
+                </div>
+                <div className="bg-slate-50 p-4 rounded-2xl text-center border border-slate-100">
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">Verification OTP</p>
+                  <p className="text-3xl font-black text-blue-600 tracking-wider">{selectedApp.visit_otp || '123456'}</p>
+                </div>
+              </div>
+
+              {/* Patient and Doctor Information */}
+              <div className="space-y-3 bg-slate-50 p-5 rounded-[1.8rem] border border-slate-100 text-xs">
+                <div className="flex justify-between items-center">
+                  <span className="font-bold text-slate-400">Doctor Name:</span>
+                  <span className="font-black text-slate-800">{selectedApp.doctorName}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="font-bold text-slate-400">Patient Name:</span>
+                  <span className="font-black text-slate-800">{selectedApp.patientName}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="font-bold text-slate-400">Time Slot:</span>
+                  <span className="font-black text-slate-800">{selectedApp.time}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="font-bold text-slate-400">Date:</span>
+                  <span className="font-black text-slate-800">{formatDate(selectedApp.date)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="font-bold text-slate-400">Consultation Fee:</span>
+                  <span className="font-black text-slate-800">Rs. {selectedApp.consultation_fee_amount || 500}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="font-bold text-slate-400">Payment Status:</span>
+                  <span className={`font-black uppercase tracking-wider px-2 py-0.5 rounded ${
+                    selectedApp.payment_status === 'Paid' ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'
+                  }`}>
+                    {selectedApp.payment_status || 'Unpaid'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <Button 
+                onClick={() => handleDownloadPDF(selectedApp)}
+                disabled={isDownloading}
+                className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl flex items-center justify-center gap-2"
+              >
+                {isDownloading ? <Loader2 className="animate-spin h-5 w-5" /> : <Download className="h-5 w-5" />}
+                Download PDF Ticket
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

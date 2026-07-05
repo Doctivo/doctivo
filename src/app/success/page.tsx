@@ -211,43 +211,28 @@ function SuccessContent() {
 
       // Output handle
       if (typeof window !== 'undefined' && (window as any).DoctivoAppChannel) {
-        const pdfDataUri = pdf.output('datauri' as any) as unknown as string;
-        const pdfBase64 = pdfDataUri.split(',')[1] || '';
-        
-        (window as any).DoctivoAppChannel.postMessage(JSON.stringify({
-          action: 'download',
-          base64: pdfBase64,
-          dataUri: pdfDataUri,
-          filename: `Doctivo_Booking_${appointment.id.slice(-6)}.pdf`
-        }));
-        
-        toast({
-          title: "Download Started",
-          description: "Receipt download initiated inside app.",
-        });
-      } else {
-        const blob = pdf.output('blob');
-        const blobUrl = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = blobUrl;
-        link.download = `Doctivo_Booking_${appointment.id.slice(-6)}.pdf`;
-        link.target = '_blank';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        setTimeout(() => {
-          try {
-            window.open(blobUrl, '_blank');
-          } catch (e) {}
-          URL.revokeObjectURL(blobUrl);
-        }, 500);
-        
-        toast({
-          title: "Success",
-          description: "PDF Ticket generated and downloaded.",
-        });
+        try {
+          const pdfDataUri = pdf.output('datauri' as any) as unknown as string;
+          const pdfBase64 = pdfDataUri.split(',')[1] || '';
+          
+          (window as any).DoctivoAppChannel.postMessage(JSON.stringify({
+            action: 'download',
+            base64: pdfBase64,
+            dataUri: pdfDataUri,
+            filename: `Doctivo_Booking_${appointment.id.slice(-6)}.pdf`
+          }));
+        } catch (e) {
+          console.error('App channel communication error:', e);
+        }
       }
+
+      // Always trigger standard native browser download
+      pdf.save(`Doctivo_Booking_${appointment.id.slice(-6)}.pdf`);
+      
+      toast({
+        title: "Success",
+        description: "PDF Ticket generated and downloaded.",
+      });
     } catch (error) {
       console.error('PDF Generation Error:', error);
       toast({

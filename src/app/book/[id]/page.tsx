@@ -108,8 +108,20 @@ function BookingContent({ id }: { id: string }) {
 
   const timeSlots = useMemo(() => {
     if (!doc) return [];
+    const customSchedule = doc.customSchedule || {};
+    const override = customSchedule[selectedDate];
+    if (override) {
+      if (override.isAvailable === false || override.is_available === false) {
+        return [];
+      }
+      return generateTimeSlots(
+        override.startTime || override.start_time || doc.startTime,
+        override.endTime || override.end_time || doc.endTime,
+        doc.slotDuration
+      );
+    }
     return generateTimeSlots(doc.startTime, doc.endTime, doc.slotDuration);
-  }, [doc]);
+  }, [doc, selectedDate]);
 
   useEffect(() => {
     async function sync() {
@@ -153,16 +165,33 @@ function BookingContent({ id }: { id: string }) {
   }, [doc, dayRange, selectedDate]);
 
   const getAvailableSlotsCount = (fullDate: string) => {
+    if (!doc) return 0;
     const bookedForDay = rangeBookedSlots.filter(r => {
       const rDate = r.appointment_date.split('T')[0];
       return rDate === fullDate;
     }).map(r => r.appointment_time_slot);
 
+    // Calculate slots list specifically for this date to support date-specific overrides
+    const customSchedule = doc.customSchedule || {};
+    const override = customSchedule[fullDate];
+    let slotsForDay: string[] = [];
+    if (override) {
+      if (override.isAvailable !== false && override.is_available !== false) {
+        slotsForDay = generateTimeSlots(
+          override.startTime || override.start_time || doc.startTime,
+          override.endTime || override.end_time || doc.endTime,
+          doc.slotDuration
+        );
+      }
+    } else {
+      slotsForDay = generateTimeSlots(doc.startTime, doc.endTime, doc.slotDuration);
+    }
+
     const now = new Date();
     const isToday = fullDate === now.toISOString().split('T')[0];
 
     let count = 0;
-    for (const slot of timeSlots) {
+    for (const slot of slotsForDay) {
       const isBooked = bookedForDay.includes(slot);
       let isPast = false;
       if (isToday) {

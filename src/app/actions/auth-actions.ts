@@ -298,3 +298,41 @@ export async function verifyAdminOtp(email: string, otp: string) {
     return { success: false, error: 'Database verification failed.' };
   }
 }
+
+/**
+ * Helper to send transactional emails via Brevo SMTP API
+ */
+export async function sendTransactionalEmail(toEmail: string, toName: string, subject: string, htmlContent: string) {
+  const apiKey = process.env.Brevo_api_key;
+  if (!apiKey) {
+    console.error('Brevo API key is not configured.');
+    return { success: false, error: 'Mail server configuration missing.' };
+  }
+
+  try {
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'api-key': apiKey,
+        'content-type': 'application/json',
+        'accept': 'application/json'
+      },
+      body: JSON.stringify({
+        sender: { name: 'Doctivo', email: 'gaurav@doctivo.in' },
+        to: [{ email: toEmail, name: toName }],
+        subject: subject,
+        htmlContent: htmlContent
+      })
+    });
+    
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error('Brevo API transactional email failed:', errText);
+      return { success: false, error: errText };
+    }
+    return { success: true };
+  } catch (err: any) {
+    console.error('Transactional email exception:', err);
+    return { success: false, error: err.message };
+  }
+}

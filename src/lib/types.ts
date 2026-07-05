@@ -46,6 +46,7 @@ export interface Doctor {
   endTime: string;   
   slotDuration: number; 
   workingDays?: string[]; 
+  customSchedule?: any;
   categoryIcon?: string;
   schedule?: any;
   reasonsForVisit?: string[];

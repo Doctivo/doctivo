@@ -93,25 +93,39 @@ export default function DoctorCatalog() {
 
   const handleAdd = async () => {
     setIsSaving(true);
-    const res = await addDoctorDirectly({ ...newDoc });
-    if (res.success) { 
-      toast({ title: 'Success', description: 'Doctor added.' });
-      setIsAddOpen(false); 
-      load(); 
+    try {
+      const res = await addDoctorDirectly({ ...newDoc });
+      if (res.success) { 
+        toast({ title: 'Success', description: 'Doctor added successfully.' });
+        setIsAddOpen(false); 
+        load(); 
+      } else {
+        toast({ variant: 'destructive', title: 'Onboarding Failed', description: res.error || 'Could not onboard doctor.' });
+      }
+    } catch (e: any) {
+      toast({ variant: 'destructive', title: 'Error', description: e.message || 'An unexpected error occurred.' });
+    } finally {
+      setIsSaving(false);
     }
-    setIsSaving(false);
   };
-
+ 
   const handleUpdate = async () => {
     if (!editingDoc) return;
     setIsSaving(true);
-    const res = await updateDoctor(editingDoc.doctor_id, editingDoc);
-    if (res.success) {
-      toast({ title: 'Success', description: 'Doctor updated.' });
-      setIsEditOpen(false);
-      load();
+    try {
+      const res = await updateDoctor(editingDoc.doctor_id, editingDoc);
+      if (res.success) {
+        toast({ title: 'Success', description: 'Doctor updated successfully.' });
+        setIsEditOpen(false);
+        load();
+      } else {
+        toast({ variant: 'destructive', title: 'Update Failed', description: res.error || 'Could not update doctor.' });
+      }
+    } catch (e: any) {
+      toast({ variant: 'destructive', title: 'Error', description: e.message || 'An unexpected error occurred.' });
+    } finally {
+      setIsSaving(false);
     }
-    setIsSaving(false);
   };
 
   return (
