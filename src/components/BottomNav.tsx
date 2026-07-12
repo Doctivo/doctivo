@@ -18,7 +18,7 @@ export function BottomNav() {
   return (
     <>
       {/* Mobile Bottom Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-100 z-50">
+      <div className={cn("md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-100 z-50", pathname?.startsWith('/book/') && "hidden")}>
         <div className="max-w-[480px] mx-auto h-20 flex items-center justify-around px-2">
           {navItems.map((item) => {
             const isActive = pathname === item.href;

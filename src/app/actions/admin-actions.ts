@@ -329,8 +329,8 @@ export async function getAdminMetrics() {
       totalPatients: parseInt(patientsCount.rows[0]?.count || '0'),
       liveBookings: parseInt(activeBookings.rows[0]?.count || '0'),
       grossRevenue: parseInt(totalRevenue.rows[0]?.sum || '0'),
-      trendData: trendResult.rows || [],
-      specialtyData: specialtyResult.rows || [],
+      trendData: trendResult.rows.map((row: any) => ({ ...row, count: parseInt(row.count || '0') })) || [],
+      specialtyData: specialtyResult.rows.map((row: any) => ({ ...row, value: parseInt(row.value || '0') })) || [],
     };
   } catch (error) {
     return { activeDoctors: 0, totalPatients: 0, liveBookings: 0, grossRevenue: 0, trendData: [], specialtyData: [] };
