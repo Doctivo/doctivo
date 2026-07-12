@@ -1,6 +1,7 @@
 import type {Metadata, Viewport} from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
+import { GlobalSidebar } from '@/components/GlobalSidebar';
 
 export const metadata: Metadata = {
   title: 'DOCTIVO - Book Appointments',
@@ -105,6 +106,7 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased bg-slate-50 min-h-screen selection:bg-blue-100">
+        <GlobalSidebar />
         <main>
           {children}
         </main>

@@ -9,7 +9,6 @@ import {
 } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { Input } from '@/components/ui/input';
-import { BottomNav } from '@/components/BottomNav';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -95,11 +94,11 @@ function HomeContent() {
           {quickActions.map((action, idx) => {
             const Content = (
               <div className={cn(
-                "flex flex-col items-center justify-center p-6 md:p-10 rounded-[2.5rem] md:rounded-[3rem] shadow-sm hover:shadow-md active:scale-95 transition-all group aspect-square border border-slate-100/50 cursor-pointer",
+                "flex flex-col items-center justify-center p-6 md:p-8 rounded-[2.5rem] md:rounded-3xl shadow-sm hover:shadow-md active:scale-95 transition-all group border border-slate-100/50 cursor-pointer h-full min-h-[140px]",
                 action.bgColor
               )}>
-                <div className="mb-4 transition-transform group-hover:scale-110">
-                  <action.icon className={cn("h-10 w-10 md:h-14 md:w-14", action.textColor)} strokeWidth={2.5} />
+                <div className="mb-3 transition-transform group-hover:scale-110">
+                  <action.icon className={cn("h-10 w-10 md:h-12 md:w-12", action.textColor)} strokeWidth={2.5} />
                 </div>
                 <span className={cn("text-[10px] md:text-xs font-black uppercase tracking-widest text-center leading-tight px-2", action.textColor)}>
                   {action.label}
@@ -115,8 +114,8 @@ function HomeContent() {
           })}
         </div>
         
-        <div className="hidden md:block bg-slate-900 rounded-[3rem] p-10 text-white relative overflow-hidden">
-          <div className="relative z-10 space-y-4 max-w-lg">
+        <div className="hidden md:block bg-slate-900 rounded-[3rem] p-10 text-white relative overflow-hidden w-full max-w-full">
+          <div className="relative z-10 space-y-4 max-w-2xl">
             <h2 className="text-3xl font-black leading-tight">Welcome Back, {user?.name?.split(' ')[0]}</h2>
             <p className="text-slate-400 font-medium">Access Gorakhpur's premium medical network. Track your live OPD queue and arrive exactly on time.</p>
             <Link href="/doctors">
@@ -128,7 +127,6 @@ function HomeContent() {
         </div>
       </div>
 
-      <BottomNav />
 
       {/* Physio Choice Pop-up */}
       <Dialog open={isPhysioOpen} onOpenChange={setIsPhysioOpen}>

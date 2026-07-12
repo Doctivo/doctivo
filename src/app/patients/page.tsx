@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { Pencil, Trash2, Plus, Loader2, Camera, Phone, User, Search, Heart } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
-import { BottomNav } from '@/components/BottomNav';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -466,7 +465,6 @@ export default function PatientsPage() {
         </Dialog>
       )}
 
-      <BottomNav />
     </div>
   );
 }

@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { Calendar, Clock, Filter, Loader2, Circle, Check } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { Card, CardContent } from '@/components/ui/card';
-import { BottomNav } from '@/components/BottomNav';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -263,7 +262,6 @@ export default function AppointmentsPage() {
         )}
       </div>
 
-      <BottomNav />
 
       <Dialog open={!!selectedApp} onOpenChange={(open) => { if (!open) setSelectedApp(null); }}>
         <DialogContent className="max-w-md rounded-[2.5rem] p-8 border-none shadow-2xl bg-white">
