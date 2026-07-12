@@ -88,7 +88,7 @@ export default function ProfilePage() {
         {/* Settings Group */}
         <div>
           <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 px-2">Account Management</h3>
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {menuItems.map((item) => (
               <button 
                 key={item.label}

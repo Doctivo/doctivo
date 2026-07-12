@@ -82,7 +82,7 @@ function DoctorsContent() {
   if (!hasHydrated) return <div className="flex justify-center items-center min-h-screen"><Loader2 className="animate-spin" /></div>;
 
   return (
-    <div className="max-w-[480px] mx-auto pb-24 bg-white min-h-screen">
+    <div className="mobile-container pb-24 bg-slate-50 min-h-screen">
       <div className="bg-white sticky top-0 z-20 border-b border-border shadow-sm">
         <div className="p-4 flex items-center gap-3 bg-white">
           <button onClick={() => router.push('/home')} className="h-10 w-10 flex items-center justify-center bg-slate-50 rounded-xl border border-border">
@@ -112,7 +112,7 @@ function DoctorsContent() {
           <div className="bg-amber-50 border border-amber-100 p-4 rounded-2xl text-amber-800 font-bold text-xs">📍 No therapists found within 10km. Suggesting specialists within 30km range.</div>
         )}
 
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-20"><Loader2 className="h-10 w-10 animate-spin text-primary mb-4" /><p className="text-xs font-black text-slate-400 uppercase tracking-widest">Searching Profiles...</p></div>
           ) : processedDoctors.items.length > 0 ? processedDoctors.items.map((doc) => (

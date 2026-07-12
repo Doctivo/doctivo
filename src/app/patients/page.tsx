@@ -203,7 +203,7 @@ export default function PatientsPage() {
   if (!hasHydrated) return <div className="flex justify-center items-center min-h-screen"><Loader2 className="animate-spin text-primary" /></div>;
 
   return (
-    <div className="max-w-[480px] mx-auto pb-24 bg-white min-h-screen">
+    <div className="mobile-container pb-24 bg-slate-50 min-h-screen">
       <div className="bg-white sticky top-0 z-20 shadow-sm border-b border-border">
         <div className="p-4 flex items-center gap-3">
           <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden relative border border-border shadow-sm shrink-0">
@@ -232,9 +232,9 @@ export default function PatientsPage() {
         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{displayPatients.length} Active Accounts</span>
       </div>
 
-      <div className="bg-white">
+      <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 bg-slate-50">
         {displayPatients.map((patient) => (
-          <div key={patient.id} className="px-6 py-6 border-b border-border last:border-0 hover:bg-slate-50/30 transition-all">
+          <div key={patient.id} className="bg-white rounded-[2rem] p-6 border border-border shadow-sm hover:shadow-lg transition-all relative">
             <div className="flex items-center space-x-5">
               <div className="h-16 w-16 rounded-full bg-slate-50 flex items-center justify-center overflow-hidden relative border border-border shrink-0">
                 {patient.imageUrl ? (
@@ -323,7 +323,7 @@ export default function PatientsPage() {
                 <span className="text-[10px] font-black text-slate-400 mt-2 uppercase tracking-widest">Update Photo</span>
               </div>
 
-              <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Full Name <span className="text-red-500">*</span></Label>
                   <Input placeholder="Enter Name" className="h-14 rounded-xl bg-slate-50 border-border font-bold" value={currentMember.name || ''} onChange={e => setCurrentMember({...currentMember, name: e.target.value})} />

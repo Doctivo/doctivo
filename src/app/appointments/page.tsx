@@ -117,9 +117,9 @@ export default function AppointmentsPage() {
   if (!isAuthenticated) return null;
 
   return (
-    <div className="mobile-container pb-32 min-h-screen">
-      <div className="bg-white px-6 pt-8 pb-4 sticky top-0 z-20 border-b border-slate-100">
-        <div className="flex justify-between items-center mb-6">
+    <div className="mobile-container pb-24 min-h-screen bg-slate-50">
+      <div className="bg-white sticky top-0 z-20 border-b border-slate-100 shadow-sm">
+        <div className="flex justify-between items-center mb-6 px-6 pt-8 pb-4">
           <div className="flex items-center space-x-3">
             <div className="h-9 w-9 rounded-xl overflow-hidden relative shadow-sm border border-slate-100 shrink-0">
               <Image src="/562c71b5-1be4-415a-94dc-002e1889eb7c-8.jpg" alt="Logo" fill className="object-cover" />
@@ -149,7 +149,7 @@ export default function AppointmentsPage() {
           </DropdownMenu>
         </div>
 
-        <div className="flex bg-slate-200/50 p-1.5 rounded-2xl border border-slate-100 max-w-sm">
+        <div className="flex bg-slate-200/50 p-1.5 rounded-2xl border border-slate-100 max-w-sm mx-6 mb-6">
           <button 
             onClick={() => setActiveTab('Upcoming')}
             className={cn(
@@ -171,14 +171,14 @@ export default function AppointmentsPage() {
         </div>
       </div>
 
-      <div className="p-6 md:p-12 space-y-6 flex-1 overflow-y-auto">
+      <div className="p-6 md:p-12">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20">
             <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
             <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Syncing Appointments...</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {currentList.map((app, index) => {
               const pos = getQueuePosition(app, index);
               const isMissed = app.status === 'Missed';

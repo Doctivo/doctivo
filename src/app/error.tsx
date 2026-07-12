@@ -18,9 +18,16 @@ export default function Error({
   useEffect(() => {
     const errorMsg = (error.message || '').toLowerCase();
     if (errorMsg.includes('chunkloaderror') || errorMsg.includes('loading chunk')) {
-      console.warn('Stale build detected. Hard reloading to fetch new chunks...');
-      window.location.reload();
-      return;
+      const lastReload = sessionStorage.getItem('doctivo_recovery_timestamp');
+      const now = Date.now();
+      
+      // Prevent infinite reload loops (only reload if we haven't in the last 10 seconds)
+      if (!lastReload || now - parseInt(lastReload) > 10000) {
+        sessionStorage.setItem('doctivo_recovery_timestamp', now.toString());
+        console.warn('Stale build detected. Hard reloading to fetch new chunks...');
+        window.location.reload();
+        return;
+      }
     }
     // Log the error to an error reporting service
     console.error('Application Crash:', error);

@@ -16,27 +16,68 @@ export function BottomNav() {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-100 z-50">
-      <div className="max-w-[480px] md:max-w-5xl mx-auto h-20 md:h-24 flex items-center justify-around px-2">
-        {navItems.map((item) => {
-          const isActive = pathname === item.href;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex flex-col items-center justify-center space-y-1 w-1/4 h-full transition-all hover:bg-slate-50 md:rounded-2xl",
-                isActive ? "text-primary" : "text-slate-400"
-              )}
-            >
-              <item.icon className={cn("h-6 w-6 md:h-7 md:w-7", isActive && "stroke-[2.5px] scale-110")} />
-              <span className={cn("text-[10px] md:text-xs font-black uppercase tracking-widest", isActive ? "text-primary" : "text-slate-400")}>
-                {item.label}
-              </span>
-            </Link>
-          );
-        })}
+    <>
+      {/* Mobile Bottom Navigation */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-100 z-50">
+        <div className="max-w-[480px] mx-auto h-20 flex items-center justify-around px-2">
+          {navItems.map((item) => {
+            const isActive = pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "flex flex-col items-center justify-center space-y-1 w-1/4 h-full transition-all",
+                  isActive ? "text-primary" : "text-slate-400"
+                )}
+              >
+                <item.icon className={cn("h-6 w-6", isActive && "stroke-[2.5px] scale-110")} />
+                <span className={cn("text-[10px] font-black uppercase tracking-widest", isActive ? "text-primary" : "text-slate-400")}>
+                  {item.label}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
       </div>
-    </div>
+
+      {/* Desktop Left Sidebar */}
+      <div className="hidden md:flex fixed top-0 left-0 bottom-0 w-[250px] bg-white border-r border-slate-200 z-50 flex-col">
+        <div className="p-8 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 bg-primary text-white rounded-xl flex items-center justify-center font-black text-xl shadow-lg shadow-primary/30">
+              D
+            </div>
+            <span className="font-black text-xl tracking-tight text-slate-800">DOCTIVO</span>
+          </div>
+        </div>
+        
+        <div className="flex flex-col gap-2 px-4 py-8 mt-4">
+          {navItems.map((item) => {
+            const isActive = pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "flex items-center gap-4 px-4 py-4 rounded-2xl transition-all font-black text-sm uppercase tracking-widest",
+                  isActive ? "bg-primary text-white shadow-lg shadow-primary/20" : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                )}
+              >
+                <item.icon className={cn("h-5 w-5", isActive && "stroke-[2.5px]")} />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+        
+        <div className="mt-auto p-8 mb-4">
+          <div className="bg-slate-50 p-4 rounded-2xl text-center border border-slate-100">
+            <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Doctivo OS</p>
+            <p className="text-xs font-bold text-slate-500 mt-1">v2.5.0-Desktop</p>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }
