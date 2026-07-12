@@ -61,7 +61,7 @@ function BookingContent({ id }: { id: string }) {
 
   const [doc, setDoc] = useState<Doctor | null>(null);
   const [selectedPatientId, setSelectedPatientId] = useState('');
-  const [selectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedSlot, setSelectedSlot] = useState('');
   const [symptoms, setSymptoms] = useState('');
   const [selectedReasons, setSelectedReasons] = useState<string[]>([]);
@@ -69,6 +69,20 @@ function BookingContent({ id }: { id: string }) {
   const [isBooking, setIsBooking] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
+
+  const getNext7Days = () => {
+    const dates = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() + i);
+      dates.push({
+        fullDate: d.toISOString().split('T')[0],
+        dayName: d.toLocaleDateString('en-US', { weekday: 'short' }),
+        dayNumber: d.getDate()
+      });
+    }
+    return dates;
+  };
 
   useEffect(() => {
     async function load() {
@@ -215,6 +229,27 @@ function BookingContent({ id }: { id: string }) {
               className="mt-3 rounded-2xl bg-white border-2 border-slate-100 font-bold"
             />
           )}
+        </div>
+
+        <div className="space-y-4">
+          <h3 className="text-xs font-black uppercase text-slate-400 px-1">Select Date</h3>
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+            {getNext7Days().map((d) => (
+              <button 
+                key={d.fullDate} 
+                onClick={() => { setSelectedDate(d.fullDate); setSelectedSlot(''); }}
+                className={cn(
+                  "min-w-[70px] h-20 rounded-2xl flex flex-col items-center justify-center font-black border-2 transition-all shrink-0",
+                  selectedDate === d.fullDate 
+                    ? "bg-primary border-primary text-white shadow-lg shadow-primary/30" 
+                    : "bg-white border-slate-100 text-slate-400 hover:border-slate-300"
+                )}
+              >
+                <span className="text-[10px] uppercase tracking-widest opacity-80">{d.dayName}</span>
+                <span className={cn("text-xl mt-1", selectedDate === d.fullDate ? "text-white" : "text-slate-800")}>{d.dayNumber}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="space-y-4">
