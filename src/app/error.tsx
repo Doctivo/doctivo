@@ -16,6 +16,12 @@ export default function Error({
   const router = useRouter();
 
   useEffect(() => {
+    const errorMsg = (error.message || '').toLowerCase();
+    if (errorMsg.includes('chunkloaderror') || errorMsg.includes('loading chunk')) {
+      console.warn('Stale build detected. Hard reloading to fetch new chunks...');
+      window.location.reload();
+      return;
+    }
     // Log the error to an error reporting service
     console.error('Application Crash:', error);
   }, [error]);
