@@ -22,7 +22,7 @@ try {
       : { rejectUnauthorized: false },
     max: 10, // Optimized for serverless
     idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 5000,
+    connectionTimeoutMillis: 15000,
   });
 
   pool.on('error', (err) => {
