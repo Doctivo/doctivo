@@ -106,15 +106,17 @@ function SuccessContent() {
   if (!appointment) return <div className="mobile-container flex flex-col items-center justify-center min-h-screen bg-slate-50 p-10"><Button onClick={() => router.push('/home')}>Home</Button></div>;
 
   return (
-    <div className="mobile-container flex flex-col p-6 bg-slate-50 min-h-screen">
-      <div className="flex-1 flex flex-col items-center justify-center space-y-6 pt-10">
-        <div className="h-28 w-28 bg-green-500 rounded-full flex items-center justify-center shadow-2xl">
-          <CheckCircle2 className="h-16 w-16 text-white stroke-[3px]" />
-        </div>
-        
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Booking Done!</h1>
-          <p className="text-slate-500 font-medium px-4">Your appointment with <span className="text-slate-900 font-black">{appointment.doctorName}</span> is confirmed.</p>
+    <div className="flex flex-col items-center justify-center p-6 bg-slate-50 min-h-screen">
+      <div className="w-full max-w-md flex flex-col space-y-6 pt-10">
+        <div className="flex flex-col items-center justify-center space-y-6">
+          <div className="h-28 w-28 bg-green-500 rounded-full flex items-center justify-center shadow-2xl">
+            <CheckCircle2 className="h-16 w-16 text-white stroke-[3px]" />
+          </div>
+          
+          <div className="text-center space-y-2">
+            <h1 className="text-3xl font-black text-slate-900 tracking-tight">Booking Done!</h1>
+            <p className="text-slate-500 font-medium px-4">Your appointment with <span className="text-slate-900 font-black">{appointment.doctorName}</span> is confirmed.</p>
+          </div>
         </div>
 
         <div className="w-full">
@@ -138,12 +140,12 @@ function SuccessContent() {
               </div>
 
               <div className="pt-6 flex justify-around border-t border-slate-50">
-                <button onClick={handleShare} className="flex flex-col items-center gap-2 text-slate-400">
-                  <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center"><Share2 className="h-5 w-5" /></div>
+                <button onClick={handleShare} className="flex flex-col items-center gap-2 text-slate-400 transition-transform active:scale-95 hover:text-blue-500">
+                  <div className="h-10 w-10 rounded-xl bg-slate-50 hover:bg-blue-50 flex items-center justify-center"><Share2 className="h-5 w-5" /></div>
                   <span className="text-[9px] font-black uppercase">Share Link</span>
                 </button>
-                <button onClick={handleDownloadPDF} disabled={isDownloading} className="flex flex-col items-center gap-2 text-slate-400">
-                  <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center">
+                <button onClick={handleDownloadPDF} disabled={isDownloading} className="flex flex-col items-center gap-2 text-slate-400 transition-transform active:scale-95 hover:text-blue-500">
+                  <div className="h-10 w-10 rounded-xl bg-slate-50 hover:bg-blue-50 flex items-center justify-center">
                     {isDownloading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Download className="h-5 w-5" />}
                   </div>
                   <span className="text-[9px] font-black uppercase">Download</span>
@@ -154,19 +156,19 @@ function SuccessContent() {
                   } else {
                     window.open(`/prescription/${appointment.id}`, '_blank');
                   }
-                }} className="flex flex-col items-center gap-2 text-slate-400">
-                  <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center"><Printer className="h-5 w-5" /></div>
+                }} className="flex flex-col items-center gap-2 text-slate-400 transition-transform active:scale-95 hover:text-blue-500">
+                  <div className="h-10 w-10 rounded-xl bg-slate-50 hover:bg-blue-50 flex items-center justify-center"><Printer className="h-5 w-5" /></div>
                   <span className="text-[9px] font-black uppercase">Print</span>
                 </button>
               </div>
             </CardContent>
           </Card>
         </div>
-      </div>
 
-      <div className="mt-10 mb-8 space-y-4">
-        <Button className="w-full h-18 text-xl font-black bg-primary rounded-[2rem] shadow-2xl" onClick={() => router.push('/appointments')}>Track Live Queue</Button>
-        <Button variant="ghost" className="w-full h-14 text-slate-400 font-bold" onClick={() => router.push('/home')}>Go Back Home</Button>
+        <div className="mt-6 mb-8 space-y-4">
+          <Button className="w-full h-14 text-lg font-black bg-primary rounded-[2rem] shadow-2xl hover:bg-blue-700 transition-all" onClick={() => router.push('/appointments')}>Track Live Queue</Button>
+          <Button variant="ghost" className="w-full h-12 text-slate-400 font-bold hover:bg-slate-200 rounded-xl transition-all" onClick={() => router.push('/home')}>Go Back Home</Button>
+        </div>
       </div>
     </div>
   );
