@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 
-const generateTimeSlots = (start: string, end: string, duration: number) => {
+const generateTimeSlots = (start: string, end: string, duration: number, selectedDate: string) => {
   const slots = [];
   try {
     const [startH, startM] = start.split(':').map(Number);
@@ -28,8 +28,17 @@ const generateTimeSlots = (start: string, end: string, duration: number) => {
     const endTime = new Date();
     endTime.setHours(endH, endM, 0, 0);
 
+    const now = new Date();
+    // Offset local timezone for correct today check
+    const localNowStr = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+    const isToday = selectedDate === localNowStr;
+
     let current = new Date(startTime);
     while (current < endTime) {
+      if (isToday && current < now) {
+        current.setMinutes(current.getMinutes() + duration);
+        continue;
+      }
       let hours = current.getHours();
       const minutes = current.getMinutes();
       const ampm = hours >= 12 ? 'PM' : 'AM';
@@ -59,15 +68,18 @@ function BookingContent({ id }: { id: string }) {
   const [showCustomSymptom, setShowCustomSymptom] = useState(false);
   const [isBooking, setIsBooking] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
+  const [bookedSlots, setBookedSlots] = useState<string[]>([]);
 
   useEffect(() => {
     async function load() {
       const data = await getDoctorById(id);
       setDoc(data);
+      const booked = await getBookedSlots(id, selectedDate);
+      setBookedSlots(booked);
       setIsFetching(false);
     }
     load();
-  }, [id]);
+  }, [id, selectedDate]);
 
   useEffect(() => {
     if (user?.id) getFamilyMembers(user.id).then(f => setPatientsStore([{...user, relation: 'Self'} as any, ...f]));
@@ -208,9 +220,23 @@ function BookingContent({ id }: { id: string }) {
         <div className="space-y-4">
           <h3 className="text-xs font-black uppercase text-slate-400 px-1">Select Time Slot</h3>
           <div className="grid grid-cols-3 gap-3">
-            {generateTimeSlots(doc.startTime, doc.endTime, doc.slotDuration).map(slot => (
-              <button key={slot} onClick={() => setSelectedSlot(slot)} className={cn("py-3 rounded-xl font-black text-[10px] border-2 transition-all", selectedSlot === slot ? "bg-primary border-primary text-white" : "bg-white border-slate-100 text-slate-800")}>{slot}</button>
-            ))}
+            {generateTimeSlots(doc.startTime, doc.endTime, doc.slotDuration, selectedDate).map(slot => {
+              const isBooked = bookedSlots.includes(slot);
+              return (
+                <button 
+                  key={slot} 
+                  disabled={isBooked}
+                  onClick={() => setSelectedSlot(slot)} 
+                  className={cn(
+                    "py-3 rounded-xl font-black text-[10px] border-2 transition-all", 
+                    isBooked ? "bg-slate-100 border-slate-100 text-slate-300 cursor-not-allowed line-through" :
+                    selectedSlot === slot ? "bg-primary border-primary text-white" : "bg-white border-slate-100 text-slate-800"
+                  )}
+                >
+                  {slot}
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>

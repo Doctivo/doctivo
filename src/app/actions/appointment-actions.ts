@@ -9,6 +9,15 @@ import { isBefore, parseISO, startOfDay } from 'date-fns';
  */
 export async function createAppointment(app: Partial<Appointment>) {
   try {
+    // 0. Prevent double booking
+    const existingCheck = await query(
+      "SELECT appointment_id FROM appointments WHERE doctor_id = $1 AND appointment_date = $2 AND appointment_time_slot = $3 AND status != 'Cancelled'",
+      [app.doctorId, app.date, app.time]
+    );
+    if (existingCheck.rows.length > 0) {
+      return { success: false, error: 'This time slot is already booked. Please choose another slot.' };
+    }
+
     // 1. Calculate the token number for this doctor on this day
     const tokenResult = await query(
       "SELECT COUNT(*) as count FROM appointments WHERE doctor_id = $1 AND appointment_date = $2",
@@ -206,5 +215,18 @@ export async function verifyVisitOtp(appointmentId: string, otp: string) {
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
+  }
+}
+
+export async function getBookedSlots(doctorId: string, date: string) {
+  try {
+    const result = await query(
+      "SELECT appointment_time_slot as time FROM appointments WHERE doctor_id = $1 AND appointment_date = $2 AND status != 'Cancelled'",
+      [doctorId, date]
+    );
+    return result.rows.map(r => String(r.time));
+  } catch (error) {
+    console.error('Error fetching booked slots:', error);
+    return [];
   }
 }

@@ -27,9 +27,25 @@ export default function PublicPrescriptionPage({ params }: { params: Promise<{ i
     load();
   }, [id]);
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
     if (typeof window !== 'undefined' && (window as any).DoctivoAppChannel) {
-      handleDownload();
+      if (!appointment) return;
+      setIsDownloading(true);
+      try {
+        const dataUrl = await getPDFBase64(appointment);
+        const base64Str = dataUrl.split(',')[1];
+        const filename = `Doctivo_Ticket_${String(appointment.id || '').slice(-6).toUpperCase()}.pdf`;
+        (window as any).DoctivoAppChannel.postMessage(JSON.stringify({
+          action: 'printPDF',
+          base64: base64Str,
+          filename: filename
+        }));
+      } catch (e) {
+        console.error(e);
+        toast({ variant: 'destructive', title: 'Error', description: 'Failed to build PDF for print.' });
+      } finally {
+        setIsDownloading(false);
+      }
     } else {
       window.print();
     }

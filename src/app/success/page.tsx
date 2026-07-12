@@ -102,6 +102,30 @@ function SuccessContent() {
     }
   };
 
+  const handlePrintPDF = async () => {
+    if (!appointment) return;
+    if (typeof window !== 'undefined' && (window as any).DoctivoAppChannel) {
+      setIsDownloading(true);
+      try {
+        const dataUrl = await getPDFBase64(appointment);
+        const base64Str = dataUrl.split(',')[1];
+        const filename = `Doctivo_Ticket_${appointment.id.slice(-6).toUpperCase()}.pdf`;
+        (window as any).DoctivoAppChannel.postMessage(JSON.stringify({
+          action: 'printPDF',
+          base64: base64Str,
+          filename: filename
+        }));
+      } catch (e) {
+        console.error(e);
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not prepare print.' });
+      } finally {
+        setIsDownloading(false);
+      }
+    } else {
+      window.open(`/prescription/${appointment.id}`, '_blank');
+    }
+  };
+
   if (isLoading) return <div className="mobile-container flex flex-col items-center justify-center min-h-screen bg-slate-50"><Loader2 className="h-10 w-10 animate-spin text-primary" /></div>;
   if (!appointment) return <div className="mobile-container flex flex-col items-center justify-center min-h-screen bg-slate-50 p-10"><Button onClick={() => router.push('/home')}>Home</Button></div>;
 
@@ -150,13 +174,7 @@ function SuccessContent() {
                   </div>
                   <span className="text-[9px] font-black uppercase">Download</span>
                 </button>
-                <button onClick={() => {
-                  if (typeof window !== 'undefined' && (window as any).DoctivoAppChannel) {
-                    handleDownloadPDF();
-                  } else {
-                    window.open(`/prescription/${appointment.id}`, '_blank');
-                  }
-                }} className="flex flex-col items-center gap-2 text-slate-400 transition-transform active:scale-95 hover:text-blue-500">
+                <button onClick={handlePrintPDF} disabled={isDownloading} className="flex flex-col items-center gap-2 text-slate-400 transition-transform active:scale-95 hover:text-blue-500">
                   <div className="h-10 w-10 rounded-xl bg-slate-50 hover:bg-blue-50 flex items-center justify-center"><Printer className="h-5 w-5" /></div>
                   <span className="text-[9px] font-black uppercase">Print</span>
                 </button>
