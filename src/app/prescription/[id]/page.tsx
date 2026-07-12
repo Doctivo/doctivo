@@ -28,7 +28,11 @@ export default function PublicPrescriptionPage({ params }: { params: Promise<{ i
   }, [id]);
 
   const handlePrint = () => {
-    window.print();
+    if (typeof window !== 'undefined' && (window as any).DoctivoAppChannel) {
+      handleDownload();
+    } else {
+      window.print();
+    }
   };
 
   const handleDownload = async () => {
@@ -36,13 +40,25 @@ export default function PublicPrescriptionPage({ params }: { params: Promise<{ i
     setIsDownloading(true);
     try {
       const dataUrl = await getPDFBase64(appointment);
-      const link = document.createElement('a');
-      link.href = dataUrl;
-      link.download = `Doctivo_Ticket_${String(appointment.id || '').slice(-6).toUpperCase()}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      toast({ title: 'Success', description: 'Booking Ticket downloaded.' });
+      const base64Str = dataUrl.split(',')[1];
+      const filename = `Doctivo_Ticket_${String(appointment.id || '').slice(-6).toUpperCase()}.pdf`;
+      
+      if (typeof window !== 'undefined' && (window as any).DoctivoAppChannel) {
+        (window as any).DoctivoAppChannel.postMessage(JSON.stringify({
+          action: 'download',
+          base64: base64Str,
+          filename: filename
+        }));
+        toast({ title: 'Success', description: 'Downloading Ticket...' });
+      } else {
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast({ title: 'Success', description: 'Booking Ticket downloaded.' });
+      }
     } catch (e) {
       console.error(e);
       toast({ variant: 'destructive', title: 'Error', description: 'Failed to build PDF.' });
