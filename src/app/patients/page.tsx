@@ -133,8 +133,13 @@ export default function PatientsPage() {
 
   const handleSavePatient = async () => {
     // Strict Validation
-    if (!currentMember.name || !currentMember.age || !currentMember.blood_group || !currentMember.gender || !currentMember.relation || !currentMember.height_cm) {
+    if (!currentMember.name || !currentMember.age || !currentMember.blood_group || !currentMember.gender || !currentMember.relation || !currentMember.height_cm || !currentMember.weight_kg) {
       toast({ variant: 'destructive', title: 'Missing Details', description: 'Please fill in all mandatory fields (*).' });
+      return;
+    }
+    
+    if (Number(currentMember.age) > 120 || Number(currentMember.height_cm) > 300 || Number(currentMember.weight_kg) > 300) {
+      toast({ variant: 'destructive', title: 'Invalid Details', description: 'Please check the values highlighted in red.' });
       return;
     }
 
@@ -330,11 +335,12 @@ export default function PatientsPage() {
                     <Input 
                       type="number" 
                       placeholder="Enter Your Age" 
-                      className="h-14 rounded-xl bg-slate-50 border-border font-bold" 
+                      className={cn("h-14 rounded-xl bg-slate-50 border-border font-bold", Number(currentMember.age) > 120 && "border-red-500")}
                       value={currentMember.age || ''} 
                       min="0"
                       onChange={e => handleNumericInput('age', e.target.value)} 
                     />
+                    {Number(currentMember.age) > 120 && <p className="text-red-500 text-[10px] mt-1 font-bold">Age must be less than 120.</p>}
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Blood Group <span className="text-red-500">*</span></Label>
@@ -353,11 +359,12 @@ export default function PatientsPage() {
                     <Input 
                       type="number" 
                       placeholder="175" 
-                      className="h-14 rounded-xl bg-slate-50 border-border font-bold" 
+                      className={cn("h-14 rounded-xl bg-slate-50 border-border font-bold", Number(currentMember.height_cm) > 300 && "border-red-500")}
                       value={currentMember.height_cm || ''} 
                       min="0"
                       onChange={e => handleNumericInput('height_cm', e.target.value)} 
                     />
+                    {Number(currentMember.height_cm) > 300 && <p className="text-red-500 text-[10px] mt-1 font-bold">Invalid height.</p>}
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Gender <span className="text-red-500">*</span></Label>
@@ -370,14 +377,28 @@ export default function PatientsPage() {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Relation <span className="text-red-500">*</span></Label>
-                  <Select value={currentMember.relation || ''} onValueChange={v => setCurrentMember({...currentMember, relation: v})}>
-                    <SelectTrigger className="h-14 rounded-xl bg-slate-50 border-border font-bold"><SelectValue /></SelectTrigger>
-                    <SelectContent className="rounded-2xl">
-                      {['Father', 'Mother', 'Spouse', 'Child', 'Sibling', 'Other'].map(r => (<SelectItem key={r} value={r} className="font-bold">{r}</SelectItem>))}
-                    </SelectContent>
-                  </Select>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Weight (kg) <span className="text-red-500">*</span></Label>
+                    <Input 
+                      type="number" 
+                      placeholder="70" 
+                      className={cn("h-14 rounded-xl bg-slate-50 border-border font-bold", Number(currentMember.weight_kg) > 300 && "border-red-500")}
+                      value={currentMember.weight_kg || ''} 
+                      min="0"
+                      onChange={e => handleNumericInput('weight_kg', e.target.value)} 
+                    />
+                    {Number(currentMember.weight_kg) > 300 && <p className="text-red-500 text-[10px] mt-1 font-bold">Invalid weight.</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Relation <span className="text-red-500">*</span></Label>
+                    <Select value={currentMember.relation || ''} onValueChange={v => setCurrentMember({...currentMember, relation: v})}>
+                      <SelectTrigger className="h-14 rounded-xl bg-slate-50 border-border font-bold"><SelectValue /></SelectTrigger>
+                      <SelectContent className="rounded-2xl">
+                        {['Father', 'Mother', 'Spouse', 'Child', 'Sibling', 'Other'].map(r => (<SelectItem key={r} value={r} className="font-bold">{r}</SelectItem>))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
                 <div className="space-y-2">

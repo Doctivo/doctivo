@@ -2,11 +2,10 @@
 
 import { query } from '@/lib/db';
 import { cookies } from 'next/headers';
-import { sendTransactionalEmail } from './auth-actions';
 
 /**
- * Initializes all database tables in the correct order of dependency.
- * Includes migrations for missing columns and NOT NULL constraints.
+ * Initializes all database tables and seeds sample data.
+ * Updated to include patient vitals in appointments and staff management tables.
  */
 export async function initializeDatabase() {
   try {
@@ -76,13 +75,31 @@ export async function initializeDatabase() {
         allow_revenue_deduction BOOLEAN DEFAULT FALSE,
         current_active_campaign VARCHAR(100),
         working_days JSONB DEFAULT '[]',
+        custom_schedule JSONB DEFAULT '{}',
+        reasons_for_visit JSONB DEFAULT '[]',
+        consultation_modes VARCHAR(100) DEFAULT 'Clinic,Home',
+        latitude DECIMAL DEFAULT 26.7606,
+        longitude DECIMAL DEFAULT 83.3731,
         image_url TEXT,
-        schedule JSONB DEFAULT '{}',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
 
-    // 4. Appointments Table
+    // 4. Attendants Table
+    await query(`
+      CREATE TABLE IF NOT EXISTS attendants (
+        attendant_id VARCHAR(50) PRIMARY KEY,
+        full_name VARCHAR(100) NOT NULL,
+        phone_number VARCHAR(15),
+        email VARCHAR(100),
+        doctor_id VARCHAR(50) REFERENCES doctors(doctor_id),
+        base_salary INT DEFAULT 10000,
+        is_approved BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // 5. Appointments Table (With Vitals)
     await query(`
       CREATE TABLE IF NOT EXISTS appointments (
         appointment_id VARCHAR(50) PRIMARY KEY,
@@ -91,6 +108,9 @@ export async function initializeDatabase() {
         booked_by_user_id VARCHAR(50) REFERENCES patients(patient_id),
         patient_type VARCHAR(50),
         patient_name VARCHAR(100),
+        patient_age VARCHAR(10),
+        patient_gender VARCHAR(20),
+        patient_blood_group VARCHAR(10),
         appointment_date DATE,
         appointment_time_slot VARCHAR(50),
         current_symptoms TEXT,
@@ -100,46 +120,54 @@ export async function initializeDatabase() {
         transaction_id VARCHAR(100),
         status VARCHAR(50) DEFAULT 'Confirmed',
         token_number INT DEFAULT 1,
+        visit_otp VARCHAR(10),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
 
-    // Migration: Add token_number column if missing
-    await query(`
-      DO $$ 
-      BEGIN 
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='appointments' AND column_name='token_number') THEN 
-          ALTER TABLE appointments ADD COLUMN token_number INT DEFAULT 1; 
-        END IF;
-      END $$;
-    `);
+    // Migration: Add missing columns if table already exists
+    const appCols = [
+      ['patient_age', 'VARCHAR(10)'],
+      ['patient_gender', 'VARCHAR(20)'],
+      ['patient_blood_group', 'VARCHAR(10)']
+    ];
+    for (const [col, type] of appCols) {
+      await query(`
+        DO $$ 
+        BEGIN 
+          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='appointments' AND column_name='${col}') THEN 
+            EXECUTE 'ALTER TABLE appointments ADD COLUMN ${col} ${type}';
+          END IF;
+        END $$;
+      `);
+    }
 
-    // 5. Attendants Table
-    await query(`
-      CREATE TABLE IF NOT EXISTS attendants (
-        attendant_id VARCHAR(50) PRIMARY KEY,
-        full_name VARCHAR(100) NOT NULL,
-        base_salary INT DEFAULT 10000,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-
-    // 6. Payroll Adjustments Table
+    // 6. Payroll Adjustments
     await query(`
       CREATE TABLE IF NOT EXISTS payroll_adjustments (
         adjustment_id SERIAL PRIMARY KEY,
         employee_id VARCHAR(50) REFERENCES attendants(attendant_id),
         employee_name VARCHAR(100),
-        type VARCHAR(20),
+        type VARCHAR(20), -- Advance, Bonus, Penalty
         amount INT,
         reason TEXT,
-        processed_date DATE DEFAULT CURRENT_DATE,
         is_settled BOOLEAN DEFAULT FALSE,
+        processed_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
 
-    // Admins Table
+    // 7. OTP Verifications
+    await query(`
+      CREATE TABLE IF NOT EXISTS otp_verifications (
+        email VARCHAR(100) PRIMARY KEY,
+        otp VARCHAR(10),
+        expires_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // 8. Admins Table
     await query(`
       CREATE TABLE IF NOT EXISTS admins (
         admin_id VARCHAR(50) PRIMARY KEY,
@@ -149,26 +177,6 @@ export async function initializeDatabase() {
         permissions JSONB DEFAULT '{}',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
-    `);
-
-    // Migration: Handle legacy 'name' column and NOT NULL constraints in admins table
-    await query(`
-      DO $$ 
-      BEGIN 
-        -- 1. Ensure full_name exists
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='admins' AND column_name='full_name') THEN
-          IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='admins' AND column_name='name') THEN
-            ALTER TABLE admins RENAME COLUMN name TO full_name;
-          ELSE
-            ALTER TABLE admins ADD COLUMN full_name VARCHAR(100);
-          END IF;
-        END IF;
-
-        -- 2. CRITICAL: Remove NOT NULL from legacy 'name' column if it still exists
-        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='admins' AND column_name='name') THEN
-          ALTER TABLE admins ALTER COLUMN name DROP NOT NULL;
-        END IF;
-      END $$;
     `);
 
     return { success: true };
@@ -191,7 +199,7 @@ export async function getEmployeePayroll() {
     
     return result.rows.map(r => ({
       ...r,
-      net_balance: parseInt(r.base_salary) + parseInt(r.total_bonuses) - parseInt(r.total_advances) - parseInt(r.total_penalties)
+      net_balance: parseInt(r.base_salary || '0') + parseInt(r.total_bonuses || '0') - parseInt(r.total_advances || '0') - parseInt(r.total_penalties || '0')
     }));
   } catch (error) {
     console.error('getEmployeePayroll Error:', error);
@@ -248,155 +256,25 @@ export async function getDoctorsByStatus(status: 'pending' | 'approved') {
   }
 }
 
-async function checkEmailUniqueness(email: string, excludeId?: string): Promise<{ success: boolean; error?: string }> {
-  const emailLower = (email || '').trim().toLowerCase();
-  if (!emailLower) return { success: true };
-
-  // 1. Block super admin email reuse
-  if (emailLower === 'admin@doctivo.com') {
-    return { success: false, error: 'This email is reserved for Super Administrator.' };
-  }
-
-  // 2. Check admins database
-  const adminQuery = excludeId 
-    ? 'SELECT 1 FROM admins WHERE LOWER(email) = $1 AND admin_id != $2' 
-    : 'SELECT 1 FROM admins WHERE LOWER(email) = $1';
-  const adminParams = excludeId ? [emailLower, excludeId] : [emailLower];
-  const adminRes = await query(adminQuery, adminParams);
-  if (adminRes.rows.length > 0) {
-    return { success: false, error: 'This email is already in use by an Administrator.' };
-  }
-
-  // 3. Check doctors database
-  const doctorQuery = excludeId 
-    ? 'SELECT 1 FROM doctors WHERE LOWER(email) = $1 AND doctor_id != $2' 
-    : 'SELECT 1 FROM doctors WHERE LOWER(email) = $1';
-  const doctorParams = excludeId ? [emailLower, excludeId] : [emailLower];
-  const doctorRes = await query(doctorQuery, doctorParams);
-  if (doctorRes.rows.length > 0) {
-    return { success: false, error: 'This email is already in use by a Doctor.' };
-  }
-
-  return { success: true };
-}
-
-export async function addDoctorDirectly(doc: any) {
-  const id = `DOC-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
-  try {
-    const check = await checkEmailUniqueness(doc.email);
-    if (!check.success) return { success: false, error: check.error };
-
-    const result = await query(`
-      INSERT INTO doctors (
-        doctor_id, full_name, phone_number, email, specialty, 
-        qualification, experience_years, clinic_address, is_approved, consultation_fee,
-        start_time, end_time, slot_duration, image_url, schedule, working_days,
-        allowed_free_attendants, total_purchased_slots, allow_revenue_deduction, current_active_campaign,
-        consultation_modes
-      )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
-      RETURNING *;
-    `, [
-      id, doc.name, doc.phone, doc.email, doc.specialty, doc.qualification, 
-      parseInt(doc.experience || '0'), doc.address, parseInt(doc.fees || '500'),
-      doc.startTime || '09:00', doc.endTime || '17:00', parseInt(doc.slotDuration || '15'),
-      doc.imageUrl || null, JSON.stringify(doc.schedule || {}), JSON.stringify(doc.working_days || []),
-      parseInt(doc.allowed_free_attendants || '1'), parseInt(doc.total_purchased_slots || '0'),
-      !!doc.allow_revenue_deduction, doc.current_active_campaign || null,
-      doc.consultation_modes || 'Clinic,Home'
-    ]);
-
-    // Send doctor onboarding welcome email
-    if (doc.email) {
-      try {
-        const welcomeHtml = `
-          <div style="font-family: Arial, sans-serif; padding: 30px; max-width: 500px; margin: auto; border: 1px solid #e2e8f0; border-radius: 24px; background-color: #ffffff; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
-            <div style="text-align: center; margin-bottom: 25px;">
-              <h2 style="color: #2563eb; margin: 0; font-weight: 900; letter-spacing: -0.5px;">Welcome to Doctivo</h2>
-              <p style="color: #64748b; font-size: 11px; text-transform: uppercase; font-weight: bold; letter-spacing: 1.5px; margin-top: 6px;">Doctor Profile Activated</p>
-            </div>
-            <p style="font-size: 14px; color: #334155; line-height: 1.6;">Hello Dr. <strong>${doc.name}</strong>,</p>
-            <p style="font-size: 14px; color: #334155; line-height: 1.6;">Your professional catalog profile has been approved and activated. Here are your credentials to log in to the Doctor dashboard:</p>
-            
-            <div style="background-color: #f8fafc; padding: 20px; border-radius: 16px; margin: 20px 0; border: 1px solid #e2e8f0;">
-              <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
-                <tr>
-                  <td style="padding: 6px 0; color: #64748b; font-weight: bold; width: 120px;">Doctor ID:</td>
-                  <td style="padding: 6px 0; color: #0f172a; font-weight: 800;">${id}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 6px 0; color: #64748b; font-weight: bold;">Phone:</td>
-                  <td style="padding: 6px 0; color: #0f172a; font-weight: 700;">${doc.phone}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 6px 0; color: #64748b; font-weight: bold;">Specialty:</td>
-                  <td style="padding: 6px 0; color: #0f172a; font-weight: 700;">${doc.specialty}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 6px 0; color: #64748b; font-weight: bold;">Address:</td>
-                  <td style="padding: 6px 0; color: #0f172a; font-weight: 700;">${doc.address}</td>
-                </tr>
-              </table>
-            </div>
-
-            <p style="font-size: 14px; color: #334155; line-height: 1.6;">You can log in to your <strong>OPD Queue Control Console</strong> at any time by visiting <a href="https://doctivo.in/login" style="color: #2563eb; text-decoration: none; font-weight: bold;">doctivo.in/login</a> using either your Doctor ID or phone number.</p>
-            <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 25px 0;" />
-            <p style="font-size: 11px; color: #94a3b8; text-align: center; margin: 0;">This is an automated system notification. Please do not reply directly to this message.</p>
-          </div>
-        `;
-        await sendTransactionalEmail(doc.email, doc.name, 'Welcome to Doctivo - Your Doctor Account is Active!', welcomeHtml);
-      } catch (emailErr) {
-        console.error('Failed to send onboarding doctor email:', emailErr);
-      }
-    }
-
-    return { success: true, data: result.rows[0] };
-  } catch (error: any) {
-    return { success: false, error: error.message };
-  }
-}
-
-export async function updateDoctor(doctorId: string, doc: any) {
-  try {
-    const check = await checkEmailUniqueness(doc.email, doctorId);
-    if (!check.success) return { success: false, error: check.error };
-
-    await query(`
-      UPDATE doctors SET
-        full_name = $1, phone_number = $2, email = $3, specialty = $4,
-        qualification = $5, experience_years = $6, clinic_address = $7,
-        consultation_fee = $8, start_time = $9, end_time = $10,
-        slot_duration = $11, image_url = $12, schedule = $13, working_days = $14,
-        allowed_free_attendants = $15, total_purchased_slots = $16,
-        allow_revenue_deduction = $17, current_active_campaign = $18,
-        consultation_modes = $19
-      WHERE doctor_id = $20
-    `, [
-      doc.full_name, doc.phone_number, doc.email, doc.specialty,
-      doc.qualification, parseInt(String(doc.experience_years || '0')), doc.clinic_address,
-      parseInt(String(doc.consultation_fee || '500')), doc.start_time, doc.end_time,
-      parseInt(String(doc.slot_duration || '15')), doc.image_url, JSON.stringify(doc.schedule || {}),
-      JSON.stringify(doc.working_days || []), parseInt(String(doc.allowed_free_attendants || '1')),
-      parseInt(String(doc.total_purchased_slots || '0')), !!doc.allow_revenue_deduction,
-      doc.current_active_campaign || null, doc.consultation_modes || 'Clinic,Home', doctorId
-    ]);
-    return { success: true };
-  } catch (error: any) {
-    return { success: false, error: error.message };
-  }
-}
-
 export async function updateDoctorBilling(doctorId: string, data: any) {
   try {
     await query(`
-      UPDATE doctors 
-      SET allowed_free_attendants = $1, total_purchased_slots = $2, 
-          allow_revenue_deduction = $3, current_active_campaign = $4
+      UPDATE doctors SET
+        allowed_free_attendants = $1,
+        total_purchased_slots = $2,
+        allow_revenue_deduction = $3,
+        current_active_campaign = $4
       WHERE doctor_id = $5
-    `, [data.allowed_free_attendants, data.total_purchased_slots, data.allow_revenue_deduction, data.current_active_campaign, doctorId]);
+    `, [
+      data.allowed_free_attendants,
+      data.total_purchased_slots,
+      data.allow_revenue_deduction,
+      data.current_active_campaign,
+      doctorId
+    ]);
     return { success: true };
-  } catch (error) {
-    return { success: false };
+  } catch (error: any) {
+    return { success: false, error: error.message };
   }
 }
 
@@ -412,39 +290,19 @@ export async function getAdminUsers() {
 export async function createAdminUser(data: any) {
   const id = `ADM-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
   try {
-    const check = await checkEmailUniqueness(data.email);
-    if (!check.success) return { success: false, error: check.error };
-
     await query('INSERT INTO admins (admin_id, full_name, email, role, permissions) VALUES ($1, $2, $3, $4, $5)', [id, data.name, data.email, data.role, JSON.stringify(data.permissions || {})]);
     return { success: true };
   } catch (error: any) {
-    console.error('createAdminUser Error:', error.message);
     return { success: false, error: error.message };
   }
 }
 
 export async function deleteAdminUser(adminId: string) {
   try {
-    const cookieStore = await cookies();
-    const sessionId = cookieStore.get('session_id')?.value;
-    if (sessionId === adminId) {
-      return { success: false, error: 'You cannot revoke your own administrator account.' };
-    }
-
     await query('DELETE FROM admins WHERE admin_id = $1', [adminId]);
     return { success: true };
   } catch (error) {
     return { success: false };
-  }
-}
-
-export async function adminLogin(email: string) {
-  try {
-    const result = await query('SELECT * FROM admins WHERE email = $1', [email]);
-    if (result.rows.length === 0) return { success: false, error: 'Admin account not found' };
-    return { success: true, admin: result.rows[0] };
-  } catch (error) {
-    return { success: false, error: 'System error during login' };
   }
 }
 
@@ -455,23 +313,15 @@ export async function getAdminMetrics() {
     const activeBookings = await query("SELECT COUNT(*) FROM appointments WHERE status IN ('Waiting', 'In Consultation', 'Confirmed') AND appointment_date = CURRENT_DATE");
     const totalRevenue = await query("SELECT SUM(consultation_fee_amount) FROM appointments WHERE payment_status = 'Paid'");
     
-    // Get last 7 days booking trend
     const trendResult = await query(`
-      SELECT 
-        TO_CHAR(appointment_date, 'Mon DD') as date,
-        COUNT(*) as count
-      FROM appointments 
-      WHERE appointment_date >= CURRENT_DATE - INTERVAL '7 days'
-      GROUP BY appointment_date
-      ORDER BY appointment_date ASC
+      SELECT TO_CHAR(appointment_date, 'Mon DD') as date, COUNT(*) as count
+      FROM appointments WHERE appointment_date >= CURRENT_DATE - INTERVAL '7 days'
+      GROUP BY appointment_date ORDER BY appointment_date ASC
     `);
 
-    // Get specialty distribution
     const specialtyResult = await query(`
       SELECT specialty as name, COUNT(*) as value
-      FROM doctors
-      WHERE is_approved = true
-      GROUP BY specialty
+      FROM doctors WHERE is_approved = true GROUP BY specialty
     `);
 
     return {
@@ -483,14 +333,7 @@ export async function getAdminMetrics() {
       specialtyData: specialtyResult.rows || [],
     };
   } catch (error) {
-    return { 
-      activeDoctors: 0, 
-      totalPatients: 0, 
-      liveBookings: 0, 
-      grossRevenue: 0,
-      trendData: [],
-      specialtyData: []
-    };
+    return { activeDoctors: 0, totalPatients: 0, liveBookings: 0, grossRevenue: 0, trendData: [], specialtyData: [] };
   }
 }
 
@@ -519,5 +362,47 @@ export async function getAllUsers(role: string) {
     return result.rows || [];
   } catch (error) {
     return [];
+  }
+}
+
+export async function addDoctorDirectly(data: any) {
+  const id = `DOC-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+  try {
+    await query(`
+      INSERT INTO doctors (
+        doctor_id, full_name, phone_number, email, specialty, qualification, 
+        experience_years, clinic_address, consultation_fee, is_approved,
+        start_time, end_time, slot_duration, image_url, consultation_modes
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true, $10, $11, $12, $13, $14)
+    `, [
+      id, data.name, data.phone, data.email || null, data.specialty, data.qualification || '',
+      parseInt(data.experience || '0'), data.address || '', parseInt(data.fees || '500'),
+      data.startTime, data.endTime, parseInt(data.slotDuration || '15'), data.imageUrl || null,
+      data.consultation_modes || 'Clinic,Home'
+    ]);
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function updateDoctor(doctorId: string, data: any) {
+  try {
+    await query(`
+      UPDATE doctors SET
+        full_name = $1, phone_number = $2, email = $3, specialty = $4, 
+        qualification = $5, experience_years = $6, clinic_address = $7, 
+        consultation_fee = $8, start_time = $9, end_time = $10, 
+        slot_duration = $11, image_url = $12, consultation_modes = $13
+      WHERE doctor_id = $14
+    `, [
+      data.full_name, data.phone_number, data.email, data.specialty, data.qualification,
+      data.experience_years, data.clinic_address, data.consultation_fee,
+      data.start_time, data.end_time, data.slot_duration, data.image_url,
+      data.consultation_modes, doctorId
+    ]);
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
   }
 }

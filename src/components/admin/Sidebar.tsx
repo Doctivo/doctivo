@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -10,6 +9,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useStore } from '@/lib/store';
 import { useEffect } from 'react';
+import { logoutSession } from '@/app/actions/auth-actions';
 
 const ALL_MENU_ITEMS = [
   { id: 'dashboard', label: 'Overview', icon: LayoutDashboard, href: '/admin' },
@@ -34,10 +34,13 @@ export function AdminSidebar() {
   }, [isAuthenticated, admin, router]);
 
   const handleLogout = async () => {
-    const { logoutSession } = await import('@/app/actions/auth-actions');
-    await logoutSession();
-    logout();
-    router.push('/login');
+    try {
+      await logoutSession();
+      logout();
+      window.location.href = '/login';
+    } catch (e) {
+      router.replace('/login');
+    }
   };
 
   const filteredMenuItems = ALL_MENU_ITEMS.filter(item => {

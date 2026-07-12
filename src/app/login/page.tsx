@@ -44,23 +44,24 @@ export default function LoginPage() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Automatic redirect if session exists
   useEffect(() => {
     if (isAuthenticated) {
       if (user?.id) {
         if (user.isProfileComplete) {
-          router.push('/home');
+          router.replace('/home');
         } else {
-          router.push('/onboarding');
+          router.replace('/onboarding');
         }
       } else if (admin?.role === 'Attendant') {
-        router.push(`/attendant/${admin.admin_id}`);
+        router.replace(`/attendant/${admin.admin_id}`);
       } else if (admin?.role === 'Doctor') {
-        router.push(`/doctor/${admin.admin_id}`);
+        router.replace(`/doctor/${admin.admin_id}`);
       } else if (admin) {
-        if (admin.admin_id === 'SUPER-1') {
-          router.push('/admin');
+        if (admin.admin_id === 'SUPER-1' || admin.admin_id === 'admin') {
+          router.replace('/admin');
         } else {
-          router.push(`/admin/${admin.admin_id}`);
+          router.replace(`/admin/${admin.admin_id}`);
         }
       }
     }
@@ -83,55 +84,30 @@ export default function LoginPage() {
         }
 
         if (result.role === 'Patient') {
-          // Clear admin state
           setAdminStore(null);
+          setUserStore(result.user as any);
+          const fullPatientList: Patient[] = [
+            { ...result.user, relation: 'Self' } as Patient,
+            ...(result.familyMembers || [])
+          ];
+          setPatientsStore(fullPatientList);
+          setAppointmentsStore(result.appointments || []);
+          setIsAuthenticated(true);
+          
+          router.refresh();
+          setTimeout(() => {
+            if (result.user.isProfileComplete) router.replace('/home');
+            else router.replace('/onboarding');
+          }, 100);
 
-          if (result.newUser) {
-            setUserStore(result.user as any);
-            setIsAuthenticated(true);
-            toast({ title: "Welcome!", description: "Please complete your profile to start booking." });
-            router.push('/onboarding');
-          } else {
-            setUserStore(result.user as any);
-            
-            const fullPatientList: Patient[] = [
-              { ...result.user, relation: 'Self' } as Patient,
-              ...(result.familyMembers || [])
-            ];
-            
-            setPatientsStore(fullPatientList);
-            setAppointmentsStore(result.appointments || []);
-            setIsAuthenticated(true);
-            
-            toast({ title: "Welcome Back!", description: "Your health records are synced." });
-            
-            if (result.user.isProfileComplete) {
-              router.push('/home');
-            } else {
-              router.push('/onboarding');
-            }
-          }
         } else if (result.role === 'Admin') {
-          // Clear patient state
-          setUserStore(null);
-          setPatientsStore([]);
-          setAppointmentsStore([]);
-
           setAdminStore(result.user as any);
           setIsAuthenticated(true);
-          toast({ title: 'Welcome Admin!', description: 'Dashboard loaded successfully.' });
-          
-          if (result.user.admin_id === 'SUPER-1') {
-            router.push('/admin');
-          } else {
-            router.push(`/admin/${result.user.admin_id}`);
-          }
+          router.refresh();
+          setTimeout(() => {
+            router.replace(result.user.admin_id === 'SUPER-1' ? '/admin' : `/admin/${result.user.admin_id}`);
+          }, 100);
         } else if (result.role === 'Doctor') {
-          // Clear patient state
-          setUserStore(null);
-          setPatientsStore([]);
-          setAppointmentsStore([]);
-
           setAdminStore({
             admin_id: result.user.doctor_id,
             full_name: result.user.full_name,
@@ -140,14 +116,11 @@ export default function LoginPage() {
             permissions: {} as any
           });
           setIsAuthenticated(true);
-          toast({ title: 'Welcome Doctor!', description: 'Your Clinic Dashboard loaded successfully.' });
-          router.push(`/doctor/${result.user.doctor_id}`);
+          router.refresh();
+          setTimeout(() => {
+            router.replace(`/doctor/${result.user.doctor_id}`);
+          }, 100);
         } else if (result.role === 'Attendant') {
-          // Clear patient state
-          setUserStore(null);
-          setPatientsStore([]);
-          setAppointmentsStore([]);
-
           setAdminStore({
             admin_id: result.user.attendant_id,
             full_name: result.user.full_name,
@@ -156,8 +129,10 @@ export default function LoginPage() {
             permissions: {} as any
           });
           setIsAuthenticated(true);
-          toast({ title: 'Welcome Attendant!', description: 'Queue Dashboard loaded successfully.' });
-          router.push(`/attendant/${result.user.attendant_id}`);
+          router.refresh();
+          setTimeout(() => {
+            router.replace(`/attendant/${result.user.attendant_id}`);
+          }, 100);
         }
       } else {
         toast({ variant: "destructive", title: "Login Failed", description: result.error });
@@ -185,16 +160,17 @@ export default function LoginPage() {
         setUserStore(null);
         setPatientsStore([]);
         setAppointmentsStore([]);
-
         setAdminStore(result.user as any);
         setIsAuthenticated(true);
-        toast({ title: 'Welcome Admin!', description: 'Dashboard loaded successfully.' });
+        router.refresh();
         
-        if (result.user.admin_id === 'SUPER-1') {
-          router.push('/admin');
-        } else {
-          router.push(`/admin/${result.user.admin_id}`);
-        }
+        setTimeout(() => {
+          if (result.user.admin_id === 'SUPER-1') {
+            router.replace('/admin');
+          } else {
+            router.replace(`/admin/${result.user.admin_id}`);
+          }
+        }, 100);
       } else {
         toast({ variant: "destructive", title: "Verification Failed", description: result.error });
       }
@@ -211,11 +187,8 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen bg-slate-50">
-      {/* Left side panel (Desktop Only) */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-tr from-blue-600 via-blue-700 to-indigo-900 p-16 flex-col justify-between text-white relative overflow-hidden">
-        {/* Background pattern */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.1),transparent)] pointer-events-none" />
-        
         <div className="flex items-center space-x-4 z-10">
           <div className="h-12 w-12 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20">
             <span className="font-black text-2xl tracking-tighter text-white">D</span>
@@ -225,26 +198,15 @@ export default function LoginPage() {
             <p className="text-[9px] text-white/50 font-bold uppercase tracking-widest leading-none">Healthcare Simplified</p>
           </div>
         </div>
-
         <div className="space-y-6 z-10 max-w-md">
-          <h2 className="text-4xl lg:text-5xl font-black leading-tight tracking-tight">
-            Experience Premium Medical Management.
-          </h2>
-          <p className="text-white/70 font-medium leading-relaxed">
-            Track live OPD queue status, manage family health records, and schedule consultations in seconds.
-          </p>
+          <h2 className="text-4xl lg:text-5xl font-black leading-tight tracking-tight">Experience Premium Medical Management.</h2>
+          <p className="text-white/70 font-medium leading-relaxed">Track live OPD queue status, manage family health records, and schedule consultations in seconds.</p>
         </div>
-
-        <div className="text-xs font-bold text-white/40 z-10">
-          © {new Date().getFullYear()} Doctivo Inc. All rights reserved.
-        </div>
+        <div className="text-xs font-bold text-white/40 z-10">© {new Date().getFullYear()} Doctivo Inc. All rights reserved.</div>
       </div>
 
-      {/* Right side login form (Mobile & Desktop) */}
       <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-6 bg-[#F8FAFF]">
         <div className="w-full max-w-[440px] flex flex-col min-h-[85vh] lg:min-h-0 justify-between lg:justify-center lg:space-y-10 py-8">
-          
-          {/* Logo (Shown on mobile, hidden on desktop) */}
           <div className="flex flex-col items-center space-y-3 lg:hidden">
             <div className="h-16 w-16 rounded-2xl flex items-center justify-center shadow-lg relative overflow-hidden">
               <Image src="/562c71b5-1be4-415a-94dc-002e1889eb7c-8.jpg" alt="Logo" fill className="object-cover" priority />
@@ -256,112 +218,43 @@ export default function LoginPage() {
            </div>
 
            <div>
-             <h2 className="text-3xl font-black text-slate-800 mb-2 px-1 tracking-tight">
-               {otpSent ? "Verify OTP" : "Login"}
-             </h2>
+             <h2 className="text-3xl font-black text-slate-800 mb-2 px-1 tracking-tight">{otpSent ? "Verify OTP" : "Login"}</h2>
              <p className="text-slate-400 font-bold text-xs uppercase tracking-widest px-1 mb-8">
-               {otpSent 
-                 ? `Enter the 6-digit code sent to ${otpEmail}`
-                 : (isMobile ? "Enter your mobile number to continue" : "Access your portal using credentials")}
+               {otpSent ? `Enter the 6-digit code sent to ${otpEmail}` : (isMobile ? "Enter your mobile number to continue" : "Access your portal using credentials")}
              </p>
 
              <Card className="w-full bg-white border-none shadow-[0_4px_25px_rgba(0,0,0,0.03)] rounded-[2.5rem] overflow-hidden">
                <CardContent className="pt-10 px-8 pb-10 space-y-10">
                  {otpSent ? (
-                   /* OTP input interface */
                    <div className="space-y-6">
                      <div className="space-y-1 px-1">
-                       <label className="text-[10px] font-black text-primary uppercase tracking-widest">
-                         Verification Code
-                       </label>
-                       
+                       <label className="text-[10px] font-black text-primary uppercase tracking-widest">Verification Code</label>
                        <div className="flex items-center border-b-2 border-slate-200 focus-within:border-primary transition-all py-3">
-                         <input 
-                           type="tel"
-                           maxLength={6}
-                           placeholder="000000" 
-                           className="border-none shadow-none outline-none focus:ring-0 h-10 text-2xl font-black text-slate-800 placeholder:text-slate-200 p-0 bg-transparent w-full text-center tracking-[0.5em]"
-                           value={otpInput || ''}
-                           onChange={(e) => setOtpInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                           onKeyDown={(e) => e.key === 'Enter' && handleVerifyOtp()}
-                         />
+                         <input type="tel" maxLength={6} placeholder="000000" className="border-none shadow-none outline-none focus:ring-0 h-10 text-2xl font-black text-slate-800 placeholder:text-slate-200 p-0 bg-transparent w-full text-center tracking-[0.5em]" value={otpInput || ''} onChange={(e) => setOtpInput(e.target.value.replace(/\D/g, '').slice(0, 6))} onKeyDown={(e) => e.key === 'Enter' && handleVerifyOtp()} />
                        </div>
                      </div>
-
-                     <Button 
-                       className="w-full h-16 text-lg font-black bg-primary text-white rounded-full transition-all flex items-center justify-center gap-2 group shadow-xl shadow-primary/20 hover:bg-primary/90"
-                       onClick={handleVerifyOtp}
-                       disabled={otpInput.length !== 6 || isVerifying}
-                     >
-                       {isVerifying ? (
-                         <Loader2 className="h-6 w-6 animate-spin" />
-                       ) : (
-                         <>Verify Code <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" /></>
-                       )}
+                     <Button className="w-full h-16 text-lg font-black bg-primary text-white rounded-full transition-all flex items-center justify-center gap-2 group shadow-xl shadow-primary/20 hover:bg-primary/90" onClick={handleVerifyOtp} disabled={otpInput.length !== 6 || isVerifying}>
+                       {isVerifying ? <Loader2 className="h-6 w-6 animate-spin" /> : <>Verify Code <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" /></>}
                      </Button>
-
                      <div className="flex justify-between items-center px-1 pt-2 text-xs font-bold">
-                       <button 
-                         onClick={handleLogin}
-                         className="text-primary hover:underline"
-                       >
-                         Resend Code
-                       </button>
-                       <button 
-                         onClick={() => { setOtpSent(false); setOtpInput(''); }}
-                         className="text-slate-400 hover:text-slate-600"
-                       >
-                         Change Email
-                       </button>
+                       <button onClick={handleLogin} className="text-primary hover:underline">Resend Code</button>
+                       <button onClick={() => { setOtpSent(false); setOtpInput(''); }} className="text-slate-400 hover:text-slate-600">Change Email</button>
                      </div>
                    </div>
                  ) : (
-                   /* Standard login interface */
                    <div className="space-y-10">
                      <div className="space-y-6">
                        <div className="space-y-1 px-1">
-                         <label className="text-[10px] font-black text-primary uppercase tracking-widest">
-                           {isMobile ? "Mobile Number" : "Identifier"}
-                         </label>
-                         
+                         <label className="text-[10px] font-black text-primary uppercase tracking-widest">{isMobile ? "Mobile Number" : "Identifier"}</label>
                          <div className="flex items-center border-b-2 border-slate-200 focus-within:border-primary transition-all py-3">
-                           {isMobile && (
-                             <span className="text-slate-400 font-bold text-xl mr-3">+91</span>
-                           )}
-                           <input 
-                             type={isMobile ? "tel" : "text"}
-                             placeholder={isMobile ? "00000 00000" : "Mobile, email, or attendant ID"} 
-                             className="border-none shadow-none outline-none focus:ring-0 h-10 text-lg font-black text-slate-800 placeholder:text-slate-200 p-0 bg-transparent w-full"
-                             value={loginInput || ''}
-                             onChange={(e) => {
-                               const val = e.target.value;
-                               if (isMobile) {
-                                 setLoginInput(val.replace(/\D/g, '').slice(0, 10));
-                               } else {
-                                 if (/^\d+$/.test(val)) {
-                                   setLoginInput(val.slice(0, 10));
-                                 } else {
-                                   setLoginInput(val);
-                                 }
-                               }
-                             }}
-                             onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-                           />
+                           {isMobile && <span className="text-slate-400 font-bold text-xl mr-3">+91</span>}
+                           <input type={isMobile ? "tel" : "text"} placeholder={isMobile ? "00000 00000" : "Mobile, email, or attendant ID"} className="border-none shadow-none outline-none focus:ring-0 h-10 text-lg font-black text-slate-800 placeholder:text-slate-200 p-0 bg-transparent w-full" value={loginInput || ''} onChange={(e) => { const val = e.target.value; if (isMobile) setLoginInput(val.replace(/\D/g, '').slice(0, 10)); else setLoginInput(val); }} onKeyDown={(e) => e.key === 'Enter' && handleLogin()} />
                          </div>
                        </div>
                      </div>
-          
                      {(!isMobile || loginInput.length === 10) && (
-                       <Button 
-                         className="w-full h-16 text-lg font-black bg-primary text-white rounded-full transition-all flex items-center justify-center gap-2 group shadow-xl shadow-primary/20 hover:bg-primary/90"
-                         onClick={handleLogin}
-                         disabled={isLoading}
-                       >
-                         {isLoading ? (
-                           <Loader2 className="h-6 w-6 animate-spin" />
-                         ) : (
-                           <>Continue <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" /></>
-                         )}
+                       <Button className="w-full h-16 text-lg font-black bg-primary text-white rounded-full transition-all flex items-center justify-center gap-2 group shadow-xl shadow-primary/20 hover:bg-primary/90" onClick={handleLogin} disabled={isLoading}>
+                         {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : <>Continue <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" /></>}
                        </Button>
                      )}
                    </div>
@@ -369,12 +262,7 @@ export default function LoginPage() {
                </CardContent>
              </Card>
            </div>
-
-           {/* Mobile Footer */}
-           <div className="text-center text-[10px] text-slate-400 font-medium lg:hidden">
-             © {new Date().getFullYear()} Doctivo Inc.
-           </div>
-
+           <div className="text-center text-[10px] text-slate-400 font-medium lg:hidden">© {new Date().getFullYear()} Doctivo Inc.</div>
          </div>
        </div>
      </div>

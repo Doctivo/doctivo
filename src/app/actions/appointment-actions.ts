@@ -21,10 +21,11 @@ export async function createAppointment(app: Partial<Appointment>) {
     const sql = `
       INSERT INTO appointments (
         appointment_id, doctor_id, doctor_name, booked_by_user_id, 
-        patient_type, patient_name, appointment_date, appointment_time_slot,
+        patient_type, patient_name, patient_age, patient_gender, patient_blood_group,
+        appointment_date, appointment_time_slot,
         current_symptoms, consultation_fee_amount, payment_status, 
         payment_mode, transaction_id, status, token_number, visit_otp
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
       RETURNING *;
     `;
 
@@ -35,6 +36,9 @@ export async function createAppointment(app: Partial<Appointment>) {
       app.patientId, 
       app.patientType,
       app.patientName,
+      app.patientAge || 'N/A',
+      app.patientGender || 'N/A',
+      app.patientBloodGroup || 'N/A',
       app.date, 
       app.time,
       app.current_symptoms || '',
@@ -73,7 +77,6 @@ export async function getUserAppointments(userId: string) {
       const appDate = r.appointment_date instanceof Date ? r.appointment_date : parseISO(String(r.appointment_date));
       let status = r.status;
 
-      // Auto-cancel (Missed) if the date has passed and it was never completed/cancelled
       if (isBefore(appDate, today) && (status === 'Confirmed' || status === 'Waiting')) {
         status = 'Missed';
       }
@@ -85,6 +88,9 @@ export async function getUserAppointments(userId: string) {
         patientId: r.booked_by_user_id,
         patientName: r.patient_name,
         patientType: r.patient_type,
+        patientAge: r.patient_age,
+        patientGender: r.patient_gender,
+        patientBloodGroup: r.patient_blood_group,
         date: r.appointment_date instanceof Date ? r.appointment_date.toISOString().split('T')[0] : String(r.appointment_date || ''),
         time: r.appointment_time_slot,
         current_symptoms: r.current_symptoms,
@@ -98,41 +104,6 @@ export async function getUserAppointments(userId: string) {
     }) as Appointment[];
   } catch (error) {
     console.error('Error fetching user appointments:', error);
-    return [];
-  }
-}
-
-/**
- * Fetches already booked slots for a specific doctor on a specific date
- */
-export async function getBookedSlots(doctorId: string, date: string) {
-  try {
-    const result = await query(
-      "SELECT appointment_time_slot FROM appointments WHERE doctor_id = $1 AND appointment_date = $2 AND status IN ('Confirmed', 'Waiting')",
-      [doctorId, date]
-    );
-    return result.rows.map(r => r.appointment_time_slot) as string[];
-  } catch (error) {
-    console.error('Error fetching booked slots:', error);
-    return [];
-  }
-}
-
-/**
- * Fetches already booked slots for a specific doctor between a range of dates
- */
-export async function getBookedSlotsForDateRange(doctorId: string, startDate: string, endDate: string) {
-  try {
-    const result = await query(
-      "SELECT appointment_date, appointment_time_slot FROM appointments WHERE doctor_id = $1 AND appointment_date >= $2 AND appointment_date <= $3 AND status IN ('Confirmed', 'Waiting')",
-      [doctorId, startDate, endDate]
-    );
-    return result.rows.map(r => ({
-      appointment_date: String(r.appointment_date),
-      appointment_time_slot: r.appointment_time_slot
-    })) as { appointment_date: string; appointment_time_slot: string }[];
-  } catch (error) {
-    console.error('Error fetching booked slots for range:', error);
     return [];
   }
 }
@@ -153,6 +124,9 @@ export async function getAppointmentById(id: string) {
       patientId: r.booked_by_user_id,
       patientName: r.patient_name,
       patientType: r.patient_type,
+      patientAge: r.patient_age,
+      patientGender: r.patient_gender,
+      patientBloodGroup: r.patient_blood_group,
       date: r.appointment_date instanceof Date ? r.appointment_date.toISOString().split('T')[0] : String(r.appointment_date || ''),
       time: r.appointment_time_slot,
       current_symptoms: r.current_symptoms,
@@ -190,6 +164,9 @@ export async function getDoctorAppointmentsForDate(doctorId: string, dateStr: st
         patientId: r.booked_by_user_id,
         patientName: r.patient_name,
         patientType: r.patient_type,
+        patientAge: r.patient_age,
+        patientGender: r.patient_gender,
+        patientBloodGroup: r.patient_blood_group,
         date: localDate,
         time: r.appointment_time_slot,
         current_symptoms: r.current_symptoms,
@@ -207,9 +184,6 @@ export async function getDoctorAppointmentsForDate(doctorId: string, dateStr: st
   }
 }
 
-/**
- * Updates the status of an appointment in the database.
- */
 export async function updateAppointmentStatus(appointmentId: string, status: string) {
   try {
     await query(
@@ -218,27 +192,16 @@ export async function updateAppointmentStatus(appointmentId: string, status: str
     );
     return { success: true };
   } catch (error: any) {
-    console.error('Error updating appointment status:', error.message);
     return { success: false, error: error.message };
   }
 }
 
-/**
- * Verifies the visit verification OTP and marks the appointment as Completed/Visited.
- * If the user chose to Pay at Clinic, this also marks their payment as Paid.
- */
 export async function verifyVisitOtp(appointmentId: string, otp: string) {
   try {
     const res = await query('SELECT visit_otp FROM appointments WHERE appointment_id = $1', [appointmentId]);
-    if (res.rowCount === 0) {
-      return { success: false, error: 'Appointment record not found.' };
-    }
-    const app = res.rows[0];
-    if (app.visit_otp !== otp) {
-      return { success: false, error: 'Incorrect Verification OTP. Please check the patient ticket or SMS/Email.' };
-    }
+    if (res.rowCount === 0) return { success: false, error: 'Not found.' };
+    if (res.rows[0].visit_otp !== otp) return { success: false, error: 'Incorrect OTP.' };
     
-    // Mark status as Completed and ensure payment is marked Paid
     await query("UPDATE appointments SET status = 'Completed', payment_status = 'Paid' WHERE appointment_id = $1", [appointmentId]);
     return { success: true };
   } catch (error: any) {

@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
+    --background: 0 0% 100%;
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
@@ -20,11 +20,10 @@
     --accent-foreground: 210 40% 98%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    /* Border color set to #5f6163 (approx 210 2% 38% in HSL) for visibility */
-    --border: 210 2% 38%;
+    --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 221.2 83.2% 53.3%;
-    --radius: 0.3rem;
+    --radius: 1rem;
   }
 }
 
@@ -33,20 +32,13 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-body;
+    @apply bg-slate-50 text-foreground antialiased;
+    font-family: 'Inter', sans-serif;
   }
 }
 
 .mobile-container {
-  max-width: 480px;
-  margin: 0 auto;
-  position: relative;
-  min-height: 100vh;
-  min-height: 100svh;
-  background-color: white;
-  box-shadow: 0 0 50px rgba(0,0,0,0.05);
-  display: flex;
-  flex-direction: column;
+  @apply max-w-[480px] md:max-w-5xl mx-auto relative min-h-screen bg-white shadow-2xl flex flex-col md:my-8 md:rounded-[3rem] overflow-hidden;
 }
 
 .scroll-hide::-webkit-scrollbar {
@@ -59,4 +51,13 @@
 
 input, textarea, select {
   @apply focus:ring-2 focus:ring-primary/20 transition-all !important;
+}
+
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
 }

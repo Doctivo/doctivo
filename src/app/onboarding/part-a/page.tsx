@@ -11,6 +11,7 @@ import { Gender } from '@/lib/types';
 import { upsertPatientProfile } from '@/app/actions/patient-actions';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 export default function PartAPage() {
   const router = useRouter();
@@ -81,10 +82,11 @@ export default function PartAPage() {
               <Input 
                 type="number" 
                 placeholder="25"
-                className="h-12 rounded-xl bg-slate-50 border-slate-100"
+                className={cn("h-12 rounded-xl bg-slate-50 border-slate-100", Number(formData.age) > 120 && "border-red-500")}
                 value={formData.age}
                 onChange={(e) => setFormData({...formData, age: e.target.value})}
               />
+              {Number(formData.age) > 120 && <p className="text-red-500 text-xs mt-1">Invalid age.</p>}
             </div>
             <div className="space-y-2">
               <Label className="text-slate-600 font-bold">Gender</Label>

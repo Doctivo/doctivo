@@ -1,14 +1,9 @@
-
 'use server';
 
 import { query } from '@/lib/db';
 import { getPatientByPhone, getFamilyMembers } from './patient-actions';
 import { getUserAppointments } from './appointment-actions';
 import { cookies } from 'next/headers';
-import dns from 'dns';
-
-// Force all DNS requests to resolve IPv4 addresses first (avoids unrecognized IPv6 block from Brevo)
-dns.setDefaultResultOrder('ipv4first');
 
 /**
  * Unified Login without OTP for Prototype/Speed.
@@ -208,30 +203,12 @@ export async function sendAdminOtp(email: string) {
     if (!response.ok) {
       const errText = await response.text();
       console.error('Brevo API request failed:', errText);
-      
-      // Local testing fallback: Print OTP to command line and allow login
-      console.log("\n==========================================");
-      console.log("🔑 [LOCAL OTP FALLBACK FOR TESTING] 🔑");
-      console.log(`Email: ${email}`);
-      console.log(`OTP Code: ${otp}`);
-      console.log("👉 Please copy this code and paste it on the screen!");
-      console.log("==========================================\n");
-
       return { success: true, localFallback: true };
     }
 
     return { success: true };
   } catch (error: any) {
     console.error('sendAdminOtp Error:', error.message);
-    
-    // Local testing fallback: Print OTP on connection error
-    console.log("\n==========================================");
-    console.log("🔑 [LOCAL OTP FALLBACK FOR TESTING] 🔑");
-    console.log(`Email: ${email}`);
-    console.log(`OTP Code: ${otp}`);
-    console.log("👉 Please copy this code and paste it on the screen!");
-    console.log("==========================================\n");
-    
     return { success: true, localFallback: true };
   }
 }
@@ -270,8 +247,8 @@ export async function verifyAdminOtp(email: string, otp: string) {
           exporter: { allow_export: true }
         }
       };
-      cookieStore.set('session_role', 'Admin', { path: '/', maxAge: 30 * 60 });
-      cookieStore.set('session_id', 'SUPER-1', { path: '/', maxAge: 30 * 60 });
+      cookieStore.set('session_role', 'Admin', { path: '/', maxAge: 60 * 60 });
+      cookieStore.set('session_id', 'SUPER-1', { path: '/', maxAge: 60 * 60 });
       return {
         success: true,
         role: 'Admin',
@@ -283,8 +260,8 @@ export async function verifyAdminOtp(email: string, otp: string) {
     const adminRes = await query('SELECT * FROM admins WHERE email = $1', [emailLower]);
     if (adminRes.rows.length > 0) {
       const adminData = adminRes.rows[0];
-      cookieStore.set('session_role', 'Admin', { path: '/', maxAge: 30 * 60 });
-      cookieStore.set('session_id', adminData.admin_id || adminData.id || 'admin', { path: '/', maxAge: 30 * 60 });
+      cookieStore.set('session_role', 'Admin', { path: '/', maxAge: 60 * 60 });
+      cookieStore.set('session_id', adminData.admin_id || adminData.id || 'admin', { path: '/', maxAge: 60 * 60 });
       return {
         success: true,
         role: 'Admin',

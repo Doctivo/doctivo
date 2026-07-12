@@ -1,20 +1,21 @@
-self.addEventListener('install', (event) => {
-  self.skipWaiting();
+const CACHE_NAME = 'doctivo-cache-v1';
+const urlsToCache = [
+  '/',
+  '/home',
+  '/manifest.json',
+  '/562c71b5-1be4-415a-94dc-002e1889eb7c-8.jpg'
+];
+
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(urlsToCache))
+  );
 });
 
-self.addEventListener('activate', (event) => {
-  event.waitUntil(clients.claim());
-});
-
-self.addEventListener('fetch', (event) => {
-  // Only intercept http/https requests to avoid chrome-extension:// or other protocols throwing errors
-  if (event.request.url.startsWith('http')) {
-    event.respondWith(
-      fetch(event.request).catch((err) => {
-        console.warn('Service worker fetch failed:', err);
-        // Return a custom network error response instead of throwing uncaught rejection
-        return new Response('Network error', { status: 480, statusText: 'Network Error' });
-      })
-    );
-  }
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    caches.match(event.request)
+      .then(response => response || fetch(event.request))
+  );
 });

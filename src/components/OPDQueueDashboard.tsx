@@ -255,9 +255,13 @@ export function OPDQueueDashboard({ mode, targetId }: OPDQueueDashboardProps) {
   };
 
   const handleLogout = async () => {
-    await logoutSession();
-    logout();
-    router.push('/login');
+    try {
+      await logoutSession();
+      logout();
+      window.location.href = '/login';
+    } catch (e) {
+      router.replace('/login');
+    }
   };
 
   if (!admin) return null;

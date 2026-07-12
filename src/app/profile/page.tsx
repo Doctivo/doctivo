@@ -12,6 +12,7 @@ import { BottomNav } from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
+import { logoutSession } from '@/app/actions/auth-actions';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -25,9 +26,19 @@ export default function ProfilePage() {
     }
   }, [isAuthenticated, router]);
 
-  const handleLogout = () => {
-    logout();
-    router.push('/login');
+  const handleLogout = async () => {
+    try {
+      // 1. Clear server sessions (cookies)
+      await logoutSession();
+      // 2. Clear client state (Zustand & LocalStorage)
+      logout();
+      // 3. Force hard redirect to login to clear all memory
+      window.location.href = '/login';
+    } catch (error) {
+      console.error('Logout failed:', error);
+      // Fallback redirect
+      router.replace('/login');
+    }
   };
 
   if (!isAuthenticated) return null;

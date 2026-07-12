@@ -84,6 +84,9 @@ export interface Appointment {
   patientId: string;
   patientName: string;
   patientType: 'Self' | 'Family_Member';
+  patientAge?: string;
+  patientGender?: string;
+  patientBloodGroup?: string;
   date: string;
   time: string;
   consultation_fee_amount: number;

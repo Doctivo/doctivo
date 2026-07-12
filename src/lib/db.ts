@@ -1,46 +1,56 @@
-
 import { Pool } from 'pg';
 
 /**
- * Optimized PostgreSQL connection pool with SSL support.
- * Checks for DATABASE_URL and provides clear error if missing or malformed.
+ * Optimized PostgreSQL connection pool for Production (Vercel).
+ * Enforces SSL for remote connections while maintaining local flexibility.
  */
 const connectionString = process.env.DATABASE_URL;
 
-// Validation to prevent "ENOTFOUND base" error
 const isValidUrl = connectionString && 
                    connectionString.startsWith('postgres') && 
                    !connectionString.includes('your_') &&
                    !connectionString.includes('base');
 
-const pool = new Pool({
-  connectionString: isValidUrl ? connectionString : undefined,
-  ssl: connectionString?.includes('localhost') || connectionString?.includes('127.0.0.1') 
-    ? false 
-    : { rejectUnauthorized: false },
-  max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 10000,
-});
+let pool: Pool;
 
-pool.on('error', (err) => {
-  console.error('Unexpected error on idle PostgreSQL client.', err.message);
-});
+try {
+  pool = new Pool({
+    connectionString: isValidUrl ? connectionString : undefined,
+    // Production requirement: SSL is mandatory for remote Postgres hosts
+    ssl: connectionString?.includes('localhost') || connectionString?.includes('127.0.0.1') 
+      ? false 
+      : { rejectUnauthorized: false },
+    max: 10, // Optimized for serverless
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 5000,
+  });
+
+  pool.on('error', (err) => {
+    console.error('Unexpected error on idle PostgreSQL client.', err.message);
+  });
+} catch (e) {
+  console.error('Failed to initialize DB pool:', e);
+}
 
 export const query = async (text: string, params?: any[]) => {
   if (!isValidUrl) {
-    throw new Error('Database Error: DATABASE_URL in .env is missing or invalid. Please paste your real connection string from Neon/Supabase.');
+    console.error('CRITICAL: DATABASE_URL is missing or invalid in Vercel environment.');
+    throw new Error('Database connection is not configured in Vercel environment variables.');
+  }
+  
+  if (!pool) {
+    throw new Error('Database pool is not initialized.');
   }
   
   try {
     return await pool.query(text, params);
   } catch (error: any) {
-    // Catch common host resolution errors
+    console.error('DB Query Error:', error.message);
     if (error.code === 'ENOTFOUND' || error.message.includes('getaddrinfo')) {
-      throw new Error(`Connection Failed: Could not resolve database host. Check if your DATABASE_URL is correct.`);
+      throw new Error(`Database connection failed. Could not reach host. Verify DATABASE_URL.`);
     }
     throw error;
   }
 };
 
-export default pool;
+export default pool!;

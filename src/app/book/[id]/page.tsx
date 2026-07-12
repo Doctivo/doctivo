@@ -1,20 +1,18 @@
 'use client';
 
-import { use, useState, useMemo, useEffect, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { use, useState, useEffect, Suspense } from 'react';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { ChevronLeft, Star, MapPin, Loader2, Plus, CheckCircle2, Calendar as CalendarIcon, Clock as ClockIcon, MessageSquare, AlertCircle, Check } from 'lucide-react';
+import { 
+  ChevronLeft, Star, MapPin, Loader2, Award, Briefcase, Info 
+} from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
-import { createAppointment, getBookedSlots, getBookedSlotsForDateRange } from '@/app/actions/appointment-actions';
+import { createAppointment, getBookedSlots } from '@/app/actions/appointment-actions';
 import { getDoctorById } from '@/app/actions/doctor-actions';
-import { addFamilyMember, getFamilyMembers } from '@/app/actions/patient-actions';
+import { getFamilyMembers } from '@/app/actions/patient-actions';
 import { useToast } from '@/hooks/use-toast';
-import { Doctor, Patient } from '@/lib/types';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Doctor } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
@@ -35,8 +33,7 @@ const generateTimeSlots = (start: string, end: string, duration: number) => {
       let hours = current.getHours();
       const minutes = current.getMinutes();
       const ampm = hours >= 12 ? 'PM' : 'AM';
-      hours = hours % 12;
-      hours = hours ? hours : 12;
+      hours = hours % 12; hours = hours ? hours : 12;
       const minStr = minutes < 10 ? '0' + minutes : minutes;
       slots.push(`${hours}:${minStr} ${ampm}`);
       current.setMinutes(current.getMinutes() + duration);
@@ -49,90 +46,19 @@ function BookingContent({ id }: { id: string }) {
   const router = useRouter();
   const patients = useStore(state => state.patients);
   const setPatientsStore = useStore(state => state.setPatients);
-  const addPatientStore = useStore(state => state.addPatient);
   const addAppointmentStore = useStore(state => state.addAppointment);
   const user = useStore(state => state.user);
   const { toast } = useToast();
 
   const [doc, setDoc] = useState<Doctor | null>(null);
   const [selectedPatientId, setSelectedPatientId] = useState('');
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-  const [bookedSlots, setBookedSlots] = useState<string[]>([]);
-  const [rangeBookedSlots, setRangeBookedSlots] = useState<{ appointment_date: string; appointment_time_slot: string }[]>([]);
-  const [paymentMode, setPaymentMode] = useState<'Online' | 'Clinic'>('Online');
+  const [selectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedSlot, setSelectedSlot] = useState('');
   const [symptoms, setSymptoms] = useState('');
   const [selectedReasons, setSelectedReasons] = useState<string[]>([]);
   const [showCustomSymptom, setShowCustomSymptom] = useState(false);
   const [isBooking, setIsBooking] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
-  const [showMockAlert, setShowMockAlert] = useState(false);
-
-  const searchParams = useSearchParams();
-  const mode = searchParams.get('mode');
-
-  const doctorReasons = useMemo(() => {
-    const list = [...(doc?.reasonsForVisit || [])];
-    if (mode === 'Home' && !list.includes('Home Visit Request')) {
-      list.unshift('Home Visit Request');
-    }
-    return list;
-  }, [doc?.reasonsForVisit, mode]);
-
-  useEffect(() => {
-    if (mode === 'Home') {
-      setSelectedReasons(['Home Visit Request']);
-    }
-  }, [mode]);
-  
-  const [isAddOpen, setIsAddOpen] = useState(false);
-  const [isSavingPatient, setIsSavingPatient] = useState(false);
-  const [newPatient, setNewPatient] = useState<Partial<Patient>>({
-    name: '', age: '', gender: 'Male', relation: 'Other', height_cm: '', weight_kg: '', blood_group: '', medicalHistory: '', allergies: '', secondaryPhone: ''
-  });
-
-  const dayRange = useMemo(() => {
-    const days = [];
-    const today = new Date();
-    for (let i = 0; i < 15; i++) {
-      const date = new Date(today);
-      date.setDate(today.getDate() + i);
-      days.push({
-        fullDate: date.toISOString().split('T')[0],
-        dayName: date.toLocaleDateString('en-US', { weekday: 'short' }),
-        dateNum: date.getDate()
-      });
-    }
-    return days;
-  }, []);
-
-  const timeSlots = useMemo(() => {
-    if (!doc) return [];
-    const customSchedule = doc.customSchedule || {};
-    const override = customSchedule[selectedDate];
-    if (override) {
-      if (override.isAvailable === false || override.is_available === false) {
-        return [];
-      }
-      return generateTimeSlots(
-        override.startTime || override.start_time || doc.startTime,
-        override.endTime || override.end_time || doc.endTime,
-        doc.slotDuration
-      );
-    }
-    return generateTimeSlots(doc.startTime, doc.endTime, doc.slotDuration);
-  }, [doc, selectedDate]);
-
-  useEffect(() => {
-    async function sync() {
-      if (user?.id) {
-        const family = await getFamilyMembers(user.id);
-        const fullList = [{ ...user, relation: 'Self' } as Patient, ...family];
-        setPatientsStore(fullList);
-      }
-    }
-    sync();
-  }, [user?.id, setPatientsStore]);
 
   useEffect(() => {
     async function load() {
@@ -144,211 +70,52 @@ function BookingContent({ id }: { id: string }) {
   }, [id]);
 
   useEffect(() => {
-    async function fetchBooked() {
-      if (!doc || !selectedDate) return;
-      const booked = await getBookedSlots(doc.id, selectedDate);
-      setBookedSlots(booked);
-      setSelectedSlot('');
-    }
-    fetchBooked();
-  }, [doc, selectedDate]);
+    if (user?.id) getFamilyMembers(user.id).then(f => setPatientsStore([{...user, relation: 'Self'} as any, ...f]));
+  }, [user, setPatientsStore]);
 
-  useEffect(() => {
-    async function fetchRangeBookings() {
-      if (!doc || dayRange.length === 0) return;
-      const startDate = dayRange[0].fullDate;
-      const endDate = dayRange[dayRange.length - 1].fullDate;
-      const data = await getBookedSlotsForDateRange(doc.id, startDate, endDate);
-      setRangeBookedSlots(data);
-    }
-    fetchRangeBookings();
-  }, [doc, dayRange, selectedDate]);
-
-  const getAvailableSlotsCount = (fullDate: string) => {
-    if (!doc) return 0;
-    const bookedForDay = rangeBookedSlots.filter(r => {
-      const rDate = r.appointment_date.split('T')[0];
-      return rDate === fullDate;
-    }).map(r => r.appointment_time_slot);
-
-    // Calculate slots list specifically for this date to support date-specific overrides
-    const customSchedule = doc.customSchedule || {};
-    const override = customSchedule[fullDate];
-    let slotsForDay: string[] = [];
-    if (override) {
-      if (override.isAvailable !== false && override.is_available !== false) {
-        slotsForDay = generateTimeSlots(
-          override.startTime || override.start_time || doc.startTime,
-          override.endTime || override.end_time || doc.endTime,
-          doc.slotDuration
-        );
-      }
-    } else {
-      slotsForDay = generateTimeSlots(doc.startTime, doc.endTime, doc.slotDuration);
-    }
-
-    const now = new Date();
-    const isToday = fullDate === now.toISOString().split('T')[0];
-
-    let count = 0;
-    for (const slot of slotsForDay) {
-      const isBooked = bookedForDay.includes(slot);
-      let isPast = false;
-      if (isToday) {
-        const [hourStr, minutePart] = slot.split(':');
-        const [minuteStr, period] = minutePart.split(' ');
-        let h = parseInt(hourStr);
-        if (period === 'PM' && h !== 12) h += 12;
-        if (period === 'AM' && h === 12) h = 0;
-        const slotTime = new Date();
-        slotTime.setHours(h, parseInt(minuteStr), 0, 0);
-        isPast = slotTime < now;
-      }
-      if (!isBooked && !isPast) {
-        count++;
-      }
-    }
-    return count;
+  const toggleReason = (reason: string) => {
+    setSelectedReasons(prev => prev.includes(reason) ? prev.filter(r => r !== reason) : [...prev, reason]);
   };
 
-  const displayPatients = useMemo(() => {
-    const list = [...patients];
-    const hasSelf = list.some(p => p.id === user?.id || p.relation === 'Self');
-    if (!hasSelf && user?.name) list.push({ ...user, relation: 'Self' } as Patient);
-    const unique = Array.from(new Map(list.map(p => [p.id, p])).values());
-    return unique.sort((a, b) => a.relation === 'Self' ? -1 : 1);
-  }, [patients, user]);
-
-  const queryPatientId = searchParams.get('patientId') || '';
-
-  useEffect(() => {
-    if (displayPatients.length > 0 && !selectedPatientId) {
-      const match = displayPatients.find(p => p.id === queryPatientId);
-      setSelectedPatientId(match ? match.id : displayPatients[0].id);
-    }
-  }, [displayPatients, selectedPatientId, queryPatientId]);
-
-  const handleAddQuickPatient = async () => {
-    if (!newPatient.name || !newPatient.age || !newPatient.gender || !newPatient.relation || !newPatient.height_cm || !newPatient.weight_kg || !newPatient.blood_group) {
-      toast({ variant: 'destructive', title: 'Validation Alert', description: 'All fields marked * are required.' });
-      return;
-    }
-    const ageVal = parseInt(newPatient.age);
-    const heightVal = parseFloat(newPatient.height_cm);
-    const weightVal = parseFloat(newPatient.weight_kg);
-    if (isNaN(ageVal) || ageVal <= 0 || ageVal > 200) {
-      toast({ variant: 'destructive', title: 'Validation Alert', description: 'Please enter a valid age (max 200).' });
-      return;
-    }
-    if (isNaN(heightVal) || heightVal <= 0 || heightVal > 250) {
-      toast({ variant: 'destructive', title: 'Validation Alert', description: 'Please enter a valid height (max 250 cm).' });
-      return;
-    }
-    if (isNaN(weightVal) || weightVal <= 0 || weightVal > 200) {
-      toast({ variant: 'destructive', title: 'Validation Alert', description: 'Please enter a valid weight (max 200 kg).' });
-      return;
-    }
-
-    setIsSavingPatient(true);
-    const memberId = `MBR-${Math.floor(100000 + Math.random() * 900000)}`;
-    const memberData = {
-      id: memberId,
-      name: newPatient.name,
-      age: newPatient.age,
-      gender: newPatient.gender,
-      relation: newPatient.relation,
-      height_cm: newPatient.height_cm,
-      weight_kg: newPatient.weight_kg,
-      blood_group: newPatient.blood_group,
-      medicalHistory: newPatient.medicalHistory || '',
-      allergies: newPatient.allergies || ''
-    } as Patient;
-    const result = await addFamilyMember(memberData, user?.id || '');
-
-    if (result.success) {
-      addPatientStore({
-        id: memberId,
-        name: newPatient.name,
-        age: newPatient.age,
-        gender: newPatient.gender,
-        relation: newPatient.relation,
-        height_cm: newPatient.height_cm,
-        weight_kg: newPatient.weight_kg,
-        blood_group: newPatient.blood_group,
-        medicalHistory: newPatient.medicalHistory || '',
-        allergies: newPatient.allergies || ''
-      } as any);
-      setSelectedPatientId(memberId);
-      setIsAddOpen(false);
-      setNewPatient({ name: '', age: '', gender: 'Male', relation: 'Other', height_cm: '', weight_kg: '', blood_group: '', medicalHistory: '', allergies: '', secondaryPhone: '' });
-      toast({ title: 'Success', description: 'Family profile added.' });
-    }
-    setIsSavingPatient(false);
-  };
-
-  const processPayment = async () => {
-    if (!selectedSlot || !selectedPatientId) return;
+  const processPayment = () => {
     setIsBooking(true);
-    if (paymentMode === 'Clinic') {
-      await finalizeBooking('PAY_AT_CLINIC');
-    } else {
-      setShowMockAlert(true);
-      setTimeout(() => finalizeBooking('TXN_' + Date.now()), 1200);
-    }
+    setTimeout(() => finalizeBooking('TXN_' + Date.now()), 1500);
   };
 
   const finalizeBooking = async (txnId: string) => {
     if (!doc || !user) return;
-    const patient = displayPatients.find(p => p.id === selectedPatientId);
+    const patient = patients.find(p => p.id === selectedPatientId) || user;
     const appData = {
       id: `${Math.floor(100000 + Math.random() * 900000)}`,
       doctorId: doc.id,
       doctorName: doc.name,
       patientId: user.id,
-      patientName: patient?.name || 'Unknown',
-      patientType: (patient?.id === user.id || patient?.relation === 'Self') ? 'Self' as const : 'Family_Member' as const,
+      patientName: patient.name,
+      patientAge: patient.age,
+      patientGender: patient.gender,
+      patientBloodGroup: patient.blood_group,
+      patientType: patient.id === user.id ? 'Self' as const : 'Family_Member' as const,
       date: selectedDate,
       time: selectedSlot,
-      current_symptoms: [
-        ...selectedReasons,
-        ...(showCustomSymptom && symptoms.trim() ? [symptoms.trim()] : (!doc?.reasonsForVisit || doc.reasonsForVisit.length === 0 ? [symptoms.trim()] : []))
-      ].join(', '),
+      current_symptoms: [...selectedReasons, symptoms].filter(Boolean).join(', '),
       consultation_fee_amount: doc.fees,
-      payment_status: paymentMode === 'Clinic' ? 'Pending' as const : 'Paid' as const,
-      payment_mode: paymentMode === 'Clinic' ? 'Pay_at_Clinic' as const : 'Online_UPI' as const,
+      payment_status: 'Paid' as const,
+      payment_mode: 'Online_UPI' as const,
       transaction_id: txnId,
       status: 'Confirmed' as const
     };
-    const result = await createAppointment(appData);
-    if (result.success) {
-      addAppointmentStore({ ...appData, tokenNumber: result.data.token_number, visit_otp: result.data.visit_otp } as any);
+    const res = await createAppointment(appData);
+    if (res.success) {
+      addAppointmentStore({...appData, tokenNumber: res.data.token_number, visit_otp: res.data.visit_otp} as any);
       router.push(`/success?id=${appData.id}`);
     } else {
       setIsBooking(false);
-      toast({ variant: 'destructive', title: 'Failed', description: result.error });
+      toast({ variant: 'destructive', title: 'Failed', description: res.error });
     }
   };
 
-  const checkIsPast = (slot: string) => {
-    const now = new Date();
-    const isToday = selectedDate === now.toISOString().split('T')[0];
-    if (!isToday) return false;
-    
-    const [hourStr, minutePart] = slot.split(':');
-    const [minuteStr, period] = minutePart.split(' ');
-    let h = parseInt(hourStr);
-    if (period === 'PM' && h !== 12) h += 12;
-    if (period === 'AM' && h === 12) h = 0;
-    
-    const slotTime = new Date();
-    slotTime.setHours(h, parseInt(minuteStr), 0, 0);
-    return slotTime < now;
-  };
-
-  if (isFetching) return <div className="flex justify-center items-center min-h-screen"><Loader2 className="animate-spin text-primary" /></div>;
-  if (!doc) return <div className="p-10 text-center font-black">Doctor not found</div>;
-
-  const displayDateString = new Date(selectedDate).toLocaleDateString('en-US', { day: 'numeric', month: 'long' });
+  if (isFetching) return <div className="flex justify-center items-center min-h-screen"><Loader2 className="animate-spin" /></div>;
+  if (!doc) return <div className="p-10 text-center">Doctor not found</div>;
 
   return (
     <div className="mobile-container pb-60 bg-slate-50 min-h-screen overflow-y-auto">
@@ -357,334 +124,101 @@ function BookingContent({ id }: { id: string }) {
           <button onClick={() => router.back()} className="h-10 w-10 flex items-center justify-center bg-slate-100 rounded-full border border-border">
             <ChevronLeft className="h-6 w-6 text-slate-700" />
           </button>
-          <h1 className="text-xl font-black text-slate-800 tracking-tight">Schedule Appointment</h1>
-        </div>
-        <div className="h-9 w-9 rounded-xl overflow-hidden relative shadow-sm border border-slate-100 shrink-0">
-          <Image src="/562c71b5-1be4-415a-94dc-002e1889eb7c-8.jpg" alt="Logo" fill className="object-cover" />
+          <h1 className="text-xl font-black text-slate-800 tracking-tight">Doctor Details</h1>
         </div>
       </div>
 
       <div className="p-6 space-y-8">
-        {showMockAlert && (
-          <Alert className="bg-blue-50 border-blue-200 rounded-2xl mb-4">
-            <CheckCircle2 className="h-4 w-4 text-blue-600" />
-            <AlertTitle className="text-[10px] font-black uppercase text-blue-700">Payment Simulation</AlertTitle>
-            <AlertDescription className="text-xs text-blue-600 font-medium">Processing mock transaction for prototype...</AlertDescription>
-          </Alert>
-        )}
-        
-        <Card className="border-border shadow-sm rounded-[1.5rem] overflow-hidden bg-white border-2">
-          <CardContent className="p-5">
-            <div className="flex justify-between items-start">
-              <div className="flex space-x-4">
-                <div className="h-20 w-20 rounded-xl bg-slate-50 flex items-center justify-center overflow-hidden relative border border-border">
-                  {doc.imageUrl ? <Image src={doc.imageUrl} alt={doc.name} fill className="object-cover" /> : <span className="text-3xl">🏥</span>}
-                </div>
-                <div className="space-y-0.5">
-                  <h2 className="font-black text-slate-900 text-[13px] uppercase tracking-tight">{doc.name}</h2>
-                  <p className="text-[11px] font-bold text-slate-500 leading-tight">
-                    {doc.specialty} {doc.qualification ? `— ${doc.qualification}` : '— MBBS, MD'}
-                  </p>
-                  <div className="flex items-center text-[10px] font-black text-yellow-600 bg-yellow-50 px-2 py-0.5 rounded-full border border-yellow-200 w-fit">
-                    <Star className="h-3 w-3 fill-yellow-600 mr-1" /> {doc.rating}
-                  </div>
-                </div>
+        <Card className="border-border shadow-sm rounded-[2.5rem] overflow-hidden bg-white border-2">
+          <CardContent className="p-8 space-y-6">
+            <div className="flex space-x-6">
+              <div className="h-24 w-24 rounded-3xl bg-slate-50 flex items-center justify-center overflow-hidden relative border-2 border-slate-100">
+                {doc.imageUrl ? <Image src={doc.imageUrl} alt={doc.name} fill className="object-cover" /> : <span className="text-4xl">🏥</span>}
               </div>
-              <div className="text-right">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Fee</p>
-                <p className="text-base font-black text-slate-900 leading-none">₹{doc.fees}</p>
+              <div className="flex-1 space-y-1">
+                <h2 className="font-black text-slate-900 text-xl uppercase tracking-tight">{doc.name}</h2>
+                <p className="text-sm font-bold text-primary uppercase tracking-widest">{doc.specialty}</p>
+                <div className="flex items-center text-[11px] font-black text-yellow-600 bg-yellow-50 px-2.5 py-1 rounded-full border border-yellow-200 w-fit">
+                  <Star className="h-3 w-3 fill-yellow-600 mr-1" /> {doc.rating} Rating
+                </div>
               </div>
             </div>
-            <div className="mt-4 flex items-center text-[11px] font-bold text-slate-500">
-              <MapPin className="h-3 w-3 mr-1 text-red-500 fill-red-500/20" />
-              {doc.address}
+
+            <div className="grid grid-cols-2 gap-4 py-4 border-y border-slate-50">
+              <div className="flex items-center space-x-3">
+                <div className="h-10 w-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center"><Award className="h-5 w-5" /></div>
+                <div><p className="text-[10px] font-black text-slate-400 uppercase">Education</p><p className="text-xs font-bold text-slate-800">{doc.qualification || 'MBBS, MD'}</p></div>
+              </div>
+              <div className="flex items-center space-x-3">
+                <div className="h-10 w-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center"><Briefcase className="h-5 w-5" /></div>
+                <div><p className="text-[10px] font-black text-slate-400 uppercase">Experience</p><p className="text-xs font-bold text-slate-800">{doc.experience}</p></div>
+              </div>
             </div>
           </CardContent>
         </Card>
 
+        <Alert className="bg-blue-50 border-blue-100 rounded-2xl">
+          <Info className="h-4 w-4 text-blue-600" />
+          <AlertTitle className="text-blue-700 font-black text-xs uppercase tracking-widest">Arrival Instruction</AlertTitle>
+          <AlertDescription className="text-blue-600 text-xs font-bold">
+            Please arrive at least 10 minutes prior to your selected slot on <strong>{selectedDate}</strong> for smooth check-in.
+          </AlertDescription>
+        </Alert>
+
         <div className="space-y-4">
-          <div className="flex justify-between items-center px-1">
-            <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">Select Patient Profile</h3>
-            <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-              <DialogTrigger asChild>
-                <Button variant="ghost" className="h-8 text-[10px] font-black text-primary uppercase p-0">
-                  <Plus className="h-3 w-3 mr-1" /> Add Family Member
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-[95vw] sm:max-w-md rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl bg-white">
-                <DialogHeader className="px-6 py-5 bg-slate-50 border-b border-border flex items-center justify-between">
-                  <DialogTitle className="text-2xl font-black">Add Family Profile</DialogTitle>
-                </DialogHeader>
-                
-                <div className="p-6 space-y-5 max-h-[60vh] overflow-y-auto scroll-hide">
-                  <div className="space-y-1.5">
-                    <Label className="text-[10px] font-black text-slate-900 uppercase">Full Name <span className="text-red-500">*</span></Label>
-                    <Input placeholder="Enter Name" value={newPatient.name || ''} onChange={e => setNewPatient({...newPatient, name: e.target.value})} className="h-12 rounded-xl bg-slate-50 border-border font-bold" />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <Label className="text-[10px] font-black text-slate-900 uppercase">Age <span className="text-red-500">*</span></Label>
-                      <Input type="number" placeholder="Enter Age" value={newPatient.age || ''} onChange={e => setNewPatient({...newPatient, age: e.target.value})} className="h-12 rounded-xl bg-slate-50 border-border font-bold" />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-[10px] font-black text-slate-900 uppercase">Gender <span className="text-red-500">*</span></Label>
-                      <Select value={newPatient.gender} onValueChange={v => setNewPatient({...newPatient, gender: v as any})}>
-                        <SelectTrigger className="h-12 bg-slate-50 border-border rounded-xl font-bold"><SelectValue placeholder="Select" /></SelectTrigger>
-                        <SelectContent className="rounded-xl">
-                          {['Male', 'Female', 'Other'].map(g => (<SelectItem key={g} value={g}>{g}</SelectItem>))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <Label className="text-[10px] font-black text-slate-900 uppercase">Height (cm) <span className="text-red-500">*</span></Label>
-                      <Input type="number" placeholder="Height in cm" value={newPatient.height_cm || ''} onChange={e => setNewPatient({...newPatient, height_cm: e.target.value})} className="h-12 rounded-xl bg-slate-50 border-border font-bold" />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-[10px] font-black text-slate-900 uppercase">Weight (kg) <span className="text-red-500">*</span></Label>
-                      <Input type="number" placeholder="Weight in kg" value={newPatient.weight_kg || ''} onChange={e => setNewPatient({...newPatient, weight_kg: e.target.value})} className="h-12 rounded-xl bg-slate-50 border-border font-bold" />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <Label className="text-[10px] font-black text-slate-900 uppercase">Blood Group <span className="text-red-500">*</span></Label>
-                      <Select value={newPatient.blood_group} onValueChange={v => setNewPatient({...newPatient, blood_group: v})}>
-                        <SelectTrigger className="h-12 bg-slate-50 border-border rounded-xl font-bold"><SelectValue placeholder="Select" /></SelectTrigger>
-                        <SelectContent className="rounded-xl">
-                          {['A+', 'B+', 'O+', 'AB+', 'A-', 'B-', 'O-', 'AB-'].map(bg => (<SelectItem key={bg} value={bg}>{bg}</SelectItem>))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-[10px] font-black text-slate-900 uppercase">Relation <span className="text-red-500">*</span></Label>
-                      <Select value={newPatient.relation} onValueChange={v => setNewPatient({...newPatient, relation: v})}>
-                        <SelectTrigger className="h-12 bg-slate-50 border-border rounded-xl font-bold"><SelectValue placeholder="Select" /></SelectTrigger>
-                        <SelectContent className="rounded-xl">
-                          {['Spouse', 'Child', 'Parent', 'Sibling', 'Other'].map(rel => (<SelectItem key={rel} value={rel}>{rel}</SelectItem>))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label className="text-[10px] font-black text-slate-900 uppercase">Medical History</Label>
-                    <Textarea placeholder="Any chronic illnesses, past surgeries..." value={newPatient.medicalHistory || ''} onChange={e => setNewPatient({...newPatient, medicalHistory: e.target.value})} className="rounded-xl bg-slate-50 border-border font-bold min-h-[80px]" />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label className="text-[10px] font-black text-slate-900 uppercase">Allergies</Label>
-                    <Textarea placeholder="Food, drug, or environmental allergies..." value={newPatient.allergies || ''} onChange={e => setNewPatient({...newPatient, allergies: e.target.value})} className="rounded-xl bg-slate-50 border-border font-bold min-h-[80px]" />
-                  </div>
-                </div>
-
-                <DialogFooter className="px-6 py-5 border-t border-border bg-white">
-                  <Button onClick={handleAddQuickPatient} disabled={isSavingPatient} className="w-full h-14 bg-primary font-black text-lg rounded-2xl">
-                    {isSavingPatient ? <Loader2 className="animate-spin" /> : 'Confirm Profile'}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </div>
-          
-          <Select value={selectedPatientId} onValueChange={setSelectedPatientId}>
-            <SelectTrigger className="h-14 rounded-2xl bg-white border-2 border-border font-bold">
-              <SelectValue placeholder="Choose a patient" />
-            </SelectTrigger>
-            <SelectContent className="rounded-2xl border-2 border-border shadow-xl">
-              {displayPatients.map(p => (
-                <SelectItem key={p.id} value={p.id} className="py-4 font-bold border-b last:border-0 border-slate-50">
-                  {p.name} ({p.relation === 'Self' ? 'Self' : p.relation})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <h3 className="text-xs font-black uppercase text-slate-400 px-1">Select Patient</h3>
+          <select value={selectedPatientId} onChange={e => setSelectedPatientId(e.target.value)} className="w-full h-14 rounded-2xl bg-white border-2 border-slate-100 px-4 font-bold outline-none">
+            <option value="">Select a profile</option>
+            {patients.map(p => <option key={p.id} value={p.id}>{p.name} ({p.relation})</option>)}
+          </select>
         </div>
 
         <div className="space-y-4">
-          <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 px-1">Reason for Visit</h3>
-          
-          {doctorReasons && doctorReasons.length > 0 ? (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-white p-5 rounded-[2rem] border-2 border-border shadow-sm">
-                {doctorReasons.map((reason) => {
-                  const isChecked = selectedReasons.includes(reason);
-                  return (
-                    <div 
-                      key={reason} 
-                      onClick={() => {
-                        if (isChecked) {
-                          setSelectedReasons(selectedReasons.filter(r => r !== reason));
-                        } else {
-                          setSelectedReasons([...selectedReasons, reason]);
-                        }
-                      }}
-                      className={cn(
-                        "flex items-center space-x-3 p-3.5 rounded-2xl border-2 transition-all cursor-pointer",
-                        isChecked ? "bg-blue-50/50 border-primary text-slate-900" : "bg-slate-50/20 border-slate-100 hover:border-slate-200 text-slate-600"
-                      )}
-                    >
-                      <div className={cn(
-                        "h-5 w-5 rounded-md border flex items-center justify-center shrink-0 transition-all",
-                        isChecked ? "bg-primary border-primary text-white" : "border-slate-300"
-                      )}>
-                        {isChecked && <Check className="h-3 w-3 stroke-[3px]" />}
-                      </div>
-                      <span className="text-xs font-bold leading-tight">{reason}</span>
-                    </div>
-                  );
-                })}
-
-                {/* Other/Custom Checkbox */}
-                <div 
-                  onClick={() => setShowCustomSymptom(!showCustomSymptom)}
-                  className={cn(
-                    "flex items-center space-x-3 p-3.5 rounded-2xl border-2 transition-all cursor-pointer",
-                    showCustomSymptom ? "bg-blue-50/50 border-primary text-slate-900" : "bg-slate-50/20 border-slate-100 hover:border-slate-200 text-slate-600"
-                  )}
-                >
-                  <div className={cn(
-                    "h-5 w-5 rounded-md border flex items-center justify-center shrink-0 transition-all",
-                    showCustomSymptom ? "bg-primary border-primary text-white" : "border-slate-300"
-                  )}>
-                    {showCustomSymptom && <Check className="h-3 w-3 stroke-[3px]" />}
-                  </div>
-                  <span className="text-xs font-bold leading-tight">Other (Please describe)</span>
-                </div>
-              </div>
-
-              {showCustomSymptom && (
-                <div className="relative animate-in fade-in slide-in-from-top-2 duration-200">
-                  <MessageSquare className="absolute left-4 top-4 h-5 w-5 text-slate-400" />
-                  <Textarea 
-                    placeholder="Briefly describe your current symptoms..." 
-                    className="min-h-[100px] rounded-2xl bg-white border-2 border-border p-5 pl-12 font-bold placeholder:text-slate-300 focus:border-primary"
-                    value={symptoms || ''}
-                    onChange={e => setSymptoms(e.target.value)}
-                  />
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="relative">
-              <MessageSquare className="absolute left-4 top-4 h-5 w-5 text-slate-400" />
-              <Textarea 
-                placeholder="Briefly describe your current symptoms..." 
-                className="min-h-[100px] rounded-2xl bg-white border-2 border-border p-5 pl-12 font-bold placeholder:text-slate-300 focus:border-primary"
-                value={symptoms || ''}
-                onChange={e => setSymptoms(e.target.value)}
-              />
-            </div>
+          <h3 className="text-xs font-black uppercase text-slate-400 px-1">Reason for Visit</h3>
+          <div className="flex flex-wrap gap-2">
+            {(doc.reasonsForVisit || ["Routine Checkup", "Consultation", "Follow-up"]).map(reason => (
+              <button 
+                key={reason} 
+                onClick={() => toggleReason(reason)}
+                className={cn(
+                  "px-4 py-2 rounded-xl text-xs font-bold border-2 transition-all",
+                  selectedReasons.includes(reason) ? "bg-primary border-primary text-white" : "bg-white border-slate-100 text-slate-600"
+                )}
+              >
+                {reason}
+              </button>
+            ))}
+            <button 
+              onClick={() => setShowCustomSymptom(!showCustomSymptom)}
+              className={cn("px-4 py-2 rounded-xl text-xs font-bold border-2 border-dashed", showCustomSymptom ? "bg-slate-100 border-slate-300" : "border-slate-300 text-slate-400")}
+            >
+              + Other
+            </button>
+          </div>
+          {showCustomSymptom && (
+            <Textarea 
+              placeholder="Describe your symptoms briefly..." 
+              value={symptoms} 
+              onChange={e => setSymptoms(e.target.value)} 
+              className="mt-3 rounded-2xl bg-white border-2 border-slate-100 font-bold"
+            />
           )}
         </div>
 
         <div className="space-y-4">
-          <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 px-1">Select Date</h3>
-          <div className="flex space-x-3 overflow-x-auto pb-4 scroll-hide -mx-6 px-6">
-            {dayRange.map(day => {
-              const count = getAvailableSlotsCount(day.fullDate);
-              const isSelected = selectedDate === day.fullDate;
-              return (
-                <div 
-                  key={day.fullDate} 
-                  onClick={() => { setSelectedDate(day.fullDate); setSelectedSlot(''); }}
-                  className={cn(
-                    "min-w-[78px] py-3.5 rounded-2xl border-2 transition-all cursor-pointer flex flex-col items-center justify-between",
-                    isSelected ? "bg-slate-900 border-slate-900 text-white" : "bg-white border-border text-slate-900"
-                  )}
-                >
-                  <span className="text-[9px] font-black uppercase mb-0.5 opacity-60">{day.dayName}</span>
-                  <span className="text-base font-black leading-none">{day.dateNum}</span>
-                  <span className={cn(
-                    "text-[8px] font-extrabold mt-1.5 px-1.5 py-0.5 rounded-md leading-none",
-                    count === 0 ? "bg-red-50 text-red-500" :
-                    isSelected ? "bg-white/10 text-white" : "bg-blue-50 text-blue-600"
-                  )}>
-                    {count === 0 ? 'Full' : `${count} Left`}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 px-1">Select Time Slot</h3>
+          <h3 className="text-xs font-black uppercase text-slate-400 px-1">Select Time Slot</h3>
           <div className="grid grid-cols-3 gap-3">
-            {timeSlots.map(slot => {
-              const isBooked = bookedSlots.includes(slot);
-              const isPast = checkIsPast(slot);
-              const isDisabled = isBooked || isPast;
-
-              return (
-                <button
-                  key={slot}
-                  disabled={isDisabled}
-                  onClick={() => setSelectedSlot(slot)}
-                  className={cn(
-                    "py-3 rounded-xl font-black text-[10px] border-2 transition-all",
-                    isDisabled ? "bg-slate-100 border-slate-200 text-slate-300 cursor-not-allowed opacity-60" :
-                    selectedSlot === slot ? "bg-primary border-primary text-white" : "bg-white border-border text-slate-900"
-                  )}
-                >
-                  {slot}
-                </button>
-              );
-            })}
+            {generateTimeSlots(doc.startTime, doc.endTime, doc.slotDuration).map(slot => (
+              <button key={slot} onClick={() => setSelectedSlot(slot)} className={cn("py-3 rounded-xl font-black text-[10px] border-2 transition-all", selectedSlot === slot ? "bg-primary border-primary text-white" : "bg-white border-slate-100 text-slate-800")}>{slot}</button>
+            ))}
           </div>
-        </div>
-
-        <div className="space-y-4">
-          <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 px-1">Payment Method</h3>
-          <div className="grid grid-cols-2 gap-4 bg-white p-5 rounded-[2rem] border-2 border-border shadow-sm">
-            <div 
-              onClick={() => setPaymentMode('Online')}
-              className={cn(
-                "flex flex-col items-center justify-center p-5 rounded-2xl border-2 transition-all cursor-pointer space-y-1 text-center",
-                paymentMode === 'Online' ? "bg-blue-50/50 border-primary text-slate-900" : "bg-slate-50/20 border-slate-100 hover:border-slate-200 text-slate-600"
-              )}
-            >
-              <span className="text-xs font-black">Pay Online</span>
-              <span className="text-[9px] font-bold opacity-60">UPI / Cards / Netbanking</span>
-            </div>
-            <div 
-              onClick={() => setPaymentMode('Clinic')}
-              className={cn(
-                "flex flex-col items-center justify-center p-5 rounded-2xl border-2 transition-all cursor-pointer space-y-1 text-center",
-                paymentMode === 'Clinic' ? "bg-blue-50/50 border-primary text-slate-900" : "bg-slate-50/20 border-slate-100 hover:border-slate-200 text-slate-600"
-              )}
-            >
-              <span className="text-xs font-black">Pay at Clinic</span>
-              <span className="text-[9px] font-bold opacity-60">Cash or UPI at counter</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-orange-50 border-2 border-orange-100 rounded-3xl p-5 space-y-2">
-          <div className="flex items-center space-x-2 text-orange-700">
-            <AlertCircle className="h-5 w-5" />
-            <h4 className="text-sm font-black uppercase tracking-tight">Booking Policy</h4>
-          </div>
-          <p className="text-xs font-bold text-orange-600 leading-relaxed">
-            If you do not reach the clinic on <span className="text-slate-900 font-black">{displayDateString}</span>, your appointment will be automatically cancelled. Please arrive on time.
-          </p>
         </div>
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 p-6 bg-white border-t border-border z-40 shadow-xl">
         <div className="max-w-[480px] mx-auto flex items-center gap-6">
-          <div className="flex-1">
-            <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest block">Total Fee</span>
-            <span className="text-slate-900 text-2xl font-black">₹{doc.fees}</span>
-          </div>
-          <Button 
-            className="h-14 px-10 text-lg font-black bg-primary rounded-2xl flex-1 shadow-lg shadow-primary/20" 
-            disabled={!selectedSlot || !selectedPatientId || isBooking} 
-            onClick={processPayment}
-          >
+          <div className="flex-1"><span className="text-slate-400 text-[10px] font-black block">FEES</span><span className="text-slate-900 text-2xl font-black">₹{doc.fees}</span></div>
+          <Button className="h-14 px-10 text-lg font-black bg-primary rounded-2xl flex-1" disabled={!selectedSlot || !selectedPatientId || isBooking} onClick={processPayment}>
             {isBooking ? <Loader2 className="animate-spin" /> : 'Confirm Booking'}
           </Button>
         </div>
@@ -695,9 +229,5 @@ function BookingContent({ id }: { id: string }) {
 
 export default function BookingPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  return (
-    <Suspense fallback={<div className="flex justify-center items-center min-h-screen"><Loader2 className="animate-spin text-primary" /></div>}>
-      <BookingContent id={id} />
-    </Suspense>
-  );
+  return <Suspense><BookingContent id={id} /></Suspense>;
 }
