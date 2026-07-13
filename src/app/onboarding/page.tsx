@@ -143,6 +143,7 @@ export default function OnboardingPage() {
               value={formData.name || ''} 
               onChange={e => setFormData({...formData, name: e.target.value})} 
             />
+          </div>
         </div>
       </div>
 
