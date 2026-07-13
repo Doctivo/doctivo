@@ -58,7 +58,7 @@ export default function LandingPage() {
           </div>
           <div className="hidden sm:block">
             <h1 className="text-lg font-black tracking-tight text-slate-800 leading-none">DOCTIVO</h1>
-            <p className="text-[8px] text-slate-400 font-bold uppercase tracking-wider mt-1">Healthcare Simplified</p>
+            <p className="text-[8px] text-slate-500 font-bold uppercase tracking-wider mt-1">Healthcare Simplified</p>
           </div>
         </div>
 
@@ -124,15 +124,15 @@ export default function LandingPage() {
           <div className="grid grid-cols-3 gap-6 pt-6 border-t border-slate-100 max-w-md mx-auto lg:mx-0">
             <div>
               <p className="text-2xl md:text-3xl font-black text-slate-800">10k+</p>
-              <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Bookings</p>
+              <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Bookings</p>
             </div>
             <div>
               <p className="text-2xl md:text-3xl font-black text-slate-800">15+</p>
-              <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Specialists</p>
+              <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Specialists</p>
             </div>
             <div>
               <p className="text-2xl md:text-3xl font-black text-slate-800">0 min</p>
-              <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Wait Time</p>
+              <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Wait Time</p>
             </div>
           </div>
         </div>
@@ -157,7 +157,7 @@ export default function LandingPage() {
             </div>
 
             <div className="bg-slate-50 rounded-3xl p-6 border border-slate-100/50 space-y-4">
-              <div className="flex justify-between items-center text-[10px] font-black text-slate-400 uppercase tracking-widest">
+              <div className="flex justify-between items-center text-[10px] font-black text-slate-500 uppercase tracking-widest">
                 <span>Patient</span>
                 <span>Queue Number</span>
               </div>
@@ -193,7 +193,7 @@ export default function LandingPage() {
       <section className="bg-white py-24 px-6 md:px-12 border-y border-slate-100">
         <div className="max-w-7xl mx-auto space-y-16">
           <div className="text-center space-y-4">
-            <h3 className="text-xs font-black uppercase tracking-[0.3em] text-blue-600">Specialties</h3>
+            <span className="text-xs font-black uppercase tracking-[0.3em] text-blue-600 block">Specialties</span>
             <h2 className="text-3xl md:text-5xl font-black text-slate-800 tracking-tight leading-tight">Our Premium Medical Network</h2>
           </div>
 
@@ -210,7 +210,7 @@ export default function LandingPage() {
                   </div>
                   <div>
                     <h4 className="font-black text-slate-800 text-xl leading-tight group-hover:text-blue-600 transition-colors">{spec.name}</h4>
-                    <p className="text-sm text-slate-400 font-medium mt-3 leading-relaxed">{spec.desc}</p>
+                    <p className="text-sm text-slate-500 font-medium mt-3 leading-relaxed">{spec.desc}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -227,7 +227,7 @@ export default function LandingPage() {
             <h2 className="text-4xl md:text-5xl font-black tracking-tight leading-tight">
               Healthcare in Your Pocket.
             </h2>
-            <p className="text-slate-400 font-medium text-lg leading-relaxed">
+            <p className="text-slate-200 font-medium text-lg leading-relaxed">
               Install the lightweight Doctivo PWA application to receive immediate notifications and access your booking tickets instantly.
             </p>
           </div>
@@ -240,7 +240,7 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-white py-16 px-6 md:px-12 border-t border-slate-100 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-center">
+      <footer className="bg-white py-16 px-6 md:px-12 border-t border-slate-100 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] text-center">
         <div className="max-w-7xl mx-auto space-y-8">
           <div className="flex items-center justify-center space-x-3 opacity-50">
             <div className="h-8 w-8 bg-slate-900 rounded-lg flex items-center justify-center">
@@ -257,7 +257,7 @@ export default function LandingPage() {
         <DialogContent className="max-w-[90vw] sm:max-w-md rounded-[3rem] p-8 border-none shadow-2xl bg-white">
           <DialogHeader className="text-center pb-6 border-b border-slate-50">
             <DialogTitle className="text-2xl font-black text-slate-800">Physiotherapy Visit</DialogTitle>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Select Consultation Mode</p>
+            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1">Select Consultation Mode</p>
           </DialogHeader>
 
           <div className="space-y-4 py-8">
@@ -273,7 +273,7 @@ export default function LandingPage() {
               </div>
               <div className="ml-5 text-left">
                 <p className="text-lg font-black text-slate-800 leading-none">Visit Clinic</p>
-                <p className="text-[10px] text-slate-400 font-black mt-2 uppercase">Professional OPD Setup</p>
+                <p className="text-[10px] text-slate-500 font-black mt-2 uppercase">Professional OPD Setup</p>
               </div>
             </button>
 
@@ -289,7 +289,7 @@ export default function LandingPage() {
               </div>
               <div className="ml-5 text-left">
                 <p className="text-lg font-black text-slate-800 leading-none">Home Visit</p>
-                <p className="text-[10px] text-slate-400 font-black mt-2 uppercase">Therapy at your doorstep</p>
+                <p className="text-[10px] text-slate-500 font-black mt-2 uppercase">Therapy at your doorstep</p>
               </div>
             </button>
           </div>

@@ -118,7 +118,9 @@ export default function NotificationsPage() {
     if (notification.id === 'welcome') {
       router.push('/home');
     } else {
-      router.push('/appointments');
+      // The notification ID is format `${app.id}-status`
+      const appId = notification.id.split('-')[0];
+      router.push(`/prescription/${appId}`);
     }
   };
 
