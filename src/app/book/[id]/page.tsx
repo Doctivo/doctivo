@@ -120,45 +120,94 @@ function BookingContent({ id }: { id: string }) {
 
     setIsBooking(true);
     
-    // Load Razorpay Script
-    const res = await new Promise((resolve) => {
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
-      document.body.appendChild(script);
-    });
+    try {
+      // 1. Create order on backend
+      const resOrder = await fetch('/api/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: (doc?.fees || 0) * 100 }), // amount in paise
+      });
+      const orderData = await resOrder.json();
 
-    if (!res || !(window as any).Razorpay) {
-      toast({ title: 'Payment Gateway Error', description: 'Could not load Razorpay. Bypassing in Test Mode...' });
-      setTimeout(() => finalizeBooking('TXN_' + Date.now(), patient), 1500);
-      return;
+      if (!resOrder.ok) {
+        setIsBooking(false);
+        toast({ variant: 'destructive', title: 'Order Failed', description: orderData.error || 'Failed to create payment order.' });
+        return;
+      }
+
+      // Load Razorpay Script
+      const resScript = await new Promise((resolve) => {
+        const script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.onload = () => resolve(true);
+        script.onerror = () => resolve(false);
+        document.body.appendChild(script);
+      });
+
+      if (!resScript || !(window as any).Razorpay) {
+        setIsBooking(false);
+        toast({ variant: 'destructive', title: 'Script Error', description: 'Failed to load Razorpay checkout script.' });
+        return;
+      }
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || '', 
+        amount: orderData.amount, 
+        currency: orderData.currency,
+        name: "Doctivo Medical",
+        description: "Consultation Fee",
+        order_id: orderData.order_id, // Pass order ID generated from backend
+        handler: async function (response: any) {
+          setIsBooking(true);
+          
+          // 3. Verify Signature on backend
+          try {
+            const verifyRes = await fetch('/api/verify-payment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              }),
+            });
+            const verifyData = await verifyRes.json();
+            
+            if (verifyRes.ok && verifyData.success) {
+              // Signature matches, finalize booking
+              finalizeBooking(response.razorpay_payment_id, patient);
+            } else {
+              setIsBooking(false);
+              toast({ variant: 'destructive', title: 'Verification Failed', description: verifyData.error || 'Payment verification failed' });
+            }
+          } catch (err) {
+            setIsBooking(false);
+            toast({ variant: 'destructive', title: 'Error', description: 'Error verifying payment signature' });
+          }
+        },
+        prefill: {
+          name: patient?.name || user?.name || '',
+          contact: patient?.phone || user?.phone || '',
+        },
+        theme: { color: "#2563eb" },
+        modal: {
+          ondismiss: function() {
+            setIsBooking(false);
+          }
+        }
+      };
+      
+      const rzp = new (window as any).Razorpay(options);
+      rzp.on('payment.failed', function (response: any){
+        setIsBooking(false);
+        toast({ variant: 'destructive', title: 'Payment Failed', description: response.error.description });
+      });
+      rzp.open();
+
+    } catch (err) {
+      setIsBooking(false);
+      toast({ variant: 'destructive', title: 'Error', description: 'An unexpected error occurred during payment initiation.' });
     }
-
-    setIsBooking(false); // Enable button again for popup
-
-    const options = {
-      key: "rzp_test_TYeYEqfJgZcWbN", // Public Test Key for Demo
-      amount: (doc?.fees || 0) * 100, // paise
-      currency: "INR",
-      name: "Doctivo Medical",
-      description: "Consultation Fee",
-      handler: function (response: any) {
-        setIsBooking(true);
-        finalizeBooking(response.razorpay_payment_id || 'TXN_' + Date.now(), patient);
-      },
-      prefill: {
-        name: patient?.name || user?.name || '',
-        contact: patient?.phone || user?.phone || '',
-      },
-      theme: { color: "#2563eb" }
-    };
-    
-    const rzp = new (window as any).Razorpay(options);
-    rzp.on('payment.failed', function (response: any){
-      toast({ variant: 'destructive', title: 'Payment Failed', description: response.error.description });
-    });
-    rzp.open();
   };
 
   const finalizeBooking = async (txnId: string, patient: any) => {
