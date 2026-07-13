@@ -132,7 +132,7 @@ export default function PatientsPage() {
 
   const handleSavePatient = async () => {
     // Strict Validation
-    if (!currentMember.name || !currentMember.age || !currentMember.blood_group || !currentMember.gender || !currentMember.relation || !currentMember.height_cm || !currentMember.weight_kg) {
+    if (!currentMember.name || !currentMember.age || !currentMember.gender || !currentMember.relation) {
       toast({ variant: 'destructive', title: 'Missing Details', description: 'Please fill in all mandatory fields (*).' });
       return;
     }
@@ -342,11 +342,11 @@ export default function PatientsPage() {
                     {Number(currentMember.age) > 120 && <p className="text-red-500 text-[10px] mt-1 font-bold">Age must be less than 120.</p>}
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Blood Group <span className="text-red-500">*</span></Label>
+                    <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Blood Group</Label>
                     <Select value={currentMember.blood_group || ''} onValueChange={v => setCurrentMember({...currentMember, blood_group: v})}>
                       <SelectTrigger className="h-14 rounded-xl bg-slate-50 border-border font-bold"><SelectValue placeholder="Select" /></SelectTrigger>
                       <SelectContent className="rounded-2xl">
-                        {['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(bg => (<SelectItem key={bg} value={bg} className="font-bold">{bg}</SelectItem>))}
+                        {['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-', 'Unknown'].map(bg => (<SelectItem key={bg} value={bg} className="font-bold">{bg}</SelectItem>))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -354,7 +354,7 @@ export default function PatientsPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Height (cm) <span className="text-red-500">*</span></Label>
+                    <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Height (cm)</Label>
                     <Input 
                       type="number" 
                       placeholder="175" 
@@ -378,7 +378,7 @@ export default function PatientsPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Weight (kg) <span className="text-red-500">*</span></Label>
+                    <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Weight (kg)</Label>
                     <Input 
                       type="number" 
                       placeholder="70" 

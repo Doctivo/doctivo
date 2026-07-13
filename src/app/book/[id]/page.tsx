@@ -17,6 +17,10 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const generateTimeSlots = (start: string, end: string, duration: number, selectedDate: string) => {
   const slots = [];
@@ -103,14 +107,62 @@ function BookingContent({ id }: { id: string }) {
     setSelectedReasons(prev => prev.includes(reason) ? prev.filter(r => r !== reason) : [...prev, reason]);
   };
 
-  const processPayment = () => {
+  const [showCompleteProfile, setShowCompleteProfile] = useState(false);
+  const [tempAge, setTempAge] = useState('');
+  const [tempGender, setTempGender] = useState<string>('Male');
+
+  const processPayment = async () => {
+    const patient = patients.find(p => p.id === selectedPatientId) || user;
+    if (!patient?.age || !patient?.gender) {
+      setShowCompleteProfile(true);
+      return;
+    }
+
     setIsBooking(true);
-    setTimeout(() => finalizeBooking('TXN_' + Date.now()), 1500);
+    
+    // Load Razorpay Script
+    const res = await new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+
+    if (!res || !(window as any).Razorpay) {
+      toast({ title: 'Payment Gateway Error', description: 'Could not load Razorpay. Bypassing in Test Mode...' });
+      setTimeout(() => finalizeBooking('TXN_' + Date.now(), patient), 1500);
+      return;
+    }
+
+    setIsBooking(false); // Enable button again for popup
+
+    const options = {
+      key: "rzp_test_TYeYEqfJgZcWbN", // Public Test Key for Demo
+      amount: (doc?.fees || 0) * 100, // paise
+      currency: "INR",
+      name: "Doctivo Medical",
+      description: "Consultation Fee",
+      handler: function (response: any) {
+        setIsBooking(true);
+        finalizeBooking(response.razorpay_payment_id || 'TXN_' + Date.now(), patient);
+      },
+      prefill: {
+        name: patient?.name || user?.name || '',
+        contact: patient?.phone || user?.phone || '',
+      },
+      theme: { color: "#2563eb" }
+    };
+    
+    const rzp = new (window as any).Razorpay(options);
+    rzp.on('payment.failed', function (response: any){
+      toast({ variant: 'destructive', title: 'Payment Failed', description: response.error.description });
+    });
+    rzp.open();
   };
 
-  const finalizeBooking = async (txnId: string) => {
+  const finalizeBooking = async (txnId: string, patient: any) => {
     if (!doc || !user) return;
-    const patient = patients.find(p => p.id === selectedPatientId) || user;
     const appData = {
       id: `${Math.floor(100000 + Math.random() * 900000)}`,
       doctorId: doc.id,
@@ -138,6 +190,24 @@ function BookingContent({ id }: { id: string }) {
       setIsBooking(false);
       toast({ variant: 'destructive', title: 'Failed', description: res.error });
     }
+  };
+
+  const handleUpdateProfile = () => {
+    if (!tempAge || !tempGender) {
+      toast({ variant: 'destructive', title: 'Required', description: 'Please provide age and gender.' });
+      return;
+    }
+    
+    // Update local store so patient has it (simulate save)
+    const patient = patients.find(p => p.id === selectedPatientId) || user;
+    if (patient) {
+      patient.age = tempAge;
+      patient.gender = tempGender as any;
+    }
+    setShowCompleteProfile(false);
+    
+    // Now trigger payment automatically
+    processPayment();
   };
 
   if (isFetching) return <div className="flex justify-center items-center min-h-screen"><Loader2 className="animate-spin" /></div>;
@@ -284,6 +354,50 @@ function BookingContent({ id }: { id: string }) {
           </Button>
         </div>
       </div>
+
+      <Dialog open={showCompleteProfile} onOpenChange={setShowCompleteProfile}>
+        <DialogContent className="max-w-[90vw] rounded-[2.5rem] p-6 border-none shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-black text-slate-800 text-center">Complete Your Profile</DialogTitle>
+            <p className="text-xs text-slate-500 font-bold text-center mt-2">
+              Age and gender are required to book this appointment for better diagnosis.
+            </p>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Age <span className="text-red-500">*</span></Label>
+              <Input 
+                type="number" 
+                placeholder="Enter Age" 
+                className="h-14 rounded-xl bg-slate-50 border-border font-bold"
+                value={tempAge} 
+                onChange={(e) => setTempAge(e.target.value.replace(/\D/g, ''))}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Gender <span className="text-red-500">*</span></Label>
+              <Select value={tempGender} onValueChange={setTempGender}>
+                <SelectTrigger className="h-14 rounded-xl bg-slate-50 border-border font-bold">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="rounded-2xl">
+                  {['Male', 'Female', 'Other'].map(g => (
+                    <SelectItem key={g} value={g} className="font-bold">{g}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button className="w-full h-14 bg-primary text-white font-black text-lg rounded-xl shadow-lg" onClick={handleUpdateProfile}>
+              Save & Pay Now
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

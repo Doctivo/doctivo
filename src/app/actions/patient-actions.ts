@@ -69,8 +69,8 @@ export async function getFamilyMembers(primaryUserId: string) {
  * Creates or updates a primary patient profile.
  */
 export async function upsertPatientProfile(profile: Partial<UserProfile>) {
-  if (!profile.name || !profile.age || !profile.phone) {
-    return { success: false, error: 'Name, Age and Phone are mandatory.' };
+  if (!profile.name || !profile.phone) {
+    return { success: false, error: 'Name and Phone are mandatory.' };
   }
 
   // Check if patient already exists by phone to avoid duplicate key error

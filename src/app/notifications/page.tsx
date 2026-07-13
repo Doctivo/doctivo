@@ -114,6 +114,14 @@ export default function NotificationsPage() {
     setNotifications([]);
   };
 
+  const handleNotificationClick = (notification: AppNotification) => {
+    if (notification.id === 'welcome') {
+      router.push('/home');
+    } else {
+      router.push('/appointments');
+    }
+  };
+
   return (
     <div className="mobile-container min-h-screen bg-slate-50 flex flex-col pb-6">
       {/* Header */}
@@ -178,7 +186,8 @@ export default function NotificationsPage() {
               return (
                 <Card 
                   key={notification.id} 
-                  className={`border-none rounded-[2.2rem] transition-all hover:shadow-md shadow-sm overflow-hidden bg-white relative`}
+                  onClick={() => handleNotificationClick(notification)}
+                  className={`border-none rounded-[2.2rem] transition-all hover:shadow-md shadow-sm overflow-hidden bg-white relative cursor-pointer`}
                 >
                   <div className={`absolute top-0 left-0 w-1.5 h-full ${
                     notification.type === 'success' ? 'bg-emerald-500' :
