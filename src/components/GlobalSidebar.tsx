@@ -17,7 +17,12 @@ export function GlobalSidebar() {
     '/verify'
   ];
   
-  if (hidePaths.includes(pathname || '')) {
+  if (
+    hidePaths.includes(pathname || '') ||
+    pathname?.startsWith('/admin') ||
+    pathname?.startsWith('/doctor') ||
+    pathname?.startsWith('/attendant')
+  ) {
     return null;
   }
   

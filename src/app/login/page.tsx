@@ -101,6 +101,7 @@ export default function LoginPage() {
           }, 100);
 
         } else if (result.role === 'Admin') {
+          setUserStore(null);
           setAdminStore(result.user as any);
           setIsAuthenticated(true);
           router.refresh();
@@ -108,6 +109,7 @@ export default function LoginPage() {
             router.replace(result.user.admin_id === 'SUPER-1' ? '/admin' : `/admin/${result.user.admin_id}`);
           }, 100);
         } else if (result.role === 'Doctor') {
+          setUserStore(null);
           setAdminStore({
             admin_id: result.user.doctor_id,
             full_name: result.user.full_name,
@@ -121,6 +123,7 @@ export default function LoginPage() {
             router.replace(`/doctor/${result.user.doctor_id}`);
           }, 100);
         } else if (result.role === 'Attendant') {
+          setUserStore(null);
           setAdminStore({
             admin_id: result.user.attendant_id,
             full_name: result.user.full_name,
