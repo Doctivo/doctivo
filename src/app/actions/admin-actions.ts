@@ -142,6 +142,16 @@ export async function initializeDatabase() {
       `);
     }
 
+    // Migration for Attendants: Rename name to full_name if it exists
+    await query(`
+      DO $$ 
+      BEGIN 
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='attendants' AND column_name='name') THEN 
+          ALTER TABLE attendants RENAME COLUMN name TO full_name;
+        END IF;
+      END $$;
+    `);
+
     // 6. Payroll Adjustments
     await query(`
       CREATE TABLE IF NOT EXISTS payroll_adjustments (
@@ -372,13 +382,13 @@ export async function addDoctorDirectly(data: any) {
       INSERT INTO doctors (
         doctor_id, full_name, phone_number, email, specialty, qualification, 
         experience_years, clinic_address, consultation_fee, is_approved,
-        start_time, end_time, slot_duration, image_url, consultation_modes
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true, $10, $11, $12, $13, $14)
+        start_time, end_time, slot_duration, image_url, consultation_modes, reasons_for_visit
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true, $10, $11, $12, $13, $14, $15)
     `, [
       id, data.name, data.phone, data.email || null, data.specialty, data.qualification || '',
       parseInt(data.experience || '0'), data.address || '', parseInt(data.fees || '500'),
       data.startTime, data.endTime, parseInt(data.slotDuration || '15'), data.imageUrl || null,
-      data.consultation_modes || 'Clinic,Home'
+      data.consultation_modes || 'Clinic,Home', JSON.stringify(data.reasons_for_visit || [])
     ]);
     return { success: true };
   } catch (error: any) {
@@ -393,13 +403,13 @@ export async function updateDoctor(doctorId: string, data: any) {
         full_name = $1, phone_number = $2, email = $3, specialty = $4, 
         qualification = $5, experience_years = $6, clinic_address = $7, 
         consultation_fee = $8, start_time = $9, end_time = $10, 
-        slot_duration = $11, image_url = $12, consultation_modes = $13
-      WHERE doctor_id = $14
+        slot_duration = $11, image_url = $12, consultation_modes = $13, reasons_for_visit = $14
+      WHERE doctor_id = $15
     `, [
       data.full_name, data.phone_number, data.email, data.specialty, data.qualification,
       data.experience_years, data.clinic_address, data.consultation_fee,
       data.start_time, data.end_time, data.slot_duration, data.image_url,
-      data.consultation_modes, doctorId
+      data.consultation_modes, JSON.stringify(data.reasons_for_visit || []), doctorId
     ]);
     return { success: true };
   } catch (error: any) {

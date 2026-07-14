@@ -211,7 +211,7 @@ export async function verifyVisitOtp(appointmentId: string, otp: string) {
     if (res.rowCount === 0) return { success: false, error: 'Not found.' };
     if (res.rows[0].visit_otp !== otp) return { success: false, error: 'Incorrect OTP.' };
     
-    await query("UPDATE appointments SET status = 'Completed', payment_status = 'Paid' WHERE appointment_id = $1", [appointmentId]);
+    await query("UPDATE appointments SET status = 'Waiting', payment_status = 'Paid' WHERE appointment_id = $1", [appointmentId]);
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };

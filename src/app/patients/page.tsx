@@ -322,7 +322,7 @@ export default function PatientsPage() {
                 <span className="text-[10px] font-black text-slate-400 mt-2 uppercase tracking-widest">Update Photo</span>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+              <div className="space-y-6 mt-6">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Full Name <span className="text-red-500">*</span></Label>
                   <Input placeholder="Enter Name" className="h-14 rounded-xl bg-slate-50 border-border font-bold" value={currentMember.name || ''} onChange={e => setCurrentMember({...currentMember, name: e.target.value})} />

@@ -20,7 +20,7 @@ export function GlobalSidebar() {
   if (
     hidePaths.includes(pathname || '') ||
     pathname?.startsWith('/admin') ||
-    pathname?.startsWith('/doctor') ||
+    pathname?.startsWith('/doctor/') ||
     pathname?.startsWith('/attendant')
   ) {
     return null;

@@ -180,16 +180,8 @@ export function OPDQueueDashboard({ mode, targetId }: OPDQueueDashboardProps) {
       if (mode === 'Doctor') {
         setSelectedDoctorId(targetId);
       } else {
-        // If Attendant, load list of doctors to manage
-        try {
-          const docs = await getDoctorsCatalog();
-          setDoctors(docs);
-          if (docs.length > 0) {
-            setSelectedDoctorId(docs[0].doctor_id);
-          }
-        } catch (e) {
-          console.error(e);
-        }
+        // If Attendant, auto-select their doctor
+        setSelectedDoctorId((admin as any).doctor_id);
       }
     }
     init();
@@ -294,23 +286,7 @@ export function OPDQueueDashboard({ mode, targetId }: OPDQueueDashboardProps) {
             />
           </div>
 
-          {mode === 'Attendant' && doctors.length > 0 && (
-            <div className="flex items-center space-x-2">
-              <span className="text-xs font-black uppercase text-slate-400">Doctor:</span>
-              <Select value={selectedDoctorId} onValueChange={setSelectedDoctorId}>
-                <SelectTrigger className="w-[200px] h-12 bg-slate-50 border-none font-bold rounded-xl">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="rounded-xl border border-slate-200">
-                  {doctors.map(d => (
-                    <SelectItem key={d.doctor_id} value={d.doctor_id} className="font-bold py-2.5">
-                      {d.full_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+          {/* Dropdown removed for Attendant as they are locked to their creator doctor */}
 
           <Button onClick={loadQueue} variant="outline" size="icon" className="h-12 w-12 rounded-xl border-slate-200 hover:bg-slate-50">
             <RefreshCw className={`h-5 w-5 text-slate-600 ${loading ? 'animate-spin' : ''}`} />
@@ -438,7 +414,7 @@ export function OPDQueueDashboard({ mode, targetId }: OPDQueueDashboardProps) {
                     <td className="px-8 py-6 text-right">
                       <div className="flex items-center justify-end gap-2">
                         {app.status === 'Confirmed' && (
-                          <Button onClick={() => handleStatusChange(app.id, 'Waiting')} size="sm" className="bg-amber-500 text-white font-bold h-9 hover:bg-amber-600">
+                          <Button onClick={() => handleOpenOtpVerification(app.id)} size="sm" className="bg-amber-500 text-white font-bold h-9 hover:bg-amber-600">
                             Check In
                           </Button>
                         )}
@@ -448,7 +424,7 @@ export function OPDQueueDashboard({ mode, targetId }: OPDQueueDashboardProps) {
                           </Button>
                         )}
                         {app.status === 'With Doctor' && (
-                          <Button onClick={() => handleOpenOtpVerification(app.id)} size="sm" className="bg-green-600 text-white font-bold h-9 hover:bg-green-700">
+                          <Button onClick={() => handleStatusChange(app.id, 'Completed')} size="sm" className="bg-green-600 text-white font-bold h-9 hover:bg-green-700">
                             Complete
                           </Button>
                         )}

@@ -129,7 +129,8 @@ export default function LoginPage() {
             full_name: result.user.full_name,
             email: "",
             role: 'Attendant',
-            permissions: {} as any
+            permissions: {} as any,
+            doctor_id: result.user.doctor_id
           });
           setIsAuthenticated(true);
           router.refresh();
@@ -163,17 +164,32 @@ export default function LoginPage() {
         setUserStore(null);
         setPatientsStore([]);
         setAppointmentsStore([]);
-        setAdminStore(result.user as any);
-        setIsAuthenticated(true);
-        router.refresh();
-        
-        setTimeout(() => {
-          if (result.user.admin_id === 'SUPER-1') {
-            router.replace('/admin');
-          } else {
-            router.replace(`/admin/${result.user.admin_id}`);
-          }
-        }, 100);
+        if (result.role === 'Doctor') {
+          setAdminStore({
+            admin_id: result.user.doctor_id,
+            full_name: result.user.full_name,
+            email: result.user.email || "",
+            role: 'Doctor',
+            permissions: {} as any
+          });
+          setIsAuthenticated(true);
+          router.refresh();
+          setTimeout(() => {
+            router.replace(`/doctor/${result.user.doctor_id}`);
+          }, 100);
+        } else {
+          setAdminStore(result.user as any);
+          setIsAuthenticated(true);
+          router.refresh();
+          
+          setTimeout(() => {
+            if (result.user.admin_id === 'SUPER-1') {
+              router.replace('/admin');
+            } else {
+              router.replace(`/admin/${result.user.admin_id}`);
+            }
+          }, 100);
+        }
       } else {
         toast({ variant: "destructive", title: "Verification Failed", description: result.error });
       }

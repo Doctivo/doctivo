@@ -96,14 +96,16 @@ export async function unifiedLogin(identifier: string) {
       // Check Doctor Database
       const docRes = await query('SELECT * FROM doctors WHERE email = $1', [identifier]);
       if (docRes.rows.length > 0) {
-        const doctorData = docRes.rows[0];
-        cookieStore.set('session_role', 'Doctor', { path: '/', maxAge: 30 * 24 * 60 * 60 }); // 30 days
-        cookieStore.set('session_id', doctorData.doctor_id, { path: '/', maxAge: 30 * 24 * 60 * 60 });
-        return {
-          success: true,
-          role: 'Doctor',
-          user: doctorData
-        };
+        const otpRes = await sendAdminOtp(emailLower);
+        if (otpRes.success) {
+          return {
+            success: true,
+            requireOtp: true,
+            email: emailLower
+          };
+        } else {
+          return { success: false, error: otpRes.error || 'Failed to send OTP' };
+        }
       }
 
       return { success: false, error: 'Access Denied: Invalid email' };
@@ -137,7 +139,7 @@ export async function unifiedLogin(identifier: string) {
       };
     }
 
-    return { success: false, error: 'Login failed: Invalid phone, email, doctor ID or attendant ID' };
+    return { success: false, error: 'Invalid credentials' };
 
   } catch (error: any) {
     console.error('Unified Login Error:', error.message);
@@ -269,7 +271,20 @@ export async function verifyAdminOtp(email: string, otp: string) {
       };
     }
 
-    return { success: false, error: 'Admin account record not found in database.' };
+    // Doctor Database lookup
+    const docRes = await query('SELECT * FROM doctors WHERE email = $1', [emailLower]);
+    if (docRes.rows.length > 0) {
+      const doctorData = docRes.rows[0];
+      cookieStore.set('session_role', 'Doctor', { path: '/', maxAge: 30 * 24 * 60 * 60 });
+      cookieStore.set('session_id', doctorData.doctor_id, { path: '/', maxAge: 30 * 24 * 60 * 60 });
+      return {
+        success: true,
+        role: 'Doctor',
+        user: doctorData
+      };
+    }
+
+    return { success: false, error: 'Account record not found in database.' };
   } catch (error: any) {
     console.error('verifyAdminOtp Error:', error.message);
     return { success: false, error: 'Database verification failed.' };

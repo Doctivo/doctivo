@@ -71,12 +71,7 @@ export function BottomNav() {
           })}
         </div>
         
-        <div className="mt-auto p-8 mb-4">
-          <div className="bg-slate-50 p-4 rounded-2xl text-center border border-slate-100">
-            <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Doctivo OS</p>
-            <p className="text-xs font-bold text-slate-500 mt-1">v2.5.0-Desktop</p>
-          </div>
-        </div>
+
       </div>
     </>
   );

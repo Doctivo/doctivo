@@ -29,7 +29,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -103,11 +103,11 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="antialiased bg-slate-50 min-h-screen selection:bg-blue-100">
+      <body className="antialiased bg-slate-50 min-h-screen selection:bg-blue-100" suppressHydrationWarning>
         <GlobalSidebar />
-        <main>
+        <div className="main-wrapper w-full min-h-screen">
           {children}
-        </main>
+        </div>
         <Toaster />
       </body>
     </html>

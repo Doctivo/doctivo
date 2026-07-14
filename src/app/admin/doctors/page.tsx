@@ -2,11 +2,11 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { Plus, Loader2, Edit3, Camera, Search, User, Mail, Phone, MapPin, IndianRupee, Clock, Users, ShieldCheck } from 'lucide-react';
+import { Plus, Loader2, Edit3, Camera, Search, User, Mail, Phone, MapPin, IndianRupee, Clock, Users, ShieldCheck, Trash2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { addDoctorDirectly, updateDoctor, getDoctorsCatalog } from '@/app/actions/admin-actions';
+import { addDoctorDirectly, updateDoctor, getDoctorsCatalog, deleteDoctor } from '@/app/actions/admin-actions';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
@@ -53,7 +53,8 @@ export default function DoctorCatalog() {
     allow_revenue_deduction: false,
     current_active_campaign: '',
     imageUrl: '',
-    consultation_modes: 'Clinic,Home'
+    consultation_modes: 'Clinic,Home',
+    reasons_for_visit_str: ''
   });
   const [isSaving, setIsSaving] = useState(false);
 
@@ -110,7 +111,11 @@ export default function DoctorCatalog() {
     }
     setIsSaving(true);
     try {
-      const res = await addDoctorDirectly({ ...newDoc });
+      const payload = {
+        ...newDoc,
+        reasons_for_visit: (newDoc.reasons_for_visit_str || '').split(',').map((s: string) => s.trim()).filter(Boolean)
+      };
+      const res = await addDoctorDirectly(payload);
       if (res.success) { 
         toast({ title: 'Success', description: 'Doctor added successfully.' });
         setIsAddOpen(false); 
@@ -129,7 +134,11 @@ export default function DoctorCatalog() {
     if (!editingDoc) return;
     setIsSaving(true);
     try {
-      const res = await updateDoctor(editingDoc.doctor_id, editingDoc);
+      const payload = {
+        ...editingDoc,
+        reasons_for_visit: (editingDoc.reasons_for_visit_str || '').split(',').map((s: string) => s.trim()).filter(Boolean)
+      };
+      const res = await updateDoctor(editingDoc.doctor_id, payload);
       if (res.success) {
         toast({ title: 'Success', description: 'Doctor profile updated.' });
         setIsEditOpen(false);
@@ -141,6 +150,21 @@ export default function DoctorCatalog() {
       toast({ variant: 'destructive', title: 'Error', description: e.message || 'An unexpected error occurred.' });
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleDeleteDoctor = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this doctor?')) return;
+    try {
+      const res = await deleteDoctor(id);
+      if (res.success) {
+        toast({ title: 'Deleted', description: 'Doctor removed successfully' });
+        load();
+      } else {
+        toast({ variant: 'destructive', title: 'Error', description: res.error || 'Failed to delete doctor' });
+      }
+    } catch (e: any) {
+      toast({ variant: 'destructive', title: 'Error', description: e.message || 'An unexpected error occurred.' });
     }
   };
 
@@ -243,40 +267,46 @@ export default function DoctorCatalog() {
                        </Select>
                      </div>
                      <div className="space-y-2">
-                       <Label className="text-[10px] font-black uppercase text-slate-400">Active Campaign</Label>
-                       <Input className="h-12 bg-slate-50 border-none font-bold rounded-xl" placeholder="None" value={newDoc.current_active_campaign} onChange={e => setNewDoc({...newDoc, current_active_campaign: e.target.value})} />
-                     </div>
-                      <div className="col-span-2 p-6 rounded-3xl bg-slate-50 border border-slate-100 space-y-4">
-                        <Label className="text-[10px] font-black uppercase text-slate-400">Consultation Modes</Label>
-                        <div className="flex gap-8">
-                          <div className="flex items-center space-x-3">
-                            <Checkbox 
-                              id="mode-clinic" 
-                              checked={(newDoc.consultation_modes || '').includes('Clinic')} 
-                              onCheckedChange={(checked) => {
-                                const modes = (newDoc.consultation_modes || '').split(',').filter(Boolean);
-                                if (checked) { if (!modes.includes('Clinic')) modes.push('Clinic'); }
-                                else { const idx = modes.indexOf('Clinic'); if (idx > -1) modes.splice(idx, 1); }
-                                setNewDoc({...newDoc, consultation_modes: modes.join(',')});
-                              }}
-                            />
-                            <Label htmlFor="mode-clinic" className="text-sm font-bold text-slate-700 cursor-pointer">Therapy at Clinic</Label>
-                          </div>
-                          <div className="flex items-center space-x-3">
-                            <Checkbox 
-                              id="mode-home" 
-                              checked={(newDoc.consultation_modes || '').includes('Home')} 
-                              onCheckedChange={(checked) => {
-                                const modes = (newDoc.consultation_modes || '').split(',').filter(Boolean);
-                                if (checked) { if (!modes.includes('Home')) modes.push('Home'); }
-                                else { const idx = modes.indexOf('Home'); if (idx > -1) modes.splice(idx, 1); }
-                                setNewDoc({...newDoc, consultation_modes: modes.join(',')});
-                              }}
-                            />
-                            <Label htmlFor="mode-home" className="text-sm font-bold text-slate-700 cursor-pointer">Therapy at Home</Label>
+                        <Label className="text-[10px] font-black uppercase text-slate-400">Active Campaign</Label>
+                        <Input className="h-12 bg-slate-50 border-none font-bold rounded-xl" placeholder="None" value={newDoc.current_active_campaign} onChange={e => setNewDoc({...newDoc, current_active_campaign: e.target.value})} />
+                      </div>
+                      <div className="col-span-2 space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-slate-400">Reasons for Visit (Comma separated)</Label>
+                        <Input className="h-12 bg-slate-50 border-none font-bold rounded-xl" placeholder="e.g. Back Pain, Neck Pain, Post Surgery" value={newDoc.reasons_for_visit_str} onChange={e => setNewDoc({...newDoc, reasons_for_visit_str: e.target.value})} />
+                      </div>
+                      {newDoc.specialty === 'Physiotherapist' && (
+                        <div className="col-span-2 p-6 rounded-3xl bg-slate-50 border border-slate-100 space-y-4">
+                          <Label className="text-[10px] font-black uppercase text-slate-400">Consultation Modes</Label>
+                          <div className="flex gap-8">
+                            <div className="flex items-center space-x-3">
+                              <Checkbox 
+                                id="mode-clinic" 
+                                checked={(newDoc.consultation_modes || '').includes('Clinic')} 
+                                onCheckedChange={(checked) => {
+                                  const modes = (newDoc.consultation_modes || '').split(',').filter(Boolean);
+                                  if (checked) { if (!modes.includes('Clinic')) modes.push('Clinic'); }
+                                  else { const idx = modes.indexOf('Clinic'); if (idx > -1) modes.splice(idx, 1); }
+                                  setNewDoc({...newDoc, consultation_modes: modes.join(',')});
+                                }}
+                              />
+                              <Label htmlFor="mode-clinic" className="text-sm font-bold text-slate-700 cursor-pointer">Therapy at Clinic</Label>
+                            </div>
+                            <div className="flex items-center space-x-3">
+                              <Checkbox 
+                                id="mode-home" 
+                                checked={(newDoc.consultation_modes || '').includes('Home')} 
+                                onCheckedChange={(checked) => {
+                                  const modes = (newDoc.consultation_modes || '').split(',').filter(Boolean);
+                                  if (checked) { if (!modes.includes('Home')) modes.push('Home'); }
+                                  else { const idx = modes.indexOf('Home'); if (idx > -1) modes.splice(idx, 1); }
+                                  setNewDoc({...newDoc, consultation_modes: modes.join(',')});
+                                }}
+                              />
+                              <Label htmlFor="mode-home" className="text-sm font-bold text-slate-700 cursor-pointer">Therapy at Home</Label>
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      )}
                       <div className="col-span-2 space-y-2">
                         <Label className="text-[10px] font-black uppercase text-slate-400">Clinic Address</Label>
                         <Input className="h-12 bg-slate-50 border-none font-bold rounded-xl" value={newDoc.address} onChange={e => setNewDoc({...newDoc, address: e.target.value})} />
@@ -322,10 +352,9 @@ export default function DoctorCatalog() {
               ) : filteredDoctors.length > 0 ? filteredDoctors.map((doc) => (
                 <tr 
                   key={doc.doctor_id} 
-                  onClick={() => { setEditingDoc(doc); setIsEditOpen(true); }}
                   className="hover:bg-slate-50/50 cursor-pointer transition-colors group"
                 >
-                  <td className="px-10 py-8">
+                  <td onClick={() => { setEditingDoc({...doc, reasons_for_visit_str: Array.isArray(doc.reasons_for_visit) ? doc.reasons_for_visit.join(', ') : ''}); setIsEditOpen(true); }} className="px-10 py-8">
                     <div className="flex items-center space-x-5">
                       <div className="h-16 w-16 rounded-2xl bg-slate-100 overflow-hidden relative border border-slate-200 flex items-center justify-center">
                         {doc.image_url ? <Image src={doc.image_url} alt="D" fill className="object-cover" /> : <User className="h-8 w-8 text-slate-300" />}
@@ -347,12 +376,20 @@ export default function DoctorCatalog() {
                       <p className="text-xs font-medium text-slate-400 flex items-center"><Mail className="h-3 w-3 mr-2 text-slate-400" /> {doc.email || 'N/A'}</p>
                     </div>
                   </td>
-                  <td className="px-10 py-8 text-right">
+                  <td className="px-10 py-8 text-right space-x-2">
                     <Button 
                       variant="ghost" 
+                      onClick={(e) => { e.stopPropagation(); setEditingDoc({...doc, reasons_for_visit_str: Array.isArray(doc.reasons_for_visit) ? doc.reasons_for_visit.join(', ') : ''}); setIsEditOpen(true); }}
                       className="h-12 w-12 rounded-2xl text-slate-300 group-hover:text-blue-500 group-hover:bg-blue-50 transition-all"
                     >
                       <Edit3 className="h-6 w-6" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      onClick={(e) => { e.stopPropagation(); handleDeleteDoctor(doc.doctor_id); }}
+                      className="h-12 w-12 rounded-2xl text-slate-300 group-hover:text-red-500 group-hover:bg-red-50 transition-all"
+                    >
+                      <Trash2 className="h-6 w-6" />
                     </Button>
                   </td>
                 </tr>
@@ -496,6 +533,11 @@ export default function DoctorCatalog() {
                     <h3 className="font-black text-slate-800 uppercase text-xs tracking-widest">Clinic Details</h3>
                   </div>
                   <div className="grid grid-cols-1 gap-6">
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-black uppercase text-slate-400">Reasons for Visit (Comma separated)</Label>
+                      <Input className="h-14 bg-slate-50 border-none font-bold rounded-xl" value={editingDoc.reasons_for_visit_str || ''} onChange={e => setEditingDoc({...editingDoc, reasons_for_visit_str: e.target.value})} />
+                    </div>
+                    {editingDoc.specialty === 'Physiotherapist' && (
                     <div className="p-6 rounded-3xl bg-slate-50 border border-slate-100 space-y-4">
                       <Label className="text-[10px] font-black uppercase text-slate-400">Consultation Availability Modes</Label>
                       <div className="flex gap-8">
@@ -527,6 +569,7 @@ export default function DoctorCatalog() {
                         </div>
                       </div>
                     </div>
+                    )}
                     <div className="space-y-1.5">
                       <Label className="text-[10px] font-black uppercase text-slate-400">Detailed Clinic Address</Label>
                       <Input className="h-14 bg-slate-50 border-none font-bold rounded-xl" value={editingDoc.clinic_address || ''} onChange={e => setEditingDoc({...editingDoc, clinic_address: e.target.value})} />
