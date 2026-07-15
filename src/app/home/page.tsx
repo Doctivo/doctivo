@@ -21,6 +21,7 @@ function HomeContent() {
   const user = useStore(state => state.user);
   const isAuthenticated = useStore(state => state.isAuthenticated);
   const hasHydrated = useStore(state => state._hasHydrated);
+  const homeCardImages = useStore(state => state.homeCardImages);
   
   const [isPhysioOpen, setIsPhysioOpen] = useState(false);
 
@@ -102,7 +103,13 @@ function HomeContent() {
                 action.bgColor
               )}>
                 <div className="mb-3 transition-transform group-hover:scale-110">
-                  <action.icon className={cn("h-10 w-10 md:h-12 md:w-12", action.textColor)} strokeWidth={2.5} />
+                  {homeCardImages && homeCardImages[idx] ? (
+                    <div className="h-14 w-14 md:h-16 md:w-16 rounded-2xl overflow-hidden relative border-2 border-white shadow-sm">
+                      <Image src={homeCardImages[idx]} alt={action.label} fill className="object-cover" />
+                    </div>
+                  ) : (
+                    <action.icon className={cn("h-10 w-10 md:h-12 md:w-12", action.textColor)} strokeWidth={2.5} />
+                  )}
                 </div>
                 <span className={cn("text-[10px] md:text-xs font-black uppercase tracking-widest text-center leading-tight px-2", action.textColor)}>
                   {action.label}

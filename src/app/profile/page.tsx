@@ -10,14 +10,24 @@ import {
 import { useStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import Image from 'next/image';
 import { logoutSession } from '@/app/actions/auth-actions';
+import { deletePatientAccount } from '@/app/actions/patient-actions';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 
 export default function ProfilePage() {
   const router = useRouter();
   const user = useStore(state => state.user);
   const logout = useStore(state => state.logout);
   const isAuthenticated = useStore(state => state.isAuthenticated);
+  const homeCardImages = useStore(state => state.homeCardImages);
+  const setHomeCardImages = useStore(state => state.setHomeCardImages);
+
+  const [isUploading, setIsUploading] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -40,16 +50,53 @@ export default function ProfilePage() {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    if (!user?.id) return;
+    setIsDeleting(true);
+    try {
+      const res = await deletePatientAccount(user.id);
+      if (res.success) {
+        await handleLogout();
+      } else {
+        alert(res.error || 'Failed to delete account');
+        setIsDeleting(false);
+      }
+    } catch (e) {
+      console.error(e);
+      setIsDeleting(false);
+    }
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, idx: number) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result as string;
+        setHomeCardImages({ ...homeCardImages, [idx]: base64 });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   if (!isAuthenticated) return null;
+
+  // Calculate Profile Completion
+  const profileFields = ['name', 'age', 'gender', 'state', 'city', 'area', 'pincode', 'blood_group', 'weight', 'height'];
+  let filledFields = 0;
+  if (user) {
+    profileFields.forEach(field => {
+      if (user[field as keyof typeof user]) filledFields++;
+    });
+  }
+  const completionPercentage = Math.round((filledFields / profileFields.length) * 100);
 
   const menuItems = [
     { label: 'Edit Profile', subLabel: 'Update Name, Age, Location', icon: Edit3, color: 'bg-blue-50 text-blue-500', href: '/onboarding' },
     { label: 'Manage Family', subLabel: 'Add Mother, Father or Spouse', icon: Users, color: 'bg-indigo-50 text-indigo-500', href: '/patients' },
-    { label: 'Medical History Log', subLabel: 'Vitals: Blood Group, Height, Weight', icon: HeartPulse, color: 'bg-purple-50 text-purple-500', href: '/onboarding' },
-    { label: 'Past Appointments', subLabel: 'View your booking history', icon: History, color: 'bg-green-50 text-green-500', href: '/appointments' },
+    { label: 'Past Appointments', subLabel: 'View your booking history', icon: History, color: 'bg-green-50 text-green-500', href: '/appointments?tab=Past' },
     { label: 'My Downloads', subLabel: 'Access saved tickets & receipts', icon: Download, color: 'bg-orange-50 text-orange-500', href: '/profile/downloads' },
-    { label: 'Help & Support', subLabel: 'Contact clinic support', icon: MessageCircleQuestion, color: 'bg-yellow-50 text-yellow-500', href: '#' },
-    { label: 'Settings', subLabel: 'App Preferences', icon: Settings, color: 'bg-slate-50 text-slate-500', href: '/settings' },
+    { label: 'Help & Support', subLabel: 'Contact clinic support', icon: MessageCircleQuestion, color: 'bg-yellow-50 text-yellow-500', href: '/support' },
   ];
 
   return (
@@ -81,6 +128,21 @@ export default function ProfilePage() {
             {user?.blood_group || 'O+'}
           </Badge>
         </div>
+
+        <div className="w-full max-w-xs mt-6 bg-slate-50 rounded-2xl p-4 border border-slate-100">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Profile Completeness</span>
+            <span className="text-xs font-black text-primary">{completionPercentage}%</span>
+          </div>
+          <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
+            <div className="h-full bg-primary rounded-full transition-all duration-1000" style={{ width: `${completionPercentage}%` }}></div>
+          </div>
+          {completionPercentage < 100 && (
+            <p onClick={() => router.push('/onboarding')} className="text-[10px] text-center font-bold text-slate-400 mt-3 cursor-pointer hover:text-primary">
+              Tap to complete your profile
+            </p>
+          )}
+        </div>
       </div>
 
       <div className="p-6 space-y-8">
@@ -107,6 +169,23 @@ export default function ProfilePage() {
           </div>
         </div>
 
+        {/* Temporary Admin Tool */}
+        <div className="bg-orange-50 border-2 border-orange-100 rounded-[1.5rem] p-6 shadow-sm">
+          <h3 className="text-xs font-black text-orange-600 uppercase tracking-[0.1em] mb-4">Admin Tool: Home Cards</h3>
+          <p className="text-[10px] text-orange-500 font-bold mb-4">Upload images to test on the home page (saved locally). You can then hardcode them later.</p>
+          <div className="space-y-4">
+            {['Book Appointment', 'My Appointment', 'Physiotherapist', 'Add Patient'].map((label, idx) => (
+              <div key={idx} className="space-y-1">
+                <Label className="text-xs font-bold text-orange-700">{label} Card Image</Label>
+                <div className="flex gap-2 items-center">
+                  <Input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, idx)} className="bg-white border-orange-200" />
+                  {homeCardImages[idx] && <div className="h-8 w-8 rounded overflow-hidden relative border border-orange-200"><Image src={homeCardImages[idx]} alt="" fill className="object-cover" /></div>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Action Zone */}
         <div className="pt-4 space-y-4">
           <Button 
@@ -117,11 +196,51 @@ export default function ProfilePage() {
             <LogOut className="mr-2 h-5 w-5" /> Sign Out from Device
           </Button>
 
+          <Button 
+            variant="ghost" 
+            className="w-full h-16 bg-red-50 text-red-600 font-black rounded-2xl border-2 border-red-100 shadow-sm flex items-center justify-center hover:bg-red-100 active:scale-95 transition-all"
+            onClick={() => setIsDeleteDialogOpen(true)}
+          >
+            <Trash2 className="mr-2 h-5 w-5" /> Delete Account Permanently
+          </Button>
+
           <p className="text-center text-[10px] text-slate-300 mt-10 font-black uppercase tracking-widest">
             Doctivo OS • v2.5.0-Gorakhpur
           </p>
         </div>
       </div>
+
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="max-w-[340px] rounded-[2rem] p-6 text-center border-border">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Trash2 className="h-8 w-8 text-red-600" />
+          </div>
+          <DialogHeader>
+            <DialogTitle className="text-xl font-black text-slate-900 tracking-tight text-center">Delete Account?</DialogTitle>
+            <DialogDescription className="text-slate-500 font-medium text-sm pt-2 text-center">
+              Are you sure you want to permanently delete your account? This will erase your personal details and cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-row gap-3 pt-4 border-t border-slate-100 sm:justify-center">
+            <Button 
+              variant="outline" 
+              onClick={() => setIsDeleteDialogOpen(false)}
+              className="flex-1 h-12 rounded-xl font-bold border-slate-200 text-slate-600"
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleDeleteAccount}
+              className="flex-1 h-12 rounded-xl font-bold"
+              disabled={isDeleting}
+            >
+              {isDeleting ? 'Deleting...' : 'Yes, Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

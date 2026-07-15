@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Download, Info, CheckCircle2 } from 'lucide-react';
+import { Download, Info, CheckCircle2, Share2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getUserAppointments, updateAppointmentStatus } from '@/app/actions/appointment-actions';
 import { Appointment } from '@/lib/types';
@@ -31,6 +31,8 @@ export default function AppointmentsPage() {
   const setAppointments = useStore(state => state.setAppointments);
   const user = useStore(state => state.user);
   const isAuthenticated = useStore(state => state.isAuthenticated);
+  const downloadedTickets = useStore(state => state.downloadedTickets);
+  const setDownloadedTickets = useStore(state => state.setDownloadedTickets);
   
   const [activeTab, setActiveTab] = useState<'Upcoming' | 'Past'>('Upcoming');
   const [loading, setLoading] = useState(true);
@@ -50,6 +52,21 @@ export default function AppointmentsPage() {
       setSelectedApp(null);
     } else {
       toast({ variant: 'destructive', title: 'Error', description: res.error || 'Failed to cancel.' });
+    }
+  };
+
+  const handleShare = async (app: any) => {
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: 'Doctivo Appointment',
+          text: `My appointment with ${app.doctorName} is confirmed for ${app.time}. Token: #${app.tokenNumber}`,
+        });
+      } else {
+        toast({ title: 'Not Supported', description: 'Sharing is not supported on this browser.' });
+      }
+    } catch (e) {
+      console.error(e);
     }
   };
 
@@ -75,7 +92,12 @@ export default function AppointmentsPage() {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        toast({ title: "Success", description: "Booking Ticket downloaded." });
+        
+        if (!downloadedTickets.includes(appointment.id)) {
+          setDownloadedTickets([...downloadedTickets, appointment.id]);
+        }
+  
+        toast({ title: 'Success', description: 'Ticket downloaded successfully.' });
       }
     } catch (err) {
       console.error(err);
@@ -212,9 +234,10 @@ export default function AppointmentsPage() {
               return (
                 <Card 
                   key={app.id} 
-                  onClick={() => setSelectedApp(app)}
+                  onClick={activeTab === 'Past' ? undefined : () => setSelectedApp(app)}
                   className={cn(
-                    "border-slate-100 shadow-lg rounded-[2.5rem] overflow-hidden bg-white border-2 cursor-pointer hover:border-blue-500/50 active:scale-[0.98] transition-all",
+                    "border-slate-100 shadow-lg rounded-[2.5rem] overflow-hidden bg-white border-2 transition-all",
+                    activeTab !== 'Past' && "cursor-pointer hover:border-blue-500/50 active:scale-[0.98]",
                     isMissed && "opacity-75 border-slate-200 grayscale-[0.5]"
                   )}
                 >
@@ -316,13 +339,18 @@ export default function AppointmentsPage() {
                 <div className="flex justify-between items-center"><span className="font-bold text-slate-400">Fee:</span><span className="font-black text-slate-800">Rs. {selectedApp.consultation_fee_amount}</span></div>
               </div>
 
-              <div className="flex gap-3">
-                <Button onClick={() => handleDownloadPDF(selectedApp)} disabled={isDownloading} className="flex-1 h-14 bg-blue-600 font-black rounded-2xl gap-2">
-                  {isDownloading ? <Loader2 className="animate-spin h-5 w-5" /> : <Download className="h-5 w-5" />}
-                  Download Ticket
-                </Button>
+              <div className="flex flex-col gap-3">
+                <div className="flex gap-3">
+                  <Button onClick={() => handleShare(selectedApp)} variant="outline" className="h-14 w-14 bg-slate-50 border-slate-200 rounded-2xl shrink-0">
+                    <Share2 className="h-5 w-5 text-slate-600" />
+                  </Button>
+                  <Button onClick={() => handleDownloadPDF(selectedApp)} disabled={isDownloading} className="flex-1 h-14 bg-blue-600 font-black rounded-2xl gap-2">
+                    {isDownloading ? <Loader2 className="animate-spin h-5 w-5" /> : <Download className="h-5 w-5" />}
+                    Download Ticket
+                  </Button>
+                </div>
                 {activeTab === 'Upcoming' && selectedApp.status !== 'Cancelled' && selectedApp.status !== 'Completed' && (
-                  <Button variant="outline" onClick={() => handleCancel(selectedApp.id)} disabled={isCancelling} className="flex-1 h-14 bg-red-50 hover:bg-red-100 text-red-600 border-red-200 font-black rounded-2xl gap-2">
+                  <Button variant="outline" onClick={() => handleCancel(selectedApp.id)} disabled={isCancelling} className="w-full h-14 bg-red-50 hover:bg-red-100 text-red-600 border-red-200 font-black rounded-2xl gap-2">
                     {isCancelling ? <Loader2 className="animate-spin h-5 w-5" /> : 'Cancel Booking'}
                   </Button>
                 )}

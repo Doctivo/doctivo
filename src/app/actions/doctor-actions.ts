@@ -21,13 +21,22 @@ function safeParseJson(val: any, fallback: any) {
 /**
  * Fetches all approved doctors from the database with robust specialty filtering.
  */
-export async function getDoctors(specialty?: string) {
+export async function getDoctors(specialty?: string, searchQuery?: string) {
   let sql = 'SELECT * FROM doctors WHERE is_approved = true';
   const params: any[] = [];
+  let paramCount = 1;
 
   if (specialty && specialty !== 'All') {
-    sql += ' AND specialty ILIKE $1';
+    sql += ` AND specialty ILIKE $${paramCount}`;
     params.push(`%${specialty.trim()}%`);
+    paramCount++;
+  }
+
+  if (searchQuery && searchQuery.trim() !== '') {
+    const term = `%${searchQuery.trim()}%`;
+    sql += ` AND (full_name ILIKE $${paramCount} OR specialty ILIKE $${paramCount} OR reasons_for_visit::text ILIKE $${paramCount})`;
+    params.push(term);
+    paramCount++;
   }
 
   try {

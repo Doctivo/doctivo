@@ -218,67 +218,134 @@ export default function NotificationsPage() {
             </Button>
           </div>
         ) : (
-          <div className="space-y-4">
-            {filteredNotifications.map((notification) => {
-              const Icon = notification.icon;
-              return (
-                <Card 
-                  key={notification.id} 
-                  onClick={() => handleNotificationClick(notification)}
-                  className={`border-none rounded-[2.2rem] transition-all hover:shadow-md overflow-hidden relative cursor-pointer group ${
-                    notification.isRead ? 'bg-white shadow-sm opacity-80' : 'bg-white shadow-md ring-2 ring-primary/10'
-                  }`}
-                >
-                  <div className={`absolute top-0 left-0 w-1.5 h-full transition-all group-hover:w-2 ${
-                    notification.type === 'success' ? 'bg-emerald-500' :
-                    notification.type === 'warning' ? 'bg-amber-500' :
-                    notification.type === 'error' ? 'bg-red-500' : 'bg-blue-500'
-                  }`} />
-                  {!notification.isRead && (
-                    <div className="absolute top-6 right-6 w-2.5 h-2.5 bg-blue-500 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.8)] animate-pulse" />
-                  )}
-                  <CardContent className="p-6 flex items-start space-x-4">
-                    <div className={`h-12 w-12 rounded-[1.25rem] flex items-center justify-center shrink-0 shadow-sm ${
-                      notification.type === 'success' ? 'bg-emerald-50 text-emerald-500 border border-emerald-100' :
-                      notification.type === 'warning' ? 'bg-amber-50 text-amber-500 border border-amber-100' :
-                      notification.type === 'error' ? 'bg-red-50 text-red-500 border border-red-100' : 'bg-blue-50 text-blue-500 border border-blue-100'
-                    }`}>
-                      <Icon className="h-6 w-6" />
-                    </div>
-                    <div className="flex-1 space-y-1">
-                      <div className="flex items-center justify-between pr-4">
-                        <h4 className={`text-sm tracking-tight leading-none ${notification.isRead ? 'font-bold text-slate-700' : 'font-black text-slate-900'}`}>
-                          {notification.title}
-                        </h4>
-                        <span className={`text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md ${
-                          notification.time === 'Active' ? 'bg-emerald-50 text-emerald-600' :
-                          notification.time === 'Completed' ? 'bg-blue-50 text-blue-600' :
-                          notification.time === 'Cancelled' ? 'bg-red-50 text-red-600' :
-                          notification.time === 'Missed' ? 'bg-amber-50 text-amber-600' : 'bg-slate-100 text-slate-500'
-                        }`}>
-                          {notification.time}
-                        </span>
-                      </div>
-                      <p className={`text-xs leading-relaxed pt-1.5 pr-2 ${notification.isRead ? 'text-slate-400 font-medium' : 'text-slate-600 font-bold'}`}>
-                        {notification.description}
-                      </p>
+          <div className="space-y-8">
+            {/* Urgent Notifications Group */}
+            {filteredNotifications.filter(n => !n.isRead && n.type !== 'success').length > 0 && (
+              <div>
+                <h3 className="text-xs font-black text-slate-800 tracking-tight mb-4 flex items-center">
+                  <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse mr-2"></div>
+                  Action Required
+                </h3>
+                <div className="space-y-4">
+                  {filteredNotifications.filter(n => !n.isRead && n.type !== 'success').map((notification) => {
+                    const Icon = notification.icon;
+                    return (
+                      <Card 
+                        key={notification.id} 
+                        onClick={() => handleNotificationClick(notification)}
+                        className={`border-none rounded-[2.2rem] transition-all hover:shadow-md overflow-hidden relative cursor-pointer group ${
+                          notification.isRead ? 'bg-white shadow-sm opacity-80' : 'bg-white shadow-md ring-2 ring-primary/10'
+                        }`}
+                      >
+                        <div className={`absolute top-0 left-0 w-1.5 h-full transition-all group-hover:w-2 ${
+                          notification.type === 'success' ? 'bg-emerald-500' :
+                          notification.type === 'warning' ? 'bg-amber-500' :
+                          notification.type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+                        }`} />
+                        {!notification.isRead && (
+                          <div className="absolute top-6 right-6 w-2.5 h-2.5 bg-blue-500 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.8)] animate-pulse" />
+                        )}
+                        <CardContent className="p-6 flex items-start space-x-4">
+                          <div className={`h-12 w-12 rounded-[1.25rem] flex items-center justify-center shrink-0 shadow-sm ${
+                            notification.type === 'success' ? 'bg-emerald-50 text-emerald-500 border border-emerald-100' :
+                            notification.type === 'warning' ? 'bg-amber-50 text-amber-500 border border-amber-100' :
+                            notification.type === 'error' ? 'bg-red-50 text-red-500 border border-red-100' : 'bg-blue-50 text-blue-500 border border-blue-100'
+                          }`}>
+                            <Icon className="h-6 w-6" />
+                          </div>
+                          <div className="flex-1 space-y-1">
+                            <div className="flex items-center justify-between pr-4">
+                              <h4 className={`text-sm tracking-tight leading-none ${notification.isRead ? 'font-bold text-slate-700' : 'font-black text-slate-900'}`}>
+                                {notification.title}
+                              </h4>
+                              <span className={`text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md ${
+                                notification.time === 'Active' ? 'bg-emerald-50 text-emerald-600' :
+                                notification.time === 'Completed' ? 'bg-blue-50 text-blue-600' :
+                                notification.time === 'Cancelled' ? 'bg-red-50 text-red-600' :
+                                notification.time === 'Missed' ? 'bg-amber-50 text-amber-600' : 'bg-slate-100 text-slate-500'
+                              }`}>
+                                {notification.time}
+                              </span>
+                            </div>
+                            <p className={`text-xs leading-relaxed pt-1.5 pr-2 ${notification.isRead ? 'text-slate-400 font-medium' : 'text-slate-600 font-bold'}`}>
+                              {notification.description}
+                            </p>
 
-                      {/* Actionable Buttons */}
-                      {!notification.isRead && notification.category === 'Appointments' && notification.time === 'Active' && (
-                        <div className="mt-4 flex gap-2">
-                          <Button size="sm" className="bg-primary hover:bg-primary/90 text-white font-bold h-9 px-4 rounded-xl shadow-lg shadow-primary/20 text-xs">
-                            Join Video Call
-                          </Button>
-                          <Button size="sm" variant="outline" className="h-9 px-4 rounded-xl font-bold border-slate-200 text-slate-600 text-xs">
-                            View Status
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+                            {/* Actionable Buttons */}
+                            {!notification.isRead && notification.category === 'Appointments' && notification.time === 'Active' && (
+                              <div className="mt-4 flex gap-2">
+                                <Button size="sm" className="bg-primary hover:bg-primary/90 text-white font-bold h-9 px-4 rounded-xl shadow-lg shadow-primary/20 text-xs">
+                                  View Live Status
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* General Updates Group */}
+            {filteredNotifications.filter(n => n.isRead || n.type === 'success').length > 0 && (
+              <div>
+                <h3 className="text-xs font-black text-slate-400 tracking-tight uppercase mb-4 flex items-center">
+                  Recent Updates
+                </h3>
+                <div className="space-y-4">
+                  {filteredNotifications.filter(n => n.isRead || n.type === 'success').map((notification) => {
+                    const Icon = notification.icon;
+                    return (
+                      <Card 
+                        key={notification.id} 
+                        onClick={() => handleNotificationClick(notification)}
+                        className={`border-none rounded-[2.2rem] transition-all hover:shadow-md overflow-hidden relative cursor-pointer group ${
+                          notification.isRead ? 'bg-white shadow-sm opacity-80' : 'bg-white shadow-md ring-2 ring-primary/10'
+                        }`}
+                      >
+                        <div className={`absolute top-0 left-0 w-1.5 h-full transition-all group-hover:w-2 ${
+                          notification.type === 'success' ? 'bg-emerald-500' :
+                          notification.type === 'warning' ? 'bg-amber-500' :
+                          notification.type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+                        }`} />
+                        {!notification.isRead && (
+                          <div className="absolute top-6 right-6 w-2.5 h-2.5 bg-blue-500 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.8)] animate-pulse" />
+                        )}
+                        <CardContent className="p-6 flex items-start space-x-4">
+                          <div className={`h-12 w-12 rounded-[1.25rem] flex items-center justify-center shrink-0 shadow-sm ${
+                            notification.type === 'success' ? 'bg-emerald-50 text-emerald-500 border border-emerald-100' :
+                            notification.type === 'warning' ? 'bg-amber-50 text-amber-500 border border-amber-100' :
+                            notification.type === 'error' ? 'bg-red-50 text-red-500 border border-red-100' : 'bg-blue-50 text-blue-500 border border-blue-100'
+                          }`}>
+                            <Icon className="h-6 w-6" />
+                          </div>
+                          <div className="flex-1 space-y-1">
+                            <div className="flex items-center justify-between pr-4">
+                              <h4 className={`text-sm tracking-tight leading-none ${notification.isRead ? 'font-bold text-slate-700' : 'font-black text-slate-900'}`}>
+                                {notification.title}
+                              </h4>
+                              <span className={`text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md ${
+                                notification.time === 'Active' ? 'bg-emerald-50 text-emerald-600' :
+                                notification.time === 'Completed' ? 'bg-blue-50 text-blue-600' :
+                                notification.time === 'Cancelled' ? 'bg-red-50 text-red-600' :
+                                notification.time === 'Missed' ? 'bg-amber-50 text-amber-600' : 'bg-slate-100 text-slate-500'
+                              }`}>
+                                {notification.time}
+                              </span>
+                            </div>
+                            <p className={`text-xs leading-relaxed pt-1.5 pr-2 ${notification.isRead ? 'text-slate-400 font-medium' : 'text-slate-600 font-bold'}`}>
+                              {notification.description}
+                            </p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </main>

@@ -10,6 +10,8 @@ interface AppState {
   admin: AdminProfile | null;
   patients: Patient[];
   appointments: Appointment[];
+  homeCardImages: Record<string, string>;
+  downloadedTickets: string[];
   isAuthenticated: boolean;
   _hasHydrated: boolean;
   
@@ -18,6 +20,8 @@ interface AppState {
   setIsAuthenticated: (val: boolean) => void;
   setPatients: (patients: Patient[]) => void;
   setAppointments: (appointments: Appointment[]) => void;
+  setHomeCardImages: (images: Record<string, string>) => void;
+  setDownloadedTickets: (tickets: string[]) => void;
   setHasHydrated: (val: boolean) => void;
   addPatient: (patient: Patient) => void;
   updatePatient: (id: string, patient: Partial<Patient>) => void;
@@ -34,6 +38,8 @@ export const useStore = create<AppState>()(
       admin: null,
       patients: [],
       appointments: [],
+      homeCardImages: {},
+      downloadedTickets: [],
       isAuthenticated: false,
       _hasHydrated: false,
 
@@ -42,6 +48,8 @@ export const useStore = create<AppState>()(
       setIsAuthenticated: (isAuthenticated) => set({ isAuthenticated }),
       setPatients: (patients) => set({ patients }),
       setAppointments: (appointments) => set({ appointments }),
+      setHomeCardImages: (homeCardImages) => set({ homeCardImages }),
+      setDownloadedTickets: (downloadedTickets) => set({ downloadedTickets }),
       setHasHydrated: (val) => set({ _hasHydrated: val }),
       addPatient: (patient) => set((state) => ({ 
         patients: [...state.patients.filter(p => p.id !== patient.id), patient] 
@@ -68,7 +76,9 @@ export const useStore = create<AppState>()(
         isAuthenticated: state.isAuthenticated, 
         user: state.user,
         admin: state.admin,
-        patients: state.patients
+        patients: state.patients,
+        homeCardImages: state.homeCardImages,
+        downloadedTickets: state.downloadedTickets || []
       }),
     }
   )

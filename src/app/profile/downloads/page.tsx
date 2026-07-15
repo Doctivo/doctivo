@@ -14,6 +14,7 @@ export default function DownloadsPage() {
   const router = useRouter();
   const user = useStore(state => state.user);
   const isAuthenticated = useStore(state => state.isAuthenticated);
+  const downloadedTickets = useStore(state => state.downloadedTickets);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -24,16 +25,17 @@ export default function DownloadsPage() {
     }
 
     async function load() {
-      if (user?.id) {
+      if (user?.id && downloadedTickets && downloadedTickets.length > 0) {
         const data = await getUserAppointments(user.id);
-        // Only show confirmed or completed bookings as they are eligible for receipts
-        const validBookings = data.filter(a => a.status === 'Confirmed' || a.status === 'Completed' || a.status === 'Waiting' || a.status === 'In Consultation');
+        const validBookings = data.filter(a => downloadedTickets.includes(a.id));
         setAppointments(validBookings);
+      } else {
+        setAppointments([]);
       }
       setLoading(false);
     }
     load();
-  }, [isAuthenticated, user, router]);
+  }, [isAuthenticated, user, router, downloadedTickets]);
 
   if (!isAuthenticated || !user) return null;
 
@@ -71,61 +73,49 @@ export default function DownloadsPage() {
             <div>
               <h3 className="text-sm font-black text-slate-800">No Receipts Available</h3>
               <p className="text-xs text-slate-400 mt-1 max-w-xs mx-auto">
-                Once you book appointments and they are confirmed, your tickets will appear here for download.
+                You haven't downloaded any tickets yet. Go to your bookings to download tickets.
               </p>
             </div>
             <Button 
-              onClick={() => router.push('/home')} 
+              onClick={() => router.push('/appointments')} 
               className="bg-primary text-white font-bold h-12 rounded-xl px-6"
             >
-              Book Appointment Now
+              Go to Bookings
             </Button>
           </div>
         ) : (
           <div className="space-y-4">
             {appointments.map((app) => (
               <Card key={app.id} className="border-none shadow-sm rounded-3xl overflow-hidden bg-white hover:shadow-md transition-shadow">
-                <CardContent className="p-6 space-y-5">
+                <CardContent className="p-6 space-y-4">
                   <div className="flex justify-between items-start">
-                    <div className="space-y-0.5">
-                      <p className="text-xs font-black text-slate-400 uppercase tracking-wider">Doctor</p>
-                      <h4 className="font-black text-slate-800 text-base leading-tight">{app.doctorName}</h4>
-                    </div>
-                    <div className="bg-blue-50 text-blue-600 px-3 py-1.5 rounded-xl text-center min-w-[70px]">
-                      <p className="text-[9px] font-black uppercase tracking-tight text-blue-400">Token</p>
-                      <p className="text-sm font-black">#{app.tokenNumber}</p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 border-t border-slate-50 pt-4 text-xs font-bold text-slate-600">
-                    <div className="flex items-center space-x-2">
-                      <Calendar className="h-4 w-4 text-slate-400" />
-                      <span>{app.date}</span>
-                    </div>
-                    <div className="flex items-center space-x-2 justify-end">
-                      <Clock className="h-4 w-4 text-slate-400" />
-                      <span>{app.time}</span>
-                    </div>
-                    <div className="flex items-center space-x-2 col-span-2">
-                      <User className="h-4 w-4 text-slate-400" />
-                      <span>Patient: {app.patientName}</span>
-                    </div>
-                    {app.visit_otp && (
-                      <div className="flex items-center space-x-2 col-span-2 bg-blue-50/50 p-3 rounded-2xl border border-blue-100/30 justify-between mt-2 print:hidden">
-                        <div className="flex items-center space-x-2">
-                          <span className="text-slate-400 text-[10px] font-black uppercase">Visit OTP:</span>
-                          <span className="font-black text-sm text-blue-700 tracking-wider leading-none">{app.visit_otp}</span>
-                        </div>
-                        <span className="text-[8px] text-slate-400 font-bold">Provide at clinic</span>
+                    <div className="flex items-center space-x-3">
+                      <div className="h-10 w-10 bg-red-100 rounded-xl flex items-center justify-center text-red-600 border border-red-200">
+                        <FileText className="h-5 w-5" />
                       </div>
-                    )}
+                      <div className="space-y-0.5">
+                        <p className="text-xs font-black text-slate-400 uppercase tracking-wider">PDF Receipt</p>
+                        <h4 className="font-black text-slate-800 text-sm leading-tight">Ticket_{app.id.slice(-6).toUpperCase()}.pdf</h4>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] font-bold text-slate-400">1.2 MB</p>
+                    </div>
                   </div>
 
-                  <Button 
-                    onClick={() => router.push(`/success?id=${app.id}`)}
-                    className="w-full h-12 bg-slate-50 hover:bg-slate-100 text-slate-800 font-bold rounded-xl border border-slate-200 flex items-center justify-center gap-2"
-                  >
-                    <Download className="h-4 w-4" /> Download / Print Ticket
+                  <div className="bg-slate-50 rounded-xl p-3 flex justify-between items-center border border-slate-100">
+                    <div>
+                      <p className="text-[10px] font-black text-slate-400 uppercase">Doctor</p>
+                      <p className="text-xs font-bold text-slate-800">{app.doctorName}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black text-slate-400 uppercase">Token</p>
+                      <p className="text-xs font-bold text-slate-800">#{app.tokenNumber}</p>
+                    </div>
+                  </div>
+                  
+                  <Button variant="outline" className="w-full h-10 border-slate-200 text-slate-600 rounded-xl font-bold gap-2">
+                    <Download className="h-4 w-4" /> Re-download
                   </Button>
                 </CardContent>
               </Card>
