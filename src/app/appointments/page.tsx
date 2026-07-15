@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Button } from '@/components/ui/button';
 import { Download, Info, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { getUserAppointments } from '@/app/actions/appointment-actions';
+import { getUserAppointments, updateAppointmentStatus } from '@/app/actions/appointment-actions';
 import { Appointment } from '@/lib/types';
 import { 
   DropdownMenu, 
@@ -37,6 +37,21 @@ export default function AppointmentsPage() {
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('All');
   const [selectedApp, setSelectedApp] = useState<any | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+
+  const handleCancel = async (appId: string) => {
+    if (!confirm('Are you sure you want to cancel this booking?')) return;
+    setIsCancelling(true);
+    const res = await updateAppointmentStatus(appId, 'Cancelled');
+    setIsCancelling(false);
+    if (res.success) {
+      toast({ title: 'Success', description: 'Booking cancelled successfully.' });
+      setAppointments(appointments.map(a => a.id === appId ? { ...a, status: 'Cancelled' } : a));
+      setSelectedApp(null);
+    } else {
+      toast({ variant: 'destructive', title: 'Error', description: res.error || 'Failed to cancel.' });
+    }
+  };
 
   const handleDownloadPDF = async (appointment: any) => {
     if (!appointment) return;
@@ -132,8 +147,8 @@ export default function AppointmentsPage() {
       <div className="bg-white sticky top-0 z-20 border-b border-slate-100 shadow-sm">
         <div className="flex justify-between items-center mb-6 px-6 pt-8 pb-4">
           <div className="flex items-center space-x-3">
-            <div className="h-9 w-9 rounded-xl overflow-hidden relative shadow-sm border border-slate-100 shrink-0">
-              <Image src="/562c71b5-1be4-415a-94dc-002e1889eb7c-8.jpg" alt="Logo" fill className="object-cover" />
+            <div className="h-9 w-9 rounded-xl overflow-hidden relative shadow-sm border border-slate-100 shrink-0 bg-white">
+              <Image src="/562c71b5-1be4-415a-94dc-002e1889eb7c-8.jpg" alt="Logo" fill className="object-contain p-1" />
             </div>
             <h1 className="text-2xl font-black text-slate-900 tracking-tight">Bookings</h1>
           </div>
@@ -301,10 +316,17 @@ export default function AppointmentsPage() {
                 <div className="flex justify-between items-center"><span className="font-bold text-slate-400">Fee:</span><span className="font-black text-slate-800">Rs. {selectedApp.consultation_fee_amount}</span></div>
               </div>
 
-              <Button onClick={() => handleDownloadPDF(selectedApp)} disabled={isDownloading} className="w-full h-14 bg-blue-600 font-black rounded-2xl gap-2">
-                {isDownloading ? <Loader2 className="animate-spin h-5 w-5" /> : <Download className="h-5 w-5" />}
-                Download Booking Ticket
-              </Button>
+              <div className="flex gap-3">
+                <Button onClick={() => handleDownloadPDF(selectedApp)} disabled={isDownloading} className="flex-1 h-14 bg-blue-600 font-black rounded-2xl gap-2">
+                  {isDownloading ? <Loader2 className="animate-spin h-5 w-5" /> : <Download className="h-5 w-5" />}
+                  Download Ticket
+                </Button>
+                {activeTab === 'Upcoming' && selectedApp.status !== 'Cancelled' && selectedApp.status !== 'Completed' && (
+                  <Button variant="outline" onClick={() => handleCancel(selectedApp.id)} disabled={isCancelling} className="flex-1 h-14 bg-red-50 hover:bg-red-100 text-red-600 border-red-200 font-black rounded-2xl gap-2">
+                    {isCancelling ? <Loader2 className="animate-spin h-5 w-5" /> : 'Cancel Booking'}
+                  </Button>
+                )}
+              </div>
             </div>
           )}
         </DialogContent>

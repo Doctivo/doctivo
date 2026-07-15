@@ -137,7 +137,7 @@ export default function PatientsPage() {
       return;
     }
     
-    if (Number(currentMember.age) > 120 || Number(currentMember.height_cm) > 300 || Number(currentMember.weight_kg) > 300) {
+    if (Number(currentMember.age) > 250 || Number(currentMember.height_cm) > 300 || Number(currentMember.weight_kg) > 300) {
       toast({ variant: 'destructive', title: 'Invalid Details', description: 'Please check the values highlighted in red.' });
       return;
     }
@@ -325,7 +325,7 @@ export default function PatientsPage() {
               <div className="space-y-6 mt-6">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Full Name <span className="text-red-500">*</span></Label>
-                  <Input placeholder="Enter Name" className="h-14 rounded-xl bg-slate-50 border-border font-bold" value={currentMember.name || ''} onChange={e => setCurrentMember({...currentMember, name: e.target.value})} />
+                  <Input placeholder="Enter Name" className="h-14 rounded-xl bg-slate-50 border-border font-bold" value={currentMember.name || ''} onChange={e => setCurrentMember({...currentMember, name: e.target.value.replace(/[^a-zA-Z\s]/g, '')})} />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -334,12 +334,12 @@ export default function PatientsPage() {
                     <Input 
                       type="number" 
                       placeholder="Enter Your Age" 
-                      className={cn("h-14 rounded-xl bg-slate-50 border-border font-bold", Number(currentMember.age) > 120 && "border-red-500")}
+                      className={cn("h-14 rounded-xl bg-slate-50 border-border font-bold", Number(currentMember.age) > 250 && "border-red-500")}
                       value={currentMember.age || ''} 
                       min="0"
                       onChange={e => handleNumericInput('age', e.target.value)} 
                     />
-                    {Number(currentMember.age) > 120 && <p className="text-red-500 text-[10px] mt-1 font-bold">Age must be less than 120.</p>}
+                    {Number(currentMember.age) > 250 && <p className="text-red-500 text-[10px] mt-1 font-bold">Age must be less than 250.</p>}
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Blood Group</Label>

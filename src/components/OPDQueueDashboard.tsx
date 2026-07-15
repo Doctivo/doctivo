@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { getDoctorAppointmentsForDate, updateAppointmentStatus, verifyVisitOtp } from '@/app/actions/appointment-actions';
 import { getDoctorsCatalog } from '@/app/actions/admin-actions';
-import { getDoctorById, getDoctorAttendants, addAttendant, updateDoctorSchedule } from '@/app/actions/doctor-actions';
+import { getDoctorById, getDoctorAttendants, addAttendant, updateDoctorSchedule, updateDoctorServices } from '@/app/actions/doctor-actions';
 import { logoutSession } from '@/app/actions/auth-actions';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -46,7 +46,7 @@ export function OPDQueueDashboard({ mode, targetId }: OPDQueueDashboardProps) {
 
   // Doctor Settings State
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [settingsTab, setSettingsTab] = useState<'staff' | 'schedule'>('staff');
+  const [settingsTab, setSettingsTab] = useState<'staff' | 'schedule' | 'services'>('staff');
   const [staffList, setStaffList] = useState<any[]>([]);
   const [newStaff, setNewStaff] = useState({ name: '', phone: '', email: '' });
   const [isAddingStaff, setIsAddingStaff] = useState(false);
@@ -67,6 +67,11 @@ export function OPDQueueDashboard({ mode, targetId }: OPDQueueDashboardProps) {
   const [overrideEnd, setOverrideEnd] = useState('17:00');
   const [isSavingSchedule, setIsSavingSchedule] = useState(false);
 
+  // Services State
+  const [servicesList, setServicesList] = useState<string[]>([]);
+  const [newService, setNewService] = useState('');
+  const [isSavingServices, setIsSavingServices] = useState(false);
+
   const handleOpenSettings = async () => {
     if (!selectedDoctorId) return;
     setIsSettingsOpen(true);
@@ -81,6 +86,7 @@ export function OPDQueueDashboard({ mode, targetId }: OPDQueueDashboardProps) {
           workingDays: doc.workingDays || []
         });
         setCustomOverrides(doc.customSchedule || {});
+        setServicesList(doc.reasonsForVisit || []);
       }
 
       // 2. Fetch fresh staff list
@@ -151,6 +157,29 @@ export function OPDQueueDashboard({ mode, targetId }: OPDQueueDashboardProps) {
       toast({ variant: 'destructive', title: 'Error', description: e.message });
     } finally {
       setIsSavingSchedule(false);
+    }
+  };
+
+  const handleAddService = () => {
+    if (newService.trim() && !servicesList.includes(newService.trim())) {
+      setServicesList([...servicesList, newService.trim()]);
+      setNewService('');
+    }
+  };
+
+  const handleSaveServices = async () => {
+    setIsSavingServices(true);
+    try {
+      const res = await updateDoctorServices(selectedDoctorId, servicesList);
+      if (res.success) {
+        toast({ title: 'Services Saved', description: 'Patient visit reasons updated successfully.' });
+      } else {
+        toast({ variant: 'destructive', title: 'Failed to Save', description: res.error });
+      }
+    } catch (e: any) {
+      toast({ variant: 'destructive', title: 'Error', description: e.message });
+    } finally {
+      setIsSavingServices(false);
     }
   };
 
@@ -491,6 +520,12 @@ export function OPDQueueDashboard({ mode, targetId }: OPDQueueDashboardProps) {
               >
                 Schedule & Overrides
               </button>
+              <button 
+                onClick={() => setSettingsTab('services')}
+                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${settingsTab === 'services' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}`}
+              >
+                Services (Visit Reasons)
+              </button>
             </div>
           </DialogHeader>
 
@@ -706,7 +741,55 @@ export function OPDQueueDashboard({ mode, targetId }: OPDQueueDashboardProps) {
                   </div>
                 </div>
               </div>
-            )}
+            ) : settingsTab === 'services' ? (
+              <div className="space-y-8">
+                <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 space-y-4">
+                  <div>
+                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">Offered Treatments & Services</h3>
+                    <p className="text-[11px] text-slate-500 font-medium leading-relaxed mt-1">
+                      Add services or reasons for visit. Patients will select one of these when booking an appointment. Keep them short and clear.
+                    </p>
+                  </div>
+                  
+                  <div className="flex items-center gap-3">
+                    <Input 
+                      placeholder="e.g. Routine Checkup, Back Pain, Root Canal..." 
+                      value={newService} 
+                      onChange={e => setNewService(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && handleAddService()}
+                      className="h-12 bg-white border-slate-200 font-bold rounded-xl flex-1"
+                    />
+                    <Button 
+                      onClick={handleAddService}
+                      className="h-12 bg-blue-600 font-black rounded-xl text-white px-6"
+                    >
+                      <Plus className="h-4 w-4 mr-2" /> Add
+                    </Button>
+                  </div>
+                  
+                  <div className="space-y-3 pt-4">
+                    <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest">Added Services</h4>
+                    {servicesList.length === 0 ? (
+                      <p className="text-xs text-slate-400 font-medium italic bg-white p-4 rounded-xl border border-dashed border-slate-200">No services added yet.</p>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {servicesList.map(srv => (
+                          <div key={srv} className="flex items-center gap-2 bg-white border border-slate-200 py-2 pl-4 pr-2 rounded-full shadow-sm">
+                            <span className="text-xs font-bold text-slate-700">{srv}</span>
+                            <button 
+                              onClick={() => handleRemoveService(srv)}
+                              className="h-6 w-6 flex items-center justify-center rounded-full hover:bg-red-50 text-red-400 transition-colors"
+                            >
+                              &times;
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : null}
           </ScrollArea>
 
           {settingsTab === 'schedule' && (
@@ -724,6 +807,25 @@ export function OPDQueueDashboard({ mode, targetId }: OPDQueueDashboardProps) {
                 className="flex-1 h-14 rounded-2xl font-black bg-blue-600 text-white hover:bg-blue-700"
               >
                 {isSavingSchedule ? <RefreshCw className="animate-spin h-5 w-5" /> : 'Save Schedule Settings'}
+              </Button>
+            </DialogFooter>
+          )}
+
+          {settingsTab === 'services' && (
+            <DialogFooter className="p-8 bg-slate-50 border-t flex gap-4">
+              <Button 
+                variant="ghost" 
+                onClick={() => setIsSettingsOpen(false)}
+                className="flex-1 h-14 rounded-2xl font-bold border-slate-200 text-slate-500"
+              >
+                Close
+              </Button>
+              <Button 
+                onClick={handleSaveServices}
+                disabled={isSavingServices}
+                className="flex-1 h-14 rounded-2xl font-black bg-blue-600 text-white hover:bg-blue-700"
+              >
+                {isSavingServices ? <RefreshCw className="animate-spin h-5 w-5" /> : 'Save Services'}
               </Button>
             </DialogFooter>
           )}

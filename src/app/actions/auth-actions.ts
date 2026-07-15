@@ -23,13 +23,10 @@ export async function unifiedLogin(identifier: string) {
       const docRes = await query('SELECT * FROM doctors WHERE phone_number = $1 OR phone_number = $2', [identifier, `+91${identifier}`]);
       if (docRes.rows.length > 0) {
         const doctorData = docRes.rows[0];
-        cookieStore.set('session_role', 'Doctor', { path: '/', maxAge: 30 * 24 * 60 * 60 });
-        cookieStore.set('session_id', doctorData.doctor_id, { path: '/', maxAge: 30 * 24 * 60 * 60 });
-        return {
-          success: true,
-          role: 'Doctor',
-          user: doctorData
-        };
+        if (!doctorData.email) return { success: false, error: 'Doctor email not configured for OTP.' };
+        const otpRes = await sendAdminOtp(doctorData.email);
+        if (otpRes.success) return { success: true, requireOtp: true, email: doctorData.email };
+        return { success: false, error: otpRes.error || 'Failed to send OTP' };
       }
 
       // Fallback: Patient check
@@ -116,13 +113,10 @@ export async function unifiedLogin(identifier: string) {
       const docRes = await query('SELECT * FROM doctors WHERE doctor_id = $1 OR doctor_id = $2', [identifier, identifier.toUpperCase()]);
       if (docRes.rows.length > 0) {
         const doctorData = docRes.rows[0];
-        cookieStore.set('session_role', 'Doctor', { path: '/', maxAge: 30 * 24 * 60 * 60 }); // 30 days
-        cookieStore.set('session_id', doctorData.doctor_id, { path: '/', maxAge: 30 * 24 * 60 * 60 });
-        return {
-          success: true,
-          role: 'Doctor',
-          user: doctorData
-        };
+        if (!doctorData.email) return { success: false, error: 'Doctor email not configured for OTP.' };
+        const otpRes = await sendAdminOtp(doctorData.email);
+        if (otpRes.success) return { success: true, requireOtp: true, email: doctorData.email };
+        return { success: false, error: otpRes.error || 'Failed to send OTP' };
       }
     }
 

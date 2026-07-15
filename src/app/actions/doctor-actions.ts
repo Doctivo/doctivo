@@ -195,3 +195,17 @@ export async function updateDoctorSchedule(doctorId: string, defaultSchedule: an
     return { success: false, error: error.message };
   }
 }
+
+/**
+ * Updates a doctor's reasons for visit (Services)
+ */
+export async function updateDoctorServices(doctorId: string, services: string[]) {
+  try {
+    await query(`UPDATE doctors SET reasons_for_visit = $1 WHERE doctor_id = $2`, [JSON.stringify(services), doctorId]);
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error updating doctor services:', error);
+    return { success: false, error: error.message };
+  }
+}
+

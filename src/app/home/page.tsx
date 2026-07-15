@@ -67,7 +67,10 @@ function HomeContent() {
     <div className="mobile-container pb-24 md:pb-32 min-h-screen">
       <div className="bg-white sticky top-0 z-20 border-b border-slate-100 px-6 py-4">
         <div className="flex items-center gap-4">
-          <div className="h-10 w-10 md:h-12 md:w-12 rounded-xl bg-slate-50 flex items-center justify-center text-primary font-bold overflow-hidden relative shadow-sm border border-slate-100">
+          <div 
+            className="h-10 w-10 md:h-12 md:w-12 rounded-xl bg-slate-50 flex items-center justify-center text-primary font-bold overflow-hidden relative shadow-sm border border-slate-100 cursor-pointer"
+            onClick={() => router.push('/profile')}
+          >
             {user?.imageUrl ? <Image src={user.imageUrl} alt="User Profile" fill className="object-cover" /> : <span>{user?.name?.charAt(0) || 'U'}</span>}
           </div>
           <div className="flex-1 relative">
