@@ -2,7 +2,7 @@
 
 import { Suspense, useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Search, MapPin, Loader2, ChevronLeft, RefreshCcw } from 'lucide-react';
+import { Search, MapPin, Loader2, ChevronLeft, RefreshCcw, Mic, History, TrendingUp, UserCircle } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { DOCTOR_CATEGORIES } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
@@ -35,9 +35,48 @@ function DoctorsContent() {
   const patientId = searchParams.get('patientId') || '';
   
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(filterSpecialtyFromQuery || 'All');
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('doctivo_recent_searches');
+    if (saved) setRecentSearches(JSON.parse(saved));
+  }, []);
+
+  const saveRecentSearch = (term: string) => {
+    if (!term.trim()) return;
+    const updated = [term, ...recentSearches.filter(s => s !== term)].slice(0, 5);
+    setRecentSearches(updated);
+    localStorage.setItem('doctivo_recent_searches', JSON.stringify(updated));
+  };
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [search]);
+
+  const handleVoiceSearch = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      recognition.onstart = () => setSearch('Listening...');
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        setSearch(transcript);
+        saveRecentSearch(transcript);
+        setShowSearchDropdown(false);
+      };
+      recognition.start();
+    } else {
+      alert('Voice search is not supported in this browser.');
+    }
+  };
 
   const loadDoctors = async () => {
     setIsLoading(true);
@@ -64,10 +103,13 @@ function DoctorsContent() {
     if (mode) {
       list = list.filter(doc => (doc.consultationModes || '').includes(mode));
     }
-    if (search) {
+    if (debouncedSearch) {
+      // Fuzzy matching logic approximation: check if all characters exist in order, or simple includes
+      const term = debouncedSearch.toLowerCase().trim();
       list = list.filter(doc => 
-        doc.name.toLowerCase().includes(search.toLowerCase()) || 
-        doc.specialty.toLowerCase().includes(search.toLowerCase())
+        doc.name.toLowerCase().includes(term) || 
+        doc.specialty.toLowerCase().includes(term) ||
+        (doc.reasonsForVisit || []).some((r: string) => r.toLowerCase().includes(term))
       );
     }
     if (isHomeVisit && !isNaN(userLat) && !isNaN(userLng)) {
@@ -77,7 +119,7 @@ function DoctorsContent() {
       return within10.length > 0 ? { items: within10, type: 'within10' as const } : { items: list.filter(d => (d.distance || 0) <= 30), type: 'within30' as const };
     }
     return { items: list, type: 'standard' as const };
-  }, [doctors, search, isHomeVisit, userLat, userLng, searchParams]);
+  }, [doctors, debouncedSearch, isHomeVisit, userLat, userLng, searchParams]);
 
   if (!hasHydrated) return <div className="flex justify-center items-center min-h-screen"><Loader2 className="animate-spin" /></div>;
 
@@ -90,7 +132,67 @@ function DoctorsContent() {
           </button>
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input placeholder="Search doctor or clinic..." className="pl-9 h-11 bg-slate-50 border-border rounded-xl font-medium" value={search} onChange={(e) => setSearch(e.target.value)} />
+            <Input 
+              placeholder="Search doctor, clinic or symptoms..." 
+              className="pl-9 pr-10 h-11 bg-slate-50 border-border rounded-xl font-medium focus-visible:ring-primary/20" 
+              value={search} 
+              onFocus={() => setShowSearchDropdown(true)}
+              onBlur={() => setTimeout(() => setShowSearchDropdown(false), 200)}
+              onKeyDown={(e) => e.key === 'Enter' && saveRecentSearch(search)}
+              onChange={(e) => setSearch(e.target.value)} 
+            />
+            <button onClick={handleVoiceSearch} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-slate-200 rounded-full transition-colors">
+              <Mic className="h-4 w-4 text-slate-400 hover:text-primary transition-colors" />
+            </button>
+            
+            {showSearchDropdown && (
+              <div className="absolute top-full mt-2 w-full bg-white border border-border shadow-2xl rounded-2xl p-4 z-50 max-h-[300px] overflow-y-auto">
+                {!search && recentSearches.length > 0 && (
+                  <div className="mb-4">
+                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center">
+                      <History className="h-3 w-3 mr-1" /> Recent Searches
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {recentSearches.map(term => (
+                        <button key={term} onMouseDown={() => { setSearch(term); saveRecentSearch(term); }} className="px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-lg text-xs font-bold text-slate-600 hover:bg-primary/5 hover:text-primary transition-colors">
+                          {term}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {!search && (
+                  <div>
+                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center">
+                      <TrendingUp className="h-3 w-3 mr-1" /> Trending
+                    </h4>
+                    <div className="space-y-1">
+                      {['Cardiologist', 'Fever', 'Root Canal', 'Skin Specialist'].map(term => (
+                        <button key={term} onMouseDown={() => { setSearch(term); saveRecentSearch(term); }} className="w-full text-left px-3 py-2 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-50 flex items-center justify-between group">
+                          {term}
+                          <ChevronLeft className="h-4 w-4 text-slate-300 group-hover:text-primary rotate-180 transition-colors" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {search && processedDoctors.items.length > 0 && (
+                  <div className="space-y-1">
+                    {processedDoctors.items.slice(0, 4).map(doc => (
+                      <button key={doc.id} onMouseDown={() => router.push(`/book/${doc.id}?mode=${isHomeVisit ? 'Home' : 'Clinic'}${patientId ? `&patientId=${patientId}` : ''}`)} className="w-full text-left p-2 rounded-xl hover:bg-slate-50 flex items-center space-x-3 group">
+                        <div className="h-10 w-10 rounded-full bg-slate-100 overflow-hidden relative border border-slate-200 flex-shrink-0">
+                          {doc.imageUrl ? <Image src={doc.imageUrl} alt={doc.name} fill className="object-cover" /> : <UserCircle className="h-6 w-6 m-auto mt-2 text-slate-300" />}
+                        </div>
+                        <div>
+                          <p className="font-bold text-slate-800 text-sm group-hover:text-primary transition-colors">{doc.name}</p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase">{doc.specialty}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
         <div className="px-4 pb-4 overflow-x-auto scroll-hide flex space-x-2">

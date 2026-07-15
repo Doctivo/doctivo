@@ -167,7 +167,7 @@ export default function AdminManagement() {
       setNewAdmin({ name: '', email: '', role: 'Operations Executive' });
       load();
     } else {
-      toast({ variant: 'destructive', title: 'Creation Failed', description: String(res.error) });
+      toast({ variant: 'destructive', title: 'Creation Failed', description: String((res as any).error) });
     }
     setIsSaving(false);
   };
@@ -183,7 +183,7 @@ export default function AdminManagement() {
       toast({ title: 'Removed', description: 'Admin access revoked.' });
       load();
     } else {
-      toast({ variant: 'destructive', title: 'Action Failed', description: String(res.error || 'Failed to delete sub-admin.') });
+      toast({ variant: 'destructive', title: 'Action Failed', description: String((res as any).error || 'Failed to delete sub-admin.') });
     }
   };
 

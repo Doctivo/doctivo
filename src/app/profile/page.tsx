@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   UserCircle, MapPin, Edit3, Users, History, 
   Settings, LogOut, ChevronRight,
-  HeartPulse, MessageCircleQuestion, Download
+  HeartPulse, MessageCircleQuestion, Download, Trash2
 } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
@@ -49,7 +49,7 @@ export default function ProfilePage() {
     { label: 'Past Appointments', subLabel: 'View your booking history', icon: History, color: 'bg-green-50 text-green-500', href: '/appointments' },
     { label: 'My Downloads', subLabel: 'Access saved tickets & receipts', icon: Download, color: 'bg-orange-50 text-orange-500', href: '/profile/downloads' },
     { label: 'Help & Support', subLabel: 'Contact clinic support', icon: MessageCircleQuestion, color: 'bg-yellow-50 text-yellow-500', href: '#' },
-    { label: 'Settings', subLabel: 'App Preferences', icon: Settings, color: 'bg-slate-50 text-slate-500', href: '#' },
+    { label: 'Settings', subLabel: 'App Preferences', icon: Settings, color: 'bg-slate-50 text-slate-500', href: '/settings' },
   ];
 
   return (
@@ -108,15 +108,15 @@ export default function ProfilePage() {
         </div>
 
         {/* Action Zone */}
-        <div className="pt-4">
+        <div className="pt-4 space-y-4">
           <Button 
             variant="ghost" 
-            className="w-full h-16 bg-white text-red-500 font-black rounded-2xl border-2 border-red-50 shadow-sm flex items-center justify-center hover:bg-red-50 active:scale-95 transition-all"
+            className="w-full h-16 bg-white text-slate-500 font-black rounded-2xl border-2 border-slate-100 shadow-sm flex items-center justify-center hover:bg-slate-50 active:scale-95 transition-all"
             onClick={handleLogout}
           >
             <LogOut className="mr-2 h-5 w-5" /> Sign Out from Device
           </Button>
-          
+
           <p className="text-center text-[10px] text-slate-300 mt-10 font-black uppercase tracking-widest">
             Doctivo OS • v2.5.0-Gorakhpur
           </p>

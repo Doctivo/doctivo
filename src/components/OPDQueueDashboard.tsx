@@ -167,6 +167,10 @@ export function OPDQueueDashboard({ mode, targetId }: OPDQueueDashboardProps) {
     }
   };
 
+  const handleRemoveService = (service: string) => {
+    setServicesList(servicesList.filter(s => s !== service));
+  };
+
   const handleSaveServices = async () => {
     setIsSavingServices(true);
     try {
@@ -596,7 +600,7 @@ export function OPDQueueDashboard({ mode, targetId }: OPDQueueDashboardProps) {
                   )}
                 </div>
               </div>
-            ) : (
+            ) : settingsTab === 'schedule' ? (
               <div className="space-y-8">
                 {/* Default Schedule */}
                 <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 space-y-4">

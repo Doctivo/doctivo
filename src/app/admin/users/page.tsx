@@ -100,7 +100,11 @@ export default function UserDirectory() {
                     </div>
                   </td>
                   <td className="px-8 py-6">
-                    <Badge className="bg-green-50 text-green-600 border-none font-bold text-[9px] uppercase tracking-widest px-2">Active</Badge>
+                    {u.is_deleted ? (
+                      <Badge className="bg-red-50 text-red-600 border-none font-bold text-[9px] uppercase tracking-widest px-2">Deleted User</Badge>
+                    ) : (
+                      <Badge className="bg-green-50 text-green-600 border-none font-bold text-[9px] uppercase tracking-widest px-2">Active</Badge>
+                    )}
                   </td>
                   <td className="px-8 py-6 text-right">
                     <DropdownMenu>

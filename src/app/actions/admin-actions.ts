@@ -142,6 +142,16 @@ export async function initializeDatabase() {
       `);
     }
 
+    // Migration for Patients: Add is_deleted
+    await query(`
+      DO $$ 
+      BEGIN 
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='patients' AND column_name='is_deleted') THEN 
+          ALTER TABLE patients ADD COLUMN is_deleted BOOLEAN DEFAULT FALSE;
+        END IF;
+      END $$;
+    `);
+
     // Migration for Attendants: Rename name to full_name if it exists
     await query(`
       DO $$ 
@@ -411,6 +421,15 @@ export async function updateDoctor(doctorId: string, data: any) {
       data.start_time, data.end_time, data.slot_duration, data.image_url,
       data.consultation_modes, JSON.stringify(data.reasons_for_visit || []), doctorId
     ]);
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function deleteDoctor(doctorId: string) {
+  try {
+    await query('DELETE FROM doctors WHERE doctor_id = $1', [doctorId]);
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };

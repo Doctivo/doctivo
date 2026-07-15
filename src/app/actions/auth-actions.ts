@@ -83,7 +83,8 @@ export async function unifiedLogin(identifier: string) {
           return {
             success: true,
             requireOtp: true,
-            email: emailLower
+            email: emailLower,
+            fallbackOtp: otpRes.fallbackOtp
           };
         } else {
           return { success: false, error: otpRes.error || 'Failed to send OTP' };
@@ -91,14 +92,15 @@ export async function unifiedLogin(identifier: string) {
       }
 
       // Check Doctor Database
-      const docRes = await query('SELECT * FROM doctors WHERE email = $1', [identifier]);
+      const docRes = await query('SELECT * FROM doctors WHERE LOWER(email) = $1', [emailLower]);
       if (docRes.rows.length > 0) {
         const otpRes = await sendAdminOtp(emailLower);
         if (otpRes.success) {
           return {
             success: true,
             requireOtp: true,
-            email: emailLower
+            email: emailLower,
+            fallbackOtp: otpRes.fallbackOtp
           };
         } else {
           return { success: false, error: otpRes.error || 'Failed to send OTP' };
@@ -115,7 +117,7 @@ export async function unifiedLogin(identifier: string) {
         const doctorData = docRes.rows[0];
         if (!doctorData.email) return { success: false, error: 'Doctor email not configured for OTP.' };
         const otpRes = await sendAdminOtp(doctorData.email);
-        if (otpRes.success) return { success: true, requireOtp: true, email: doctorData.email };
+        if (otpRes.success) return { success: true, requireOtp: true, email: doctorData.email, fallbackOtp: otpRes.fallbackOtp };
         return { success: false, error: otpRes.error || 'Failed to send OTP' };
       }
     }
@@ -199,13 +201,13 @@ export async function sendAdminOtp(email: string) {
     if (!response.ok) {
       const errText = await response.text();
       console.error('Brevo API request failed:', errText);
-      return { success: true, localFallback: true };
+      return { success: true, localFallback: true, fallbackOtp: otp };
     }
 
-    return { success: true };
+    return { success: true, fallbackOtp: otp };
   } catch (error: any) {
     console.error('sendAdminOtp Error:', error.message);
-    return { success: true, localFallback: true };
+    return { success: true, localFallback: true, fallbackOtp: otp };
   }
 }
 
@@ -215,18 +217,17 @@ export async function verifyAdminOtp(email: string, otp: string) {
     // 1. Purge expired OTPs
     await query("DELETE FROM otp_verifications WHERE expires_at < NOW();", []);
 
-    // 2. Validate OTP
-    const res = await query("SELECT * FROM otp_verifications WHERE email = $1 AND otp = $2 AND expires_at >= NOW();", [email, otp]);
+    // 2. Validate OTP (Case Insensitive Email)
+    const emailLower = email.trim().toLowerCase();
+    const res = await query("SELECT * FROM otp_verifications WHERE LOWER(email) = $1 AND otp = $2 AND expires_at >= NOW();", [emailLower, otp]);
     if (res.rows.length === 0) {
       return { success: false, error: 'Invalid or expired OTP code' };
     }
 
     // 3. Delete verified OTP record
-    await query("DELETE FROM otp_verifications WHERE email = $1;", [email]);
+    await query("DELETE FROM otp_verifications WHERE LOWER(email) = $1;", [emailLower]);
 
     // 4. Authenticate admin
-    const emailLower = email.trim().toLowerCase();
-    
     // Super Admin check
     const adminMails = (process.env.admin_mails || '').split(',').map(m => m.trim().toLowerCase());
     if (emailLower === 'admin@doctivo.com' || adminMails.includes(emailLower)) {
@@ -253,7 +254,7 @@ export async function verifyAdminOtp(email: string, otp: string) {
     }
 
     // Sub-Admin Database lookup
-    const adminRes = await query('SELECT * FROM admins WHERE email = $1', [emailLower]);
+    const adminRes = await query('SELECT * FROM admins WHERE LOWER(email) = $1', [emailLower]);
     if (adminRes.rows.length > 0) {
       const adminData = adminRes.rows[0];
       cookieStore.set('session_role', 'Admin', { path: '/', maxAge: 60 * 60 });
@@ -266,7 +267,7 @@ export async function verifyAdminOtp(email: string, otp: string) {
     }
 
     // Doctor Database lookup
-    const docRes = await query('SELECT * FROM doctors WHERE email = $1', [emailLower]);
+    const docRes = await query('SELECT * FROM doctors WHERE LOWER(email) = $1', [emailLower]);
     if (docRes.rows.length > 0) {
       const doctorData = docRes.rows[0];
       cookieStore.set('session_role', 'Doctor', { path: '/', maxAge: 30 * 24 * 60 * 60 });

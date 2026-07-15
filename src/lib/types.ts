@@ -75,6 +75,7 @@ export interface AdminProfile {
   email: string;
   role: string;
   permissions: AdminPermissions;
+  doctor_id?: string;
 }
 
 export interface Appointment {

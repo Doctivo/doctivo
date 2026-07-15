@@ -5,6 +5,23 @@ import { query } from '@/lib/db';
 import { UserProfile, Patient } from '@/lib/types';
 
 /**
+ * Validates a name to ensure it contains only alphabets and no abusive content.
+ */
+function validateName(name: string): string | null {
+  if (!/^[a-zA-Z\s]+$/.test(name)) {
+    return 'Name must contain only alphabets and spaces.';
+  }
+  const abusiveWords = ['abuse', 'fuck', 'shit', 'bitch', 'ass', 'bastard', 'cunt', 'dick', 'pussy', 'whore', 'slut', 'fag', 'nigger', 'chutiya', 'bhosadike', 'madarchod', 'behenchod', 'gandu', 'randi', 'kamina', 'harami', 'kutta']; // Basic list, can be expanded
+  const nameLower = name.toLowerCase();
+  for (const word of abusiveWords) {
+    if (nameLower.includes(word)) {
+      return 'Name contains inappropriate or abusive content.';
+    }
+  }
+  return null;
+}
+
+/**
  * Fetches a patient profile by phone number.
  */
 export async function getPatientByPhone(phone: string) {
@@ -71,6 +88,11 @@ export async function getFamilyMembers(primaryUserId: string) {
 export async function upsertPatientProfile(profile: Partial<UserProfile>) {
   if (!profile.name || !profile.phone) {
     return { success: false, error: 'Name and Phone are mandatory.' };
+  }
+
+  const nameError = validateName(profile.name);
+  if (nameError) {
+    return { success: false, error: nameError };
   }
 
   // Check if patient already exists by phone to avoid duplicate key error
@@ -230,5 +252,24 @@ export async function removeFamilyMember(memberId: string) {
   } catch (error) {
     console.error('Remove Family Member Error:', error);
     return { success: false, error: 'Failed to delete' };
+  }
+}
+
+/**
+ * Soft deletes a patient account.
+ */
+export async function deletePatientAccount(patientId: string) {
+  try {
+    await query(`
+      UPDATE patients 
+      SET 
+        is_deleted = TRUE,
+        phone_number = phone_number || '_DEL_' || EXTRACT(EPOCH FROM NOW())::INT
+      WHERE patient_id = $1
+    `, [patientId]);
+    return { success: true };
+  } catch (error: any) {
+    console.error('Delete Patient Account Error:', error.message);
+    return { success: false, error: error.message };
   }
 }

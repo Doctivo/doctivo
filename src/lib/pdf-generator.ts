@@ -1,11 +1,12 @@
-import { jsPDF } from 'jspdf';
 import { Appointment } from './types';
+import type { jsPDF } from 'jspdf';
 
 /**
  * Professional Doctivo Digital Ticket Generator.
  * Enriched with patient vitals and symptoms while keeping Rx space clear.
  */
 export const generateProfessionalPDF = async (appointment: Appointment): Promise<jsPDF> => {
+  const { jsPDF } = await import('jspdf');
   const pdf = new jsPDF({
     orientation: 'p',
     unit: 'mm',
