@@ -58,15 +58,40 @@ export default function AppointmentsPage() {
   const handleShare = async (app: any) => {
     try {
       if (navigator.share) {
-        await navigator.share({
-          title: 'Doctivo Appointment',
-          text: `My appointment with ${app.doctorName} is confirmed for ${app.time}. Token: #${app.tokenNumber}`,
-        });
+        setIsDownloading(true);
+        const dataUrl = await getPDFBase64(app);
+        const filename = `Doctivo_Ticket_${String(app.id || '').slice(-6).toUpperCase()}.pdf`;
+        
+        // Convert base64 to Blob
+        const base64Data = dataUrl.split(',')[1];
+        const byteCharacters = atob(base64Data);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: 'application/pdf' });
+        const file = new File([blob], filename, { type: 'application/pdf' });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            title: 'Doctivo Appointment',
+            text: `My appointment with ${app.doctorName} is confirmed for ${app.time}. Token: #${app.tokenNumber}`,
+            files: [file]
+          });
+        } else {
+          await navigator.share({
+            title: 'Doctivo Appointment',
+            text: `My appointment with ${app.doctorName} is confirmed for ${app.time}. Token: #${app.tokenNumber}`,
+          });
+        }
       } else {
         toast({ title: 'Not Supported', description: 'Sharing is not supported on this browser.' });
       }
     } catch (e) {
       console.error(e);
+    } finally {
+      setIsDownloading(false);
     }
   };
 

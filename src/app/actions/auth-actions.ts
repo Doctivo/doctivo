@@ -5,6 +5,9 @@ import { getPatientByPhone, getFamilyMembers } from './patient-actions';
 import { getUserAppointments } from './appointment-actions';
 import { cookies } from 'next/headers';
 
+// Rate Limiting Map: phone/email -> { attempts, lockUntil }
+const otpLimitMap = new Map<string, { attempts: number; lockUntil: number }>();
+
 /**
  * Unified Login without OTP for Prototype/Speed.
  * Supports Patient (phone), Admin (email), Doctor (email/phone/ID), and Attendant (attendant_id).
@@ -150,6 +153,16 @@ export async function logoutSession() {
 }
 
 export async function sendAdminOtp(email: string) {
+  // Rate Limit Check
+  const identifier = email.trim().toLowerCase();
+  const now = Date.now();
+  const limitRecord = otpLimitMap.get(identifier);
+  
+  if (limitRecord && limitRecord.lockUntil > now) {
+    const waitMinutes = Math.ceil((limitRecord.lockUntil - now) / 60000);
+    return { success: false, error: `Account temporarily locked. Try again in ${waitMinutes} minutes.` };
+  }
+
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   try {
     // 1. Purge expired OTPs
@@ -161,7 +174,7 @@ export async function sendAdminOtp(email: string) {
       VALUES ($1, $2, NOW() + INTERVAL '10 minutes')
       ON CONFLICT (email)
       DO UPDATE SET otp = EXCLUDED.otp, expires_at = EXCLUDED.expires_at, created_at = CURRENT_TIMESTAMP;
-    `, [email, otp]);
+    `, [identifier, otp]);
 
     // 4. Send email via Brevo API
     const apiKey = process.env.Brevo_api_key;
@@ -213,24 +226,48 @@ export async function sendAdminOtp(email: string) {
 
 export async function verifyAdminOtp(email: string, otp: string) {
   const cookieStore = await cookies();
+  
+  // Rate Limit Check
+  const identifier = email.trim().toLowerCase();
+  const now = Date.now();
+  const limitRecord = otpLimitMap.get(identifier);
+  
+  if (limitRecord && limitRecord.lockUntil > now) {
+    const waitMinutes = Math.ceil((limitRecord.lockUntil - now) / 60000);
+    return { success: false, error: `Too many failed attempts. Try again in ${waitMinutes} minutes.` };
+  }
+
   try {
     // 1. Purge expired OTPs
     await query("DELETE FROM otp_verifications WHERE expires_at < NOW();", []);
 
     // 2. Validate OTP (Case Insensitive Email)
-    const emailLower = email.trim().toLowerCase();
-    const res = await query("SELECT * FROM otp_verifications WHERE LOWER(email) = $1 AND otp = $2 AND expires_at >= NOW();", [emailLower, otp]);
+    const res = await query("SELECT * FROM otp_verifications WHERE LOWER(email) = $1 AND otp = $2 AND expires_at >= NOW();", [identifier, otp]);
     if (res.rows.length === 0) {
+      // Record failed attempt
+      const record = otpLimitMap.get(identifier) || { attempts: 0, lockUntil: 0 };
+      if (record.lockUntil < now) {
+        record.attempts += 1;
+      }
+      if (record.attempts >= 5) {
+        record.lockUntil = now + 15 * 60 * 1000; // 15 mins lock
+        record.attempts = 0;
+      }
+      otpLimitMap.set(identifier, record);
+      
       return { success: false, error: 'Invalid or expired OTP code' };
     }
 
+    // Success - reset limits
+    otpLimitMap.delete(identifier);
+
     // 3. Delete verified OTP record
-    await query("DELETE FROM otp_verifications WHERE LOWER(email) = $1;", [emailLower]);
+    await query("DELETE FROM otp_verifications WHERE LOWER(email) = $1;", [identifier]);
 
     // 4. Authenticate admin
     // Super Admin check
     const adminMails = (process.env.admin_mails || '').split(',').map(m => m.trim().toLowerCase());
-    if (emailLower === 'admin@doctivo.com' || adminMails.includes(emailLower)) {
+    if (identifier === 'admin@doctivo.com' || adminMails.includes(identifier)) {
       const superAdminData = {
         admin_id: 'SUPER-1',
         full_name: 'Super Administrator',

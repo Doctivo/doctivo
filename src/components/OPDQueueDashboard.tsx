@@ -298,7 +298,8 @@ export function OPDQueueDashboard({ mode, targetId }: OPDQueueDashboardProps) {
   const completed = appointments.filter(a => a.status === 'Completed').length;
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6 md:p-10 space-y-8">
+    <div className="min-h-screen bg-slate-50 p-6 md:p-10">
+      <div className="max-w-7xl mx-auto space-y-8">
       {/* Header */}
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
         <div className="space-y-1">
@@ -502,6 +503,7 @@ export function OPDQueueDashboard({ mode, targetId }: OPDQueueDashboardProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
 
       <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
         <DialogContent className="max-w-2xl rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl bg-white flex flex-col max-h-[90vh]">
@@ -835,6 +837,7 @@ export function OPDQueueDashboard({ mode, targetId }: OPDQueueDashboardProps) {
           )}
         </DialogContent>
       </Dialog>
+      </div>
     </div>
   );
 }

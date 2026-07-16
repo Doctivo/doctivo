@@ -22,8 +22,6 @@ export default function ProfilePage() {
   const user = useStore(state => state.user);
   const logout = useStore(state => state.logout);
   const isAuthenticated = useStore(state => state.isAuthenticated);
-  const homeCardImages = useStore(state => state.homeCardImages);
-  const setHomeCardImages = useStore(state => state.setHomeCardImages);
 
   const [isUploading, setIsUploading] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -64,18 +62,6 @@ export default function ProfilePage() {
     } catch (e) {
       console.error(e);
       setIsDeleting(false);
-    }
-  };
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, idx: number) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64 = reader.result as string;
-        setHomeCardImages({ ...homeCardImages, [idx]: base64 });
-      };
-      reader.readAsDataURL(file);
     }
   };
 
@@ -165,23 +151,6 @@ export default function ProfilePage() {
                 </div>
                 <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-primary transition-colors" />
               </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Temporary Admin Tool */}
-        <div className="bg-orange-50 border-2 border-orange-100 rounded-[1.5rem] p-6 shadow-sm">
-          <h3 className="text-xs font-black text-orange-600 uppercase tracking-[0.1em] mb-4">Admin Tool: Home Cards</h3>
-          <p className="text-[10px] text-orange-500 font-bold mb-4">Upload images to test on the home page (saved locally). You can then hardcode them later.</p>
-          <div className="space-y-4">
-            {['Book Appointment', 'My Appointment', 'Physiotherapist', 'Add Patient'].map((label, idx) => (
-              <div key={idx} className="space-y-1">
-                <Label className="text-xs font-bold text-orange-700">{label} Card Image</Label>
-                <div className="flex gap-2 items-center">
-                  <Input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, idx)} className="bg-white border-orange-200" />
-                  {homeCardImages[idx] && <div className="h-8 w-8 rounded overflow-hidden relative border border-orange-200"><Image src={homeCardImages[idx]} alt="" fill className="object-cover" /></div>}
-                </div>
-              </div>
             ))}
           </div>
         </div>

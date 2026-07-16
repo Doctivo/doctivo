@@ -99,6 +99,14 @@ export async function initializeDatabase() {
       );
     `);
 
+    // 4.5. App Settings Table
+    await query(`
+      CREATE TABLE IF NOT EXISTS app_settings (
+        key VARCHAR(50) PRIMARY KEY,
+        value JSONB
+      );
+    `);
+
     // 5. Appointments Table (With Vitals)
     await query(`
       CREATE TABLE IF NOT EXISTS appointments (

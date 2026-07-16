@@ -93,8 +93,8 @@ export default function OnboardingPage() {
 
   const handleComplete = async () => {
     // Strict Validation
-    if (!formData.name) {
-      toast({ variant: 'destructive', title: 'Missing Details', description: 'Please enter your full name.' });
+    if (!formData.name || !formData.age || !formData.gender) {
+      toast({ variant: 'destructive', title: 'Missing Details', description: 'Please enter your full name, age, and gender.' });
       return;
     }
 
@@ -134,17 +134,101 @@ export default function OnboardingPage() {
           <p className="text-[10px] font-black text-slate-500 mt-3 uppercase tracking-widest">Update Photo</p>
         </div>
 
-        <div className="space-y-6">
-          <div className="space-y-2">
-            <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">Full Name <span className="text-red-500">*</span></Label>
-            <Input 
-              placeholder="Enter Your Name" 
-              className="h-14 rounded-2xl bg-slate-50 border-border font-bold" 
-              value={formData.name || ''} 
-              onChange={e => setFormData({...formData, name: e.target.value})} 
-            />
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">Full Name <span className="text-red-500">*</span></Label>
+              <Input 
+                placeholder="Enter Your Name" 
+                className="h-14 rounded-2xl bg-slate-50 border-border font-bold" 
+                value={formData.name || ''} 
+                onChange={e => setFormData({...formData, name: e.target.value})} 
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">Age <span className="text-red-500">*</span></Label>
+                <Input 
+                  placeholder="e.g. 28" 
+                  className="h-14 rounded-2xl bg-slate-50 border-border font-bold" 
+                  value={formData.age || ''} 
+                  onChange={e => handleNumericInput('age', e.target.value)} 
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">Gender <span className="text-red-500">*</span></Label>
+                <Select value={formData.gender} onValueChange={(val: Gender) => setFormData({...formData, gender: val})}>
+                  <SelectTrigger className="h-14 rounded-2xl bg-slate-50 border-border font-bold">
+                    <SelectValue placeholder="Gender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Male">Male</SelectItem>
+                    <SelectItem value="Female">Female</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">Phone Number (Optional)</Label>
+              <div className="relative">
+                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                <Input 
+                  placeholder="Secondary Phone" 
+                  className="h-14 pl-12 rounded-2xl bg-slate-50 border-border font-bold" 
+                  value={formData.secondaryPhone || ''} 
+                  onChange={e => handleNumericInput('secondaryPhone', e.target.value)} 
+                  maxLength={10}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">State</Label>
+                <Select value={formData.state || ''} onValueChange={val => setFormData({...formData, state: val, city: ''})}>
+                  <SelectTrigger className="h-14 rounded-2xl bg-slate-50 border-border font-bold">
+                    <SelectValue placeholder="State" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">City</Label>
+                <Select value={formData.city || ''} onValueChange={val => setFormData({...formData, city: val})} disabled={!formData.state}>
+                  <SelectTrigger className="h-14 rounded-2xl bg-slate-50 border-border font-bold">
+                    <SelectValue placeholder="City" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(CITIES[formData.state as string] || []).map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">Medical History</Label>
+              <Textarea 
+                placeholder="Any previous illnesses, surgeries, or chronic conditions..." 
+                className="rounded-2xl bg-slate-50 border-border font-medium resize-none min-h-[100px]" 
+                value={formData.medicalHistory || ''} 
+                onChange={e => setFormData({...formData, medicalHistory: e.target.value})} 
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">Allergies</Label>
+              <Textarea 
+                placeholder="Any allergies to medicines or food..." 
+                className="rounded-2xl bg-slate-50 border-border font-medium resize-none min-h-[80px]" 
+                value={formData.allergies || ''} 
+                onChange={e => setFormData({...formData, allergies: e.target.value})} 
+              />
+            </div>
           </div>
-        </div>
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 p-6 bg-white/95 backdrop-blur-md border-t border-slate-200 z-50">
