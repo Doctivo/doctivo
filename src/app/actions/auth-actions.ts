@@ -271,14 +271,17 @@ export async function verifyAdminOtp(email: string, otp: string) {
       const superAdminData = {
         admin_id: 'SUPER-1',
         full_name: 'Super Administrator',
-        email: emailLower,
+        email: identifier,
         role: 'Super Admin',
         permissions: {
           dashboard: { view: true, view_financials: true },
           doctors: { view: true, approve: true, suspend: true },
           bookings: { view: true, modify: true },
-          payroll: { view: true, adjust: true, settle: true },
-          exporter: { allow_export: true }
+          billing: { view: true, edit: true, delete: true },
+          payroll: { view: true, edit: true },
+          settings: { view: true, edit: true },
+          users: { view: true, edit: true, suspend: true },
+          admins: { view: true, edit: true, delete: true }
         }
       };
       cookieStore.set('session_role', 'Admin', { path: '/', maxAge: 60 * 60 });
@@ -291,7 +294,7 @@ export async function verifyAdminOtp(email: string, otp: string) {
     }
 
     // Sub-Admin Database lookup
-    const adminRes = await query('SELECT * FROM admins WHERE LOWER(email) = $1', [emailLower]);
+    const adminRes = await query('SELECT * FROM admins WHERE LOWER(email) = $1', [identifier]);
     if (adminRes.rows.length > 0) {
       const adminData = adminRes.rows[0];
       cookieStore.set('session_role', 'Admin', { path: '/', maxAge: 60 * 60 });
@@ -304,7 +307,7 @@ export async function verifyAdminOtp(email: string, otp: string) {
     }
 
     // Doctor Database lookup
-    const docRes = await query('SELECT * FROM doctors WHERE LOWER(email) = $1', [emailLower]);
+    const docRes = await query('SELECT * FROM doctors WHERE LOWER(email) = $1', [identifier]);
     if (docRes.rows.length > 0) {
       const doctorData = docRes.rows[0];
       cookieStore.set('session_role', 'Doctor', { path: '/', maxAge: 30 * 24 * 60 * 60 });
