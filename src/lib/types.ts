@@ -65,8 +65,12 @@ export interface AdminPermissions {
   dashboard: { view: boolean; view_financials: boolean };
   doctors: { view: boolean; approve: boolean; suspend: boolean };
   bookings: { view: boolean; modify: boolean };
-  payroll: { view: boolean; adjust: boolean; settle: boolean };
-  exporter: { allow_export: boolean };
+  billing?: { view: boolean; edit: boolean; delete: boolean };
+  payroll?: { view: boolean; edit?: boolean; adjust?: boolean; settle?: boolean };
+  settings?: { view: boolean; edit: boolean };
+  users?: { view: boolean; edit: boolean; suspend: boolean };
+  admins?: { view: boolean; edit: boolean; delete: boolean };
+  exporter?: { allow_export: boolean };
 }
 
 export interface AdminProfile {

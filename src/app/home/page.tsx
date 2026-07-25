@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Image from 'next/image';
+import { getAppSetting } from '@/app/actions/admin-actions';
 
 function HomeContent() {
   const router = useRouter();
@@ -21,9 +22,23 @@ function HomeContent() {
   const user = useStore(state => state.user);
   const isAuthenticated = useStore(state => state.isAuthenticated);
   const hasHydrated = useStore(state => state._hasHydrated);
-  const homeCardImages = useStore(state => state.homeCardImages);
   
   const [isPhysioOpen, setIsPhysioOpen] = useState(false);
+  const [serverImages, setServerImages] = useState<any>(null);
+
+  useEffect(() => {
+    async function loadImages() {
+      try {
+        const res = await getAppSetting('homeCardImages');
+        if (res.success && res.value) {
+          setServerImages(res.value);
+        }
+      } catch (e) {
+        console.error('Failed to load card images', e);
+      }
+    }
+    loadImages();
+  }, []);
 
   useEffect(() => {
     if (!hasHydrated) return;
@@ -103,9 +118,9 @@ function HomeContent() {
                 action.bgColor
               )}>
                 <div className="mb-3 transition-transform group-hover:scale-110">
-                  {homeCardImages && homeCardImages[idx] ? (
+                  {serverImages && serverImages[`card${idx}`] ? (
                     <div className="h-14 w-14 md:h-16 md:w-16 rounded-2xl overflow-hidden relative border-2 border-white shadow-sm">
-                      <Image src={homeCardImages[idx]} alt={action.label} fill className="object-cover" />
+                      <Image src={serverImages[`card${idx}`]} alt={action.label} fill className="object-cover" />
                     </div>
                   ) : (
                     <action.icon className={cn("h-10 w-10 md:h-12 md:w-12", action.textColor)} strokeWidth={2.5} />

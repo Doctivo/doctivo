@@ -443,3 +443,28 @@ export async function deleteDoctor(doctorId: string) {
     return { success: false, error: error.message };
   }
 }
+
+export async function setAppSetting(key: string, value: any) {
+  try {
+    await query(`
+      INSERT INTO app_settings (key, value)
+      VALUES ($1, $2)
+      ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value
+    `, [key, JSON.stringify(value)]);
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function getAppSetting(key: string) {
+  try {
+    const res = await query('SELECT value FROM app_settings WHERE key = $1', [key]);
+    if (res.rows.length > 0) {
+      return { success: true, value: res.rows[0].value };
+    }
+    return { success: true, value: null };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}

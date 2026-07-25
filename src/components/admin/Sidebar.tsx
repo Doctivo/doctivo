@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { 
   LayoutDashboard, UserCheck, Calendar, 
-  Wallet, Download, LogOut, ShieldCheck 
+  Wallet, Download, LogOut, ShieldCheck, Settings 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useStore } from '@/lib/store';
@@ -16,6 +16,7 @@ const ALL_MENU_ITEMS = [
   { id: 'doctors', label: 'Doctor Catalog', icon: UserCheck, href: '/admin/doctors' },
   { id: 'bookings', label: 'Bookings Override', icon: Calendar, href: '/admin/bookings' },
   { id: 'payroll', label: 'Payroll Console', icon: Wallet, href: '/admin/payroll' },
+  { id: 'settings', label: 'Platform Settings', icon: Settings, href: '/admin/settings' },
   { id: 'admins', label: 'Sub-Admins', icon: ShieldCheck, href: '/admin/admins' },
   { id: 'exporter', label: 'Bulk Exporter', icon: Download, href: '/admin/exporter' },
 ];
@@ -55,6 +56,7 @@ export function AdminSidebar() {
       case 'doctors': return perms.doctors?.view;
       case 'bookings': return perms.bookings?.view;
       case 'payroll': return perms.payroll?.view;
+      case 'settings': return perms.settings?.view;
       case 'exporter': return perms.exporter?.allow_export;
       case 'admins': return false;
       default: return false;

@@ -1,9 +1,14 @@
 'use client';
 
-import { Activity, Clock, ShieldCheck, Database, Server } from 'lucide-react';
+import { Activity, Clock, ShieldCheck, Database, Server, Image as ImageIcon, Save, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useState, useEffect } from 'react';
+import { getAppSetting, setAppSetting } from '@/app/actions/admin-actions';
+import { useToast } from '@/hooks/use-toast';
 
 const MOCK_LOGS = [
   { action: "Admin approved Dr. Ramesh Mishra", user: "Admin Team", time: "10 mins ago", type: "Approval" },
@@ -13,13 +18,111 @@ const MOCK_LOGS = [
   { action: "New sub-admin added: Manager Rohit", user: "Super Admin", time: "1 day ago", type: "Access" },
 ];
 
-export default function AuditLogs() {
+export default function PlatformSettings() {
+  const { toast } = useToast();
+  const [images, setImages] = useState({
+    card0: '',
+    card1: '',
+    card2: '',
+    card3: ''
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  const loadSettings = async () => {
+    setIsLoading(true);
+    try {
+      const res = await getAppSetting('homeCardImages');
+      if (res.success && res.value) {
+        setImages(res.value);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    setIsLoading(false);
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      const res = await setAppSetting('homeCardImages', images);
+      if (res.success) {
+        toast({ title: 'Success', description: 'Home Page Cards updated successfully.' });
+      } else {
+        toast({ variant: 'destructive', title: 'Error', description: 'Failed to update cards.' });
+      }
+    } catch (e: any) {
+      toast({ variant: 'destructive', title: 'Error', description: e.message });
+    }
+    setIsSaving(false);
+  };
+
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-black text-slate-800 tracking-tight">Platform Audit Logs</h1>
-        <p className="text-slate-500 font-medium">Tracking system changes and administrative actions.</p>
+        <h1 className="text-3xl font-black text-slate-800 tracking-tight">Platform Settings</h1>
+        <p className="text-slate-500 font-medium">Manage system configurations and audit logs.</p>
       </div>
+
+      <Tabs defaultValue="ui" className="w-full">
+        <TabsList className="bg-slate-200 p-1 rounded-xl mb-8">
+          <TabsTrigger value="ui" className="rounded-lg font-bold data-[state=active]:bg-white data-[state=active]:text-blue-600 px-6">App UI Settings</TabsTrigger>
+          <TabsTrigger value="logs" className="rounded-lg font-bold data-[state=active]:bg-white data-[state=active]:text-blue-600 px-6">Audit Logs</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="ui" className="space-y-6">
+          <Card className="border-none shadow-sm rounded-[2rem] bg-white overflow-hidden max-w-4xl">
+            <CardHeader className="p-8 border-b border-slate-50">
+              <CardTitle className="text-xl font-bold text-slate-800 flex items-center">
+                <ImageIcon className="h-6 w-6 mr-3 text-blue-500" /> Home Page Feature Cards
+              </CardTitle>
+              <p className="text-sm text-slate-500 font-medium mt-2">
+                Paste direct image URLs (e.g. Cloudinary, Imgur links) for the 4 quick action cards shown on the user's home screen. Leave blank to show default icons.
+              </p>
+            </CardHeader>
+            <CardContent className="p-8 space-y-6">
+              {isLoading ? (
+                <div className="py-12 flex justify-center"><RefreshCw className="animate-spin h-8 w-8 text-blue-500" /></div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {[
+                    { key: 'card0', label: 'Card 1: Book Appointment' },
+                    { key: 'card1', label: 'Card 2: My Appointment' },
+                    { key: 'card2', label: 'Card 3: Physiotherapist' },
+                    { key: 'card3', label: 'Card 4: Add Patient' }
+                  ].map((card, idx) => (
+                    <div key={card.key} className="space-y-3 p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                      <label className="text-xs font-black uppercase tracking-widest text-slate-500">{card.label}</label>
+                      <Input
+                        placeholder="https://..."
+                        value={(images as any)[card.key] || ''}
+                        onChange={(e) => setImages({ ...images, [card.key]: e.target.value })}
+                        className="bg-white border-slate-200 h-12 rounded-xl font-medium"
+                      />
+                      {(images as any)[card.key] && (
+                        <div className="mt-2 h-24 w-24 rounded-2xl overflow-hidden border border-slate-200 bg-white relative">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={(images as any)[card.key]} alt={card.label} className="object-cover w-full h-full" />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="pt-4 flex justify-end">
+                <Button onClick={handleSave} disabled={isSaving || isLoading} className="h-12 px-8 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl">
+                  {isSaving ? <RefreshCw className="animate-spin h-5 w-5 mr-2" /> : <Save className="h-5 w-5 mr-2" />} Save Changes
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="logs">
 
       <div className="grid grid-cols-3 gap-8">
         <div className="col-span-2 space-y-4">
@@ -95,6 +198,8 @@ export default function AuditLogs() {
           </Card>
         </div>
       </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
