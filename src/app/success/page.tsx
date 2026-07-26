@@ -91,24 +91,31 @@ function SuccessContent() {
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
           await navigator.share({ title: 'Doctivo Booking Ticket', text: shareText, files: [file] }).catch(e => {
             console.error(e);
-            if (navigator.clipboard) navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
-            toast({ title: "Copied", description: "Link copied to clipboard." });
+            // Fallback: Download PDF
+            const url = URL.createObjectURL(pdfBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `Doctivo_Ticket_${appointment.tokenNumber}.pdf`;
+            link.click();
+            URL.revokeObjectURL(url);
+            toast({ title: "PDF Downloaded", description: "Browser blocked sharing. PDF downloaded instead." });
           });
           return;
         }
-        await navigator.share({ title: 'Doctivo Booking', text: shareText, url: shareUrl }).catch(e => {
-          console.error(e);
-          if (navigator.clipboard) navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
-          toast({ title: "Copied", description: "Link copied to clipboard." });
-        });
+        // Fallback if file sharing is not supported
+        const url = URL.createObjectURL(pdfBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Doctivo_Ticket_${appointment.tokenNumber}.pdf`;
+        link.click();
+        URL.revokeObjectURL(url);
+        toast({ title: "PDF Downloaded", description: "Sharing not supported. PDF downloaded instead." });
       } else {
-        if (navigator.clipboard) navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
-        toast({ title: "Link Copied", description: "Shareable link copied to clipboard." });
+        toast({ title: 'Error', description: 'Sharing not supported on this device.' });
       }
     } catch (err) {
       console.error('Share failed:', err);
-      if (navigator.clipboard) navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
-      toast({ title: "Copied", description: "Link copied to clipboard." });
+      toast({ title: "Error", description: "Failed to generate or share PDF." });
     }
   };
 

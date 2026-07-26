@@ -82,22 +82,23 @@ export default function AppointmentsPage() {
             files: [file]
           }).catch(e => {
             console.error('Share promise failed', e);
-            if (navigator.clipboard) navigator.clipboard.writeText(textToShare);
-            toast({ title: 'Copied', description: 'Details copied to clipboard' });
+            // Fallback: Download the PDF
+            const link = document.createElement('a');
+            link.href = dataUrl;
+            link.download = filename;
+            link.click();
+            toast({ title: 'PDF Downloaded', description: 'Browser blocked sharing. PDF has been downloaded instead.' });
           });
         } else {
-          await navigator.share({
-            title: 'Doctivo Appointment',
-            text: textToShare,
-          }).catch(e => {
-            console.error('Share promise failed', e);
-            if (navigator.clipboard) navigator.clipboard.writeText(textToShare);
-            toast({ title: 'Copied', description: 'Details copied to clipboard' });
-          });
+          // Fallback if file sharing not supported
+          const link = document.createElement('a');
+          link.href = dataUrl;
+          link.download = filename;
+          link.click();
+          toast({ title: 'PDF Downloaded', description: 'Direct sharing not supported. PDF downloaded instead.' });
         }
       } else {
-        if (navigator.clipboard) navigator.clipboard.writeText(textToShare);
-        toast({ title: 'Copied', description: 'Details copied to clipboard' });
+        toast({ title: 'Error', description: 'Sharing not supported on this device.' });
       }
     } catch (e) {
       console.error(e);
