@@ -133,6 +133,22 @@ export default function ProfilePage() {
         <div>
           <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-4 px-2">Settings</h3>
           <div className="flex flex-col gap-3">
+            {/* Dark Mode Toggle */}
+            <div className="w-full bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-600 dark:text-slate-300">
+                  <Moon className="h-5 w-5" />
+                </div>
+                <div className="ml-4 flex-1 text-left min-w-0">
+                  <p className="text-sm font-bold text-slate-800 dark:text-slate-200">Dark Mode</p>
+                </div>
+              </div>
+              <Switch 
+                checked={theme === 'dark'}
+                onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+              />
+            </div>
+
             {menuItems.map((item) => (
               <button 
                 key={item.label}
