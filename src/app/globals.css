@@ -25,6 +25,27 @@
     --ring: 221.2 83.2% 53.3%;
     --radius: 1rem;
   }
+  .dark {
+    --background: 222 47% 6%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 8%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 8%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+  }
 }
 
 @layer base {
@@ -32,13 +53,13 @@
     @apply border-border;
   }
   body {
-    @apply bg-slate-50 text-foreground antialiased;
+    @apply bg-slate-50 text-slate-900 dark:bg-[#020617] dark:text-slate-100 antialiased;
     font-family: 'Inter', sans-serif;
   }
 }
 
 .mobile-container {
-  @apply w-full max-w-[480px] md:max-w-none md:w-full mx-auto relative min-h-screen bg-white md:bg-slate-50 flex flex-col overflow-hidden;
+  @apply w-full max-w-[480px] md:max-w-[1024px] mx-auto relative min-h-screen bg-white md:bg-slate-50 dark:bg-slate-950 flex flex-col overflow-hidden;
 }
 
 .scroll-hide::-webkit-scrollbar {

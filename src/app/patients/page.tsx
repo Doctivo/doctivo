@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Pencil, Trash2, Plus, Loader2, Camera, Phone, User, Search, Heart } from 'lucide-react';
+import { Pencil, Edit3, Trash2, Plus, Loader2, Camera, Phone, User, Search, Heart } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';

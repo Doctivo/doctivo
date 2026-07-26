@@ -48,12 +48,12 @@ export function BottomNav() {
       </div>
 
       {/* Desktop Top Navbar */}
-      <div className="hidden md:flex sticky top-0 left-0 right-0 h-20 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 z-50 flex-row items-center justify-between pl-8 pr-12 shadow-sm">
+      <div className="hidden md:flex sticky top-0 left-0 right-0 h-16 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 z-50 flex-row items-center justify-between pl-8 pr-12 shadow-sm">
         <Link href="/home" className="flex items-center gap-3">
-          <div className="h-10 w-10 bg-primary text-white rounded-xl flex items-center justify-center font-black text-xl shadow-lg shadow-primary/30">
+          <div className="h-8 w-8 bg-primary text-white rounded-lg flex items-center justify-center font-black text-lg shadow-md shadow-primary/30">
             D
           </div>
-          <span className="font-black text-xl tracking-tight text-slate-800 dark:text-slate-100">DOCTIVO</span>
+          <span className="font-black text-lg tracking-tight text-slate-800 dark:text-slate-100">DOCTIVO</span>
         </Link>
         
         <div className="flex flex-row gap-6 items-center h-full">
@@ -73,15 +73,15 @@ export function BottomNav() {
             );
           })}
           
-          <div className="w-[1px] h-8 bg-slate-200 dark:bg-slate-700 mx-2"></div>
+          <div className="w-[1px] h-6 bg-slate-200 dark:bg-slate-700 mx-2"></div>
 
           {mounted && (
             <button
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="h-10 w-10 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all border border-slate-200 dark:border-slate-700"
+              className="h-9 w-9 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all border border-slate-200 dark:border-slate-700"
               aria-label="Toggle Dark Mode"
             >
-              {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              {theme === 'dark' ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
             </button>
           )}
         </div>

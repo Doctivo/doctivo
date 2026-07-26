@@ -75,7 +75,8 @@ export default function ProfilePage() {
   const menuItems = [
     { label: 'Edit Profile', icon: Edit3, color: 'bg-blue-50 text-blue-500', href: '/onboarding' },
     { label: 'Help & Support', icon: MessageCircleQuestion, color: 'bg-yellow-50 text-yellow-500', href: '/support' },
-    { label: 'About Founder', icon: Info, color: 'bg-purple-50 text-purple-500', href: '/about' },
+    { label: 'About DOCTIVO', icon: Info, color: 'bg-indigo-50 text-indigo-500', href: '/about' },
+    { label: 'About Founder', icon: Info, color: 'bg-purple-50 text-purple-500', href: '/about-founder' },
     { label: 'Terms of Service', icon: FileText, color: 'bg-slate-100 text-slate-500', href: '/terms' },
     { label: 'Privacy Policy', icon: ShieldCheck, color: 'bg-slate-100 text-slate-500', href: '/privacy-policy' },
     { label: 'Refund Policy', icon: RefreshCcw, color: 'bg-slate-100 text-slate-500', href: '/refund-policy' },
@@ -84,34 +85,34 @@ export default function ProfilePage() {
   return (
     <div className="mobile-container pb-24 bg-slate-50 dark:bg-slate-950 min-h-screen overflow-y-auto">
       {/* Profile Header */}
-      <div className="bg-white dark:bg-slate-900 p-8 pt-12 rounded-b-[3rem] shadow-sm flex flex-col items-center border-b border-border">
-        <div className="h-28 w-28 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4 relative ring-4 ring-slate-100 dark:ring-slate-800 overflow-hidden border border-border">
+      <div className="bg-white dark:bg-slate-900 p-4 pt-6 rounded-b-2xl shadow-sm flex flex-col items-center border-b border-slate-100 dark:border-slate-800">
+        <div className="h-20 w-20 bg-slate-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center mb-3 relative ring-2 ring-slate-100 dark:ring-slate-800 overflow-hidden border border-slate-200 dark:border-slate-700">
           {user?.imageUrl ? (
             <Image src={user.imageUrl} alt="P" fill className="object-cover" />
           ) : (
-            <UserCircle className="h-16 w-16 text-slate-300 dark:text-slate-600" />
+            <UserCircle className="h-10 w-10 text-slate-300 dark:text-slate-600" />
           )}
           <button 
             onClick={() => router.push('/onboarding')}
-            className="absolute bottom-1 right-1 bg-primary h-8 w-8 rounded-full border-4 border-white dark:border-slate-900 flex items-center justify-center shadow-lg"
+            className="absolute -bottom-1 -right-1 bg-white dark:bg-slate-800 h-8 w-8 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center shadow-sm"
           >
-            <Edit3 className="h-3 w-3 text-white" />
+            <Edit3 className="h-4 w-4 text-slate-500 dark:text-slate-400" />
           </button>
         </div>
         
-        <h2 className="text-xl font-black text-slate-900 dark:text-slate-100 tracking-tight">{user?.name || 'Full Name'}</h2>
-        <p className="text-slate-400 font-bold text-xs uppercase tracking-widest mt-1">+91 {user?.phone || '9807XXXXXX'}</p>
+        <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">{user?.name || 'Full Name'}</h2>
+        <p className="text-slate-500 dark:text-slate-400 font-medium text-xs mt-1">+91 {user?.phone || '9807XXXXXX'}</p>
         
-        <div className="mt-4 flex flex-wrap gap-2 justify-center">
-          <Badge className="bg-blue-50 text-blue-600 border-none px-3 py-1 font-black text-[9px] uppercase">
-            <MapPin className="h-2.5 w-2.5 mr-1" /> {user?.city || 'Gorakhpur'}, {user?.state || 'UP'}
+        <div className="mt-3 flex flex-wrap gap-2 justify-center">
+          <Badge className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-none px-2 py-0.5 font-bold text-[10px]">
+            <MapPin className="h-3 w-3 mr-1" /> {user?.city || 'Gorakhpur'}, {user?.state || 'UP'}
           </Badge>
-          <Badge className="bg-red-50 text-red-600 border-none px-3 py-1 font-black text-[9px] uppercase">
+          <Badge className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-none px-2 py-0.5 font-bold text-[10px]">
             {user?.blood_group || 'O+'}
           </Badge>
         </div>
 
-        <div className="w-full max-w-xs mt-6 bg-slate-50 dark:bg-slate-800 rounded-2xl p-4 border border-slate-100 dark:border-slate-700">
+        <div className="w-full max-w-xs mt-4 bg-slate-50 dark:bg-slate-800 rounded-xl p-3 border border-slate-100 dark:border-slate-700">
           <div className="flex justify-between items-center mb-2">
             <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Profile Completeness</span>
             <span className="text-xs font-black text-primary">{completionPercentage}%</span>
@@ -130,39 +131,23 @@ export default function ProfilePage() {
       <div className="p-6 space-y-6">
         {/* Settings Group */}
         <div>
-          <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 px-2">Settings</h3>
+          <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-4 px-2">Settings</h3>
           <div className="flex flex-col gap-3">
             {menuItems.map((item) => (
               <button 
                 key={item.label}
                 onClick={() => router.push(item.href)}
-                className="w-full bg-white dark:bg-slate-900 p-4 rounded-[1.5rem] shadow-sm border border-border flex items-center group active:scale-95 transition-all"
+                className="w-full bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 flex items-center group active:scale-95 transition-all hover:border-slate-300 dark:hover:border-slate-600"
               >
-                <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 border border-slate-100 dark:border-slate-800 ${item.color}`}>
+                <div className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-600 dark:text-slate-300">
                   <item.icon className="h-5 w-5" />
                 </div>
                 <div className="ml-4 flex-1 text-left min-w-0">
                   <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{item.label}</p>
                 </div>
-                <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-primary transition-colors" />
+                <ChevronRight className="h-4 w-4 text-slate-300 dark:text-slate-600 group-hover:text-primary transition-colors" />
               </button>
             ))}
-
-            {/* Dark Mode Toggle */}
-            <div className="w-full bg-white dark:bg-slate-900 p-4 rounded-[1.5rem] shadow-sm border border-border flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0 border border-slate-100 dark:border-slate-800 bg-slate-900 text-white">
-                  <Moon className="h-5 w-5" />
-                </div>
-                <div className="ml-4 flex-1 text-left min-w-0">
-                  <p className="text-sm font-bold text-slate-800 dark:text-slate-200">Dark Mode 🌙</p>
-                </div>
-              </div>
-              <Switch 
-                checked={theme === 'dark'} 
-                onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')} 
-              />
-            </div>
           </div>
         </div>
 
@@ -187,16 +172,14 @@ export default function ProfilePage() {
       </div>
 
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="max-w-[340px] rounded-[2rem] p-6 text-center border-border dark:bg-slate-900">
-          <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Trash2 className="h-8 w-8 text-red-600 dark:text-red-400" />
+        <DialogContent className="max-w-[340px] rounded-3xl p-6 text-center border-slate-200 dark:border-slate-800 dark:bg-slate-900 shadow-xl">
+          <div className="w-16 h-16 bg-red-50 dark:bg-red-900/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-red-100 dark:border-red-900/30">
+            <Trash2 className="h-8 w-8 text-red-500 dark:text-red-400" />
           </div>
           <DialogHeader>
-            <DialogTitle className="text-xl font-black text-slate-900 dark:text-slate-100 tracking-tight text-center">Delete Account?</DialogTitle>
-            <DialogDescription className="text-slate-500 dark:text-slate-400 font-medium text-[13px] pt-4 text-center leading-relaxed">
-              Deleting your account is permanent and cannot be undone. Once your account is deleted, you will lose access to your profile, and your personal information will be permanently removed or anonymized, except where retention is required by applicable law.
-              <br/><br/>
-              Your medical appointment history and related records may be retained for legal, regulatory, compliance, or audit purposes, as required by law.
+            <DialogTitle className="text-xl font-bold text-slate-900 dark:text-slate-100 text-center">Delete Account?</DialogTitle>
+            <DialogDescription className="text-slate-500 dark:text-slate-400 font-medium text-[13px] pt-2 text-center leading-relaxed">
+              Deleting your account is permanent and cannot be undone. Once your account is deleted, you will lose access to your profile, and your personal information will be permanently removed.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex-row gap-3 pt-6 sm:justify-center">

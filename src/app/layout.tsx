@@ -1,8 +1,11 @@
 import type {Metadata, Viewport} from 'next';
+import { Inter } from 'next/font/google';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { GlobalSidebar } from '@/components/GlobalSidebar';
 import { ThemeProvider } from '@/components/theme-provider';
+
+const inter = Inter({ subsets: ['latin'], display: 'swap' });
 
 export const metadata: Metadata = {
   title: 'DOCTIVO - Book Appointments',
@@ -32,9 +35,6 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
         {/* Anti-ChunkLoadError & Recovery Script */}
         <script
           dangerouslySetInnerHTML={{
@@ -104,7 +104,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="antialiased bg-slate-50 min-h-screen selection:bg-blue-100" suppressHydrationWarning>
+      <body className={`antialiased bg-slate-50 min-h-screen selection:bg-blue-100 ${inter.className}`} suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           <div className="main-wrapper w-full min-h-screen flex flex-col">
             <GlobalSidebar />
