@@ -14,7 +14,9 @@ export function GlobalSidebar() {
     '/onboarding/part-a', 
     '/onboarding/part-b', 
     '/success', 
-    '/verify'
+    '/verify',
+    '/privacy-policy',
+    '/terms'
   ];
   
   if (

@@ -41,18 +41,16 @@ export function BottomNav() {
         </div>
       </div>
 
-      {/* Desktop Left Sidebar */}
-      <div className="hidden md:flex fixed top-0 left-0 bottom-0 w-[250px] bg-white border-r border-slate-200 z-50 flex-col">
-        <div className="p-8 pb-4">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 bg-primary text-white rounded-xl flex items-center justify-center font-black text-xl shadow-lg shadow-primary/30">
-              D
-            </div>
-            <span className="font-black text-xl tracking-tight text-slate-800">DOCTIVO</span>
+      {/* Desktop Top Navbar */}
+      <div className="hidden md:flex sticky top-0 left-0 right-0 h-20 bg-white border-b border-slate-200 z-50 flex-row items-center justify-between px-8 shadow-sm">
+        <Link href="/home" className="flex items-center gap-3">
+          <div className="h-10 w-10 bg-primary text-white rounded-xl flex items-center justify-center font-black text-xl shadow-lg shadow-primary/30">
+            D
           </div>
-        </div>
+          <span className="font-black text-xl tracking-tight text-slate-800">DOCTIVO</span>
+        </Link>
         
-        <div className="flex flex-col gap-2 px-4 py-8 mt-4">
+        <div className="flex flex-row gap-2 items-center">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
             return (
@@ -60,7 +58,7 @@ export function BottomNav() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-4 px-4 py-4 rounded-2xl transition-all font-black text-sm uppercase tracking-widest",
+                  "flex items-center gap-2 px-5 py-2.5 rounded-2xl transition-all font-black text-sm uppercase tracking-widest",
                   isActive ? "bg-primary text-white shadow-lg shadow-primary/20" : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
                 )}
               >
@@ -70,8 +68,6 @@ export function BottomNav() {
             );
           })}
         </div>
-        
-
       </div>
     </>
   );
