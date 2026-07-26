@@ -114,19 +114,19 @@ function HomeContent() {
           {quickActions.map((action, idx) => {
             const Content = (
               <div className={cn(
-                "flex flex-col items-center justify-center p-6 md:p-8 rounded-[2.5rem] md:rounded-3xl shadow-sm hover:shadow-md active:scale-95 transition-all group border border-slate-100/50 cursor-pointer h-full min-h-[140px]",
+                "flex flex-col items-center justify-center p-4 md:p-6 rounded-[2rem] md:rounded-3xl shadow-sm hover:shadow-md active:scale-95 transition-all group border border-slate-100/50 cursor-pointer h-full min-h-[120px]",
                 action.bgColor
               )}>
                 <div className="mb-3 transition-transform group-hover:scale-110">
                   {serverImages && serverImages[`card${idx}`] ? (
-                    <div className="h-14 w-14 md:h-16 md:w-16 rounded-2xl overflow-hidden relative border-2 border-white shadow-sm">
-                      <Image src={serverImages[`card${idx}`]} alt={action.label} fill className="object-cover" />
+                    <div className="h-12 w-12 md:h-16 md:w-16 relative">
+                      <Image src={serverImages[`card${idx}`]} alt={action.label} fill className="object-contain drop-shadow-sm" />
                     </div>
                   ) : (
                     <action.icon className={cn("h-10 w-10 md:h-12 md:w-12", action.textColor)} strokeWidth={2.5} />
                   )}
                 </div>
-                <span className={cn("text-[10px] md:text-xs font-black uppercase tracking-widest text-center leading-tight px-2", action.textColor)}>
+                <span className={cn("text-[10px] md:text-[11px] font-black uppercase tracking-widest text-center leading-tight px-1", action.textColor)}>
                   {action.label}
                 </span>
               </div>

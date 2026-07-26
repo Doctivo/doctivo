@@ -2,6 +2,7 @@ import type {Metadata, Viewport} from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { GlobalSidebar } from '@/components/GlobalSidebar';
+import { ThemeProvider } from '@/components/theme-provider';
 
 export const metadata: Metadata = {
   title: 'DOCTIVO - Book Appointments',
@@ -104,13 +105,15 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased bg-slate-50 min-h-screen selection:bg-blue-100" suppressHydrationWarning>
-        <div className="main-wrapper w-full min-h-screen flex flex-col">
-          <GlobalSidebar />
-          <div className="flex-1">
-            {children}
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+          <div className="main-wrapper w-full min-h-screen flex flex-col">
+            <GlobalSidebar />
+            <div className="flex-1">
+              {children}
+            </div>
           </div>
-        </div>
-        <Toaster />
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );

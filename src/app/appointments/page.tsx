@@ -57,8 +57,10 @@ export default function AppointmentsPage() {
 
   const handleShare = async (app: any) => {
     try {
+      setIsDownloading(true);
+      const textToShare = `My appointment with ${app.doctorName} is confirmed for ${app.time}. Token: #${app.tokenNumber}`;
+      
       if (navigator.share) {
-        setIsDownloading(true);
         const dataUrl = await getPDFBase64(app);
         const filename = `Doctivo_Ticket_${String(app.id || '').slice(-6).toUpperCase()}.pdf`;
         
@@ -76,20 +78,30 @@ export default function AppointmentsPage() {
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
           await navigator.share({
             title: 'Doctivo Appointment',
-            text: `My appointment with ${app.doctorName} is confirmed for ${app.time}. Token: #${app.tokenNumber}`,
+            text: textToShare,
             files: [file]
+          }).catch(e => {
+            console.error('Share promise failed', e);
+            if (navigator.clipboard) navigator.clipboard.writeText(textToShare);
+            toast({ title: 'Copied', description: 'Details copied to clipboard' });
           });
         } else {
           await navigator.share({
             title: 'Doctivo Appointment',
-            text: `My appointment with ${app.doctorName} is confirmed for ${app.time}. Token: #${app.tokenNumber}`,
+            text: textToShare,
+          }).catch(e => {
+            console.error('Share promise failed', e);
+            if (navigator.clipboard) navigator.clipboard.writeText(textToShare);
+            toast({ title: 'Copied', description: 'Details copied to clipboard' });
           });
         }
       } else {
-        toast({ title: 'Not Supported', description: 'Sharing is not supported on this browser.' });
+        if (navigator.clipboard) navigator.clipboard.writeText(textToShare);
+        toast({ title: 'Copied', description: 'Details copied to clipboard' });
       }
     } catch (e) {
       console.error(e);
+      toast({ title: 'Error', description: 'Failed to share.' });
     } finally {
       setIsDownloading(false);
     }

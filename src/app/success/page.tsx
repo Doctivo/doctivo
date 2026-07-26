@@ -89,16 +89,26 @@ function SuccessContent() {
         const file = new File([pdfBlob], `Doctivo_Ticket_${appointment.tokenNumber}.pdf`, { type: 'application/pdf' });
         
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({ title: 'Doctivo Booking Ticket', text: shareText, files: [file] });
+          await navigator.share({ title: 'Doctivo Booking Ticket', text: shareText, files: [file] }).catch(e => {
+            console.error(e);
+            if (navigator.clipboard) navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+            toast({ title: "Copied", description: "Link copied to clipboard." });
+          });
           return;
         }
-        await navigator.share({ title: 'Doctivo Booking', text: shareText, url: shareUrl });
+        await navigator.share({ title: 'Doctivo Booking', text: shareText, url: shareUrl }).catch(e => {
+          console.error(e);
+          if (navigator.clipboard) navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+          toast({ title: "Copied", description: "Link copied to clipboard." });
+        });
       } else {
-        navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+        if (navigator.clipboard) navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
         toast({ title: "Link Copied", description: "Shareable link copied to clipboard." });
       }
     } catch (err) {
       console.error('Share failed:', err);
+      if (navigator.clipboard) navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+      toast({ title: "Copied", description: "Link copied to clipboard." });
     }
   };
 
