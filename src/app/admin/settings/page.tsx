@@ -1,6 +1,6 @@
 'use client';
 
-import { Activity, Clock, ShieldCheck, Database, Server, Image as ImageIcon, Save, RefreshCw } from 'lucide-react';
+import { Activity, Clock, ShieldCheck, Database, Server, Image as ImageIcon, Save, RefreshCw, Upload } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -61,6 +61,49 @@ export default function PlatformSettings() {
     setIsSaving(false);
   };
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, key: string) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Optional: add loading state per image if needed
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new window.Image();
+      img.onload = () => {
+        // Compress and resize image
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 400;
+        const MAX_HEIGHT = 400;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+        
+        // Convert to WebP for better compression (fallback to jpeg)
+        const dataUrl = canvas.toDataURL('image/webp', 0.8);
+        setImages(prev => ({ ...prev, [key]: dataUrl }));
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+
   return (
     <div className="space-y-8">
       <div>
@@ -95,14 +138,27 @@ export default function PlatformSettings() {
                     { key: 'card2', label: 'Card 3: Physiotherapist' },
                     { key: 'card3', label: 'Card 4: Add Patient' }
                   ].map((card, idx) => (
-                    <div key={card.key} className="space-y-3 p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                    <div key={card.key} className="space-y-3 p-6 bg-slate-50 rounded-3xl border border-slate-100 relative">
                       <label className="text-xs font-black uppercase tracking-widest text-slate-500">{card.label}</label>
-                      <Input
-                        placeholder="https://..."
-                        value={(images as any)[card.key] || ''}
-                        onChange={(e) => setImages({ ...images, [card.key]: e.target.value })}
-                        className="bg-white border-slate-200 h-12 rounded-xl font-medium"
-                      />
+                      <div className="flex space-x-2">
+                        <Input
+                          placeholder="https://... or Upload"
+                          value={(images as any)[card.key] || ''}
+                          onChange={(e) => setImages({ ...images, [card.key]: e.target.value })}
+                          className="bg-white border-slate-200 h-12 rounded-xl font-medium flex-1"
+                        />
+                        <div className="relative">
+                          <Button type="button" variant="outline" className="h-12 w-12 p-0 rounded-xl bg-white border-slate-200">
+                            <Upload className="h-5 w-5 text-slate-500" />
+                          </Button>
+                          <input 
+                            type="file" 
+                            accept="image/*"
+                            className="absolute inset-0 opacity-0 cursor-pointer"
+                            onChange={(e) => handleImageUpload(e, card.key)}
+                          />
+                        </div>
+                      </div>
                       {(images as any)[card.key] && (
                         <div className="mt-2 h-24 w-24 rounded-2xl overflow-hidden border border-slate-200 bg-white relative">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
