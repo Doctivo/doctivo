@@ -104,9 +104,11 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased bg-slate-50 min-h-screen selection:bg-blue-100" suppressHydrationWarning>
-        <GlobalSidebar />
-        <div className="main-wrapper w-full min-h-screen">
-          {children}
+        <div className="main-wrapper w-full min-h-screen flex flex-col">
+          <GlobalSidebar />
+          <div className="flex-1">
+            {children}
+          </div>
         </div>
         <Toaster />
       </body>
