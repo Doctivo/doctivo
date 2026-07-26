@@ -80,11 +80,11 @@ function HomeContent() {
   ];
 
   return (
-    <div className="mobile-container pb-24 md:pb-32 min-h-screen">
-      <div className="bg-white sticky top-0 z-20 border-b border-slate-100 px-6 py-4">
+    <div className="mobile-container pb-24 md:pb-32 min-h-screen dark:bg-slate-950">
+      <div className="bg-white dark:bg-slate-900 sticky top-0 z-20 border-b border-slate-100 dark:border-slate-800 px-6 py-4">
         <div className="flex items-center gap-4">
           <div 
-            className="h-10 w-10 md:h-12 md:w-12 rounded-xl bg-slate-50 flex items-center justify-center text-primary font-bold overflow-hidden relative shadow-sm border border-slate-100 cursor-pointer"
+            className="h-10 w-10 md:h-12 md:w-12 rounded-xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-primary font-bold overflow-hidden relative shadow-sm border border-slate-100 dark:border-slate-700 cursor-pointer"
             onClick={() => router.push('/profile')}
           >
             {user?.imageUrl ? <Image src={user.imageUrl} alt="User Profile" fill className="object-cover" /> : <span>{user?.name?.charAt(0) || 'U'}</span>}
@@ -93,18 +93,18 @@ function HomeContent() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input 
               placeholder="Search doctor, clinic..." 
-              className="pl-9 h-11 md:h-12 bg-slate-50 border-none rounded-xl font-medium cursor-pointer" 
+              className="pl-9 h-11 md:h-12 bg-slate-50 dark:bg-slate-800 border-none rounded-xl font-medium cursor-pointer dark:text-slate-100" 
               onClick={() => router.push('/doctors')}
               readOnly
             />
           </div>
           <button 
             onClick={() => router.push('/notifications')}
-            className="p-2.5 bg-slate-50 rounded-xl text-slate-500 relative border border-slate-100"
+            className="p-2.5 bg-slate-50 dark:bg-slate-800 rounded-xl text-slate-500 dark:text-slate-400 relative border border-slate-100 dark:border-slate-700"
             aria-label="Notifications"
           >
             <Bell className="h-5 w-5" aria-hidden="true" />
-            <span className="absolute top-2 right-2 h-2 w-2 bg-red-500 rounded-full border-2 border-white"></span>
+            <span className="absolute top-2 right-2 h-2 w-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
           </button>
         </div>
       </div>
@@ -114,8 +114,8 @@ function HomeContent() {
           {quickActions.map((action, idx) => {
             const Content = (
               <div className={cn(
-                "flex flex-col items-center justify-center p-4 md:p-6 rounded-[2rem] md:rounded-3xl shadow-sm hover:shadow-md active:scale-95 transition-all group border border-slate-100/50 cursor-pointer h-full min-h-[120px]",
-                action.bgColor
+                "flex flex-col items-center justify-center p-4 md:p-6 rounded-[2rem] md:rounded-3xl shadow-sm hover:shadow-md active:scale-95 transition-all group border border-slate-100/50 dark:border-slate-800/50 cursor-pointer h-full min-h-[120px]",
+                action.bgColor, "dark:bg-opacity-20"
               )}>
                 <div className="mb-3 transition-transform group-hover:scale-110">
                   {serverImages && serverImages[`card${idx}`] ? (
@@ -156,9 +156,9 @@ function HomeContent() {
 
       {/* Physio Choice Pop-up */}
       <Dialog open={isPhysioOpen} onOpenChange={setIsPhysioOpen}>
-        <DialogContent className="max-w-[90vw] sm:max-w-md rounded-[3rem] p-8 border-none shadow-2xl bg-white">
-          <DialogHeader className="text-center pb-6 border-b border-slate-50">
-            <DialogTitle className="text-2xl font-black text-slate-800">Physiotherapy Visit</DialogTitle>
+        <DialogContent className="max-w-[90vw] sm:max-w-md rounded-[3rem] p-8 border-none shadow-2xl bg-white dark:bg-slate-900">
+          <DialogHeader className="text-center pb-6 border-b border-slate-50 dark:border-slate-800">
+            <DialogTitle className="text-2xl font-black text-slate-800 dark:text-slate-100">Physiotherapy Visit</DialogTitle>
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Select Consultation Mode</p>
           </DialogHeader>
 
@@ -168,13 +168,13 @@ function HomeContent() {
                 setIsPhysioOpen(false);
                 router.push('/physio?mode=Clinic');
               }}
-              className="w-full p-6 rounded-[2rem] border-2 border-slate-100 hover:border-blue-600 bg-white flex items-center group transition-all"
+              className="w-full p-6 rounded-[2rem] border-2 border-slate-100 dark:border-slate-800 hover:border-blue-600 dark:hover:border-blue-500 bg-white dark:bg-slate-800 flex items-center group transition-all"
             >
-              <div className="h-14 w-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+              <div className="h-14 w-14 rounded-2xl bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
                 <Building2 className="h-7 w-7" />
               </div>
               <div className="ml-5 text-left">
-                <p className="text-lg font-black text-slate-800 leading-none">Visit Clinic</p>
+                <p className="text-lg font-black text-slate-800 dark:text-slate-200 leading-none">Visit Clinic</p>
                 <p className="text-[10px] text-slate-400 font-black mt-2 uppercase">Professional OPD Setup</p>
               </div>
             </button>
@@ -184,13 +184,13 @@ function HomeContent() {
                 setIsPhysioOpen(false);
                 router.push('/physio?mode=Home');
               }}
-              className="w-full p-6 rounded-[2rem] border-2 border-slate-100 hover:border-purple-600 bg-white flex items-center group transition-all"
+              className="w-full p-6 rounded-[2rem] border-2 border-slate-100 dark:border-slate-800 hover:border-purple-600 dark:hover:border-purple-500 bg-white dark:bg-slate-800 flex items-center group transition-all"
             >
-              <div className="h-14 w-14 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+              <div className="h-14 w-14 rounded-2xl bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
                 <Users className="h-7 w-7" />
               </div>
               <div className="ml-5 text-left">
-                <p className="text-lg font-black text-slate-800 leading-none">Home Visit</p>
+                <p className="text-lg font-black text-slate-800 dark:text-slate-200 leading-none">Home Visit</p>
                 <p className="text-[10px] text-slate-400 font-black mt-2 uppercase">Therapy at your doorstep</p>
               </div>
             </button>

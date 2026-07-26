@@ -202,17 +202,17 @@ export default function PatientsPage() {
   if (!hasHydrated) return <div className="flex justify-center items-center min-h-screen"><Loader2 className="animate-spin text-primary" /></div>;
 
   return (
-    <div className="mobile-container pb-24 bg-slate-50 min-h-screen">
-      <div className="bg-white sticky top-0 z-20 shadow-sm border-b border-border">
+    <div className="mobile-container pb-24 bg-slate-50 dark:bg-slate-950 min-h-screen">
+      <div className="bg-white dark:bg-slate-900 sticky top-0 z-20 shadow-sm border-b border-border dark:border-slate-800">
         <div className="p-4 flex items-center gap-3">
-          <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden relative border border-border shadow-sm shrink-0">
+          <div className="h-12 w-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden relative border border-border dark:border-slate-700 shadow-sm shrink-0">
             {user?.imageUrl ? <Image src={user.imageUrl} alt="Me" fill className="object-cover" /> : <span className="text-primary font-bold">{user?.name?.charAt(0) || 'U'}</span>}
           </div>
           <div className="flex-1 relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input 
               placeholder="Search profiles..." 
-              className="pl-11 h-12 bg-slate-50 border-border rounded-full font-medium focus-visible:ring-primary/20" 
+              className="pl-11 h-12 bg-slate-50 dark:bg-slate-800 border-border dark:border-slate-700 rounded-full font-medium focus-visible:ring-primary/20 dark:text-slate-100" 
               value={search || ''} 
               onChange={(e) => setSearch(e.target.value)} 
             />
@@ -221,59 +221,57 @@ export default function PatientsPage() {
             onClick={openAddModal}
             className="h-12 w-12 bg-primary text-white rounded-full flex items-center justify-center shadow-lg hover:bg-primary/90 transition-all shrink-0"
           >
-            <Plus className="h-6 w-6" />
+            <Plus className="h-6 w-6 stroke-[3px]" />
           </button>
         </div>
       </div>
 
-      <div className="bg-slate-50/50 px-6 py-3 border-b border-border flex justify-between items-center">
-        <h2 className="text-[10px] font-black text-slate-800 uppercase tracking-widest">Patient Profiles</h2>
+      <div className="bg-slate-50/50 dark:bg-slate-900/50 px-6 py-3 border-b border-border dark:border-slate-800 flex justify-between items-center">
+        <h2 className="text-[10px] font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest">Patient Profiles</h2>
         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{displayPatients.length} Active Accounts</span>
       </div>
 
-      <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 bg-slate-50">
+      <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 bg-slate-50 dark:bg-slate-950">
         {displayPatients.map((patient) => (
-          <div key={patient.id} className="bg-white rounded-[2rem] p-6 border border-border shadow-sm hover:shadow-lg transition-all relative">
+          <div key={patient.id} className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 border border-border dark:border-slate-800 shadow-sm hover:shadow-lg transition-all relative">
             <div className="flex items-center space-x-5">
-              <div className="h-16 w-16 rounded-full bg-slate-50 flex items-center justify-center overflow-hidden relative border border-border shrink-0">
+              <div className="h-16 w-16 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center overflow-hidden relative border border-border dark:border-slate-700 shrink-0">
                 {patient.imageUrl ? (
                   <Image src={patient.imageUrl} alt={patient.name} fill className="object-cover" />
                 ) : (
-                  <span className="text-xl font-black text-primary/30 uppercase">{patient.name.charAt(0)}</span>
+                  <span className="text-xl font-bold text-slate-400">{patient.name.charAt(0)}</span>
                 )}
               </div>
-              
-              <div className="flex-1 min-w-0">
-                <h3 className="font-black text-slate-900 text-lg leading-tight truncate">{patient.name}</h3>
-                <p className="text-[10px] font-black text-primary uppercase tracking-tight mt-1">
-                  {patient.relation === 'Self' ? 'Primary User' : patient.relation.toUpperCase()}
-                </p>
-                <div className="flex items-center text-[11px] text-slate-400 font-bold uppercase tracking-widest mt-1">
-                  <User className="h-3 w-3 mr-1.5" /> {patient.age} Years • {patient.gender}
+              <div className="flex-1 min-w-0 pr-4">
+                <h3 className="text-xl font-black text-slate-900 dark:text-slate-100 truncate tracking-tight">{patient.name}</h3>
+                <p className="text-[10px] font-black text-primary uppercase tracking-widest mt-1 mb-2">{patient.relation}</p>
+                <div className="flex items-center text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  <User className="h-3 w-3 mr-1" />
+                  <span className="truncate">{patient.age} Years • {patient.gender}</span>
                 </div>
               </div>
-
               <div className="flex flex-col items-end space-y-3 shrink-0">
-                <div className="flex items-center space-x-1 bg-blue-50 px-3 py-1 rounded-full border border-border shadow-sm">
+                <div className="flex items-center space-x-1 bg-blue-50 dark:bg-blue-900/20 px-3 py-1 rounded-full border border-border dark:border-slate-700 shadow-sm">
                   <Heart className="h-3 w-3 text-blue-500 fill-blue-500" />
-                  <span className="text-[10px] font-black text-blue-700">{patient.blood_group || '-'}</span>
+                  <span className="text-[10px] font-black text-blue-700 dark:text-blue-400 uppercase tracking-widest">
+                    {patient.blood_group || 'Unknown'}
+                  </span>
                 </div>
-                
-                <div className="flex items-center space-x-2">
+                <div className="flex space-x-2">
                   <Button 
                     variant="outline" 
-                    size="icon"
+                    size="icon" 
                     onClick={() => patient.relation === 'Self' ? router.push('/onboarding') : openEditModal(patient)}
-                    className="h-10 w-10 rounded-full bg-white hover:bg-slate-50 text-slate-400 border border-border p-0 shadow-sm"
+                    className="h-10 w-10 rounded-full bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-400 dark:text-slate-300 border border-border dark:border-slate-700 p-0 shadow-sm"
                   >
-                    <Pencil className="h-4 w-4" />
+                    <Edit3 className="h-4 w-4" />
                   </Button>
                   {patient.relation !== 'Self' && (
                     <Button 
                       variant="outline" 
                       size="icon"
                       onClick={() => handleDelete(patient.id)}
-                      className="h-10 w-10 rounded-full bg-white hover:bg-red-50 text-red-400 border border-border p-0 shadow-sm"
+                      className="h-10 w-10 rounded-full bg-white dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-400 dark:text-red-400 border border-border dark:border-slate-700 p-0 shadow-sm"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

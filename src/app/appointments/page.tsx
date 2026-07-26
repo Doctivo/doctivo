@@ -202,29 +202,29 @@ export default function AppointmentsPage() {
   if (!isAuthenticated) return null;
 
   return (
-    <div className="mobile-container pb-24 min-h-screen bg-slate-50">
-      <div className="bg-white sticky top-0 z-20 border-b border-slate-100 shadow-sm">
+    <div className="mobile-container pb-24 min-h-screen bg-slate-50 dark:bg-slate-950">
+      <div className="bg-white dark:bg-slate-900 sticky top-0 z-20 border-b border-slate-100 dark:border-slate-800 shadow-sm">
         <div className="flex justify-between items-center mb-6 px-6 pt-8 pb-4">
           <div className="flex items-center space-x-3">
-            <div className="h-9 w-9 rounded-xl overflow-hidden relative shadow-sm border border-slate-100 shrink-0 bg-white">
+            <div className="h-9 w-9 rounded-xl overflow-hidden relative shadow-sm border border-slate-100 dark:border-slate-800 shrink-0 bg-white dark:bg-slate-800">
               <Image src="/562c71b5-1be4-415a-94dc-002e1889eb7c-8.jpg" alt="Logo" fill className="object-contain p-1" />
             </div>
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">Bookings</h1>
+            <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Bookings</h1>
           </div>
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="p-2.5 bg-slate-100 rounded-full text-slate-500 border border-slate-300 flex items-center gap-2">
+              <button className="p-2.5 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-700 flex items-center gap-2">
                 <Filter className="h-5 w-5" />
                 {timeFilter !== 'All' && <span className="text-[10px] font-black text-primary uppercase">{timeFilter}</span>}
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2 shadow-2xl border-2 border-slate-100">
+            <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2 shadow-2xl border-2 border-slate-100 dark:border-slate-800 dark:bg-slate-900">
               {(['All', 'This Week', 'Last Month', 'Last 3 Months'] as TimeFilter[]).map((f) => (
                 <DropdownMenuItem 
                   key={f} 
                   onClick={() => setTimeFilter(f)}
-                  className="p-3 rounded-xl font-bold text-sm cursor-pointer flex justify-between items-center"
+                  className="p-3 rounded-xl font-bold text-sm cursor-pointer flex justify-between items-center dark:text-slate-200"
                 >
                   {f}
                   {timeFilter === f && <Check className="h-4 w-4 text-primary" />}
@@ -234,12 +234,12 @@ export default function AppointmentsPage() {
           </DropdownMenu>
         </div>
 
-        <div className="flex bg-slate-200/50 p-1.5 rounded-2xl border border-slate-100 max-w-sm mx-6 mb-6">
+        <div className="flex bg-slate-200/50 dark:bg-slate-800/50 p-1.5 rounded-2xl border border-slate-100 dark:border-slate-800 max-w-sm mx-6 mb-6">
           <button 
             onClick={() => setActiveTab('Upcoming')}
             className={cn(
               "flex-1 py-3 text-xs font-black rounded-xl transition-all",
-              activeTab === 'Upcoming' ? "bg-white text-primary shadow-md" : "text-slate-500"
+              activeTab === 'Upcoming' ? "bg-white dark:bg-slate-700 text-primary dark:text-blue-400 shadow-md" : "text-slate-500 dark:text-slate-400"
             )}
           >
             Active
@@ -248,7 +248,7 @@ export default function AppointmentsPage() {
             onClick={() => setActiveTab('Past')}
             className={cn(
               "flex-1 py-3 text-xs font-black rounded-xl transition-all",
-              activeTab === 'Past' ? "bg-white text-primary shadow-md" : "text-slate-500"
+              activeTab === 'Past' ? "bg-white dark:bg-slate-700 text-primary dark:text-blue-400 shadow-md" : "text-slate-500 dark:text-slate-400"
             )}
           >
             History
@@ -273,48 +273,48 @@ export default function AppointmentsPage() {
                   key={app.id} 
                   onClick={activeTab === 'Past' ? undefined : () => setSelectedApp(app)}
                   className={cn(
-                    "border-slate-100 shadow-lg rounded-[2.5rem] overflow-hidden bg-white border-2 transition-all",
+                    "border-slate-100 dark:border-slate-800 shadow-lg rounded-[2.5rem] overflow-hidden bg-white dark:bg-slate-900 border-2 transition-all",
                     activeTab !== 'Past' && "cursor-pointer hover:border-blue-500/50 active:scale-[0.98]",
                     isMissed && "opacity-75 border-slate-200 grayscale-[0.5]"
                   )}
                 >
                   <CardContent className="p-6 space-y-5">
                     <div className="flex justify-between items-center px-1">
-                      <p className="text-[11px] font-black text-slate-500 tracking-tight">ID: #APT-{app.id.slice(-6).toUpperCase()}</p>
+                      <p className="text-[11px] font-black text-slate-500 dark:text-slate-400 tracking-tight">ID: #APT-{app.id.slice(-6).toUpperCase()}</p>
                       <div className={cn(
                         "px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest",
-                        app.status === 'Confirmed' ? "bg-green-100 text-green-700" : 
-                        app.status === 'Cancelled' ? "bg-red-100 text-red-700" : 
-                        app.status === 'Missed' ? "bg-slate-100 text-slate-500" : "bg-orange-100 text-orange-700"
+                        app.status === 'Confirmed' ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : 
+                        app.status === 'Cancelled' ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" : 
+                        app.status === 'Missed' ? "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400" : "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
                       )}>
                         {app.status === 'Confirmed' ? 'BOOKED' : isMissed ? 'MISSED' : app.status.toUpperCase()}
                       </div>
                     </div>
 
                     <div className="flex items-center space-x-5">
-                      <div className="h-16 w-16 rounded-2xl bg-slate-50 flex items-center justify-center text-primary font-bold text-2xl border border-slate-100 shrink-0">
+                      <div className="h-16 w-16 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-primary dark:text-blue-400 font-bold text-2xl border border-slate-100 dark:border-slate-700 shrink-0">
                         <span>🏥</span>
                       </div>
                       <div>
-                        <h3 className="text-lg font-black text-slate-900 leading-tight">{app.doctorName}</h3>
-                        <p className="text-[11px] font-bold text-slate-500">Patient: {app.patientName}</p>
+                        <h3 className="text-lg font-black text-slate-900 dark:text-slate-100 leading-tight">{app.doctorName}</h3>
+                        <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400">Patient: {app.patientName}</p>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-center space-x-3 bg-slate-50 p-3 rounded-[1.5rem]">
+                    <div className="flex items-center justify-center space-x-3 bg-slate-50 dark:bg-slate-800 p-3 rounded-[1.5rem]">
                       <div className="flex items-center space-x-2">
                         <Calendar className="h-4 w-4 text-primary" />
-                        <span className="text-[12px] font-black text-slate-700">{formatDate(app.date)}</span>
+                        <span className="text-[12px] font-black text-slate-700 dark:text-slate-300">{formatDate(app.date)}</span>
                       </div>
-                      <span className="h-1.5 w-1.5 rounded-full bg-slate-300" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-slate-300 dark:bg-slate-600" />
                       <div className="flex items-center space-x-2">
                         <Clock className="h-4 w-4 text-primary" />
-                        <span className="text-[12px] font-black text-slate-700">{app.time}</span>
+                        <span className="text-[12px] font-black text-slate-700 dark:text-slate-300">{app.time}</span>
                       </div>
                     </div>
 
                     {activeTab === 'Upcoming' && app.status !== 'Cancelled' && (
-                      <div className="bg-slate-900 text-white rounded-[2rem] p-6 shadow-xl">
+                      <div className="bg-slate-900 dark:bg-slate-950 text-white rounded-[2rem] p-6 shadow-xl">
                         <div className="flex items-center divide-x divide-slate-800">
                           <div className="flex-1 text-center pr-4">
                             <p className="text-2xl font-black text-blue-400">{typeof pos === 'number' ? `#${pos}` : pos}</p>
@@ -336,11 +336,11 @@ export default function AppointmentsPage() {
 
             {currentList.length === 0 && (
               <div className="col-span-full flex flex-col items-center justify-center py-24 text-center space-y-6">
-                <div className="h-24 w-24 bg-slate-50 rounded-full flex items-center justify-center text-slate-300 border-2 border-slate-100 border-dashed">
+                <div className="h-24 w-24 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-300 dark:text-slate-700 border-2 border-slate-100 dark:border-slate-800 border-dashed">
                   <Calendar className="h-12 w-12" />
                 </div>
                 <div className="space-y-1">
-                  <p className="text-slate-900 font-black text-lg">No records found</p>
+                  <p className="text-slate-900 dark:text-slate-100 font-black text-lg">No records found</p>
                   <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest">Adjust filters or book a new session.</p>
                 </div>
               </div>
@@ -349,37 +349,37 @@ export default function AppointmentsPage() {
         )}
       </div>
 
-
       <Dialog open={!!selectedApp} onOpenChange={(open) => { if (!open) setSelectedApp(null); }}>
-        <DialogContent className="max-w-md rounded-[2.5rem] p-8 border-none shadow-2xl bg-white">
-          <DialogHeader className="text-center space-y-2 pb-4 border-b border-slate-100">
-            <DialogTitle className="text-2xl font-black text-slate-800">Booking Ticket</DialogTitle>
+        <DialogContent className="max-w-md rounded-[2.5rem] p-8 border-none shadow-2xl bg-white dark:bg-slate-900">
+          <DialogHeader className="text-center space-y-2 pb-4 border-b border-slate-100 dark:border-slate-800">
+            <DialogTitle className="text-2xl font-black text-slate-800 dark:text-slate-100">Booking Ticket</DialogTitle>
           </DialogHeader>
 
           {selectedApp && (
             <div className="py-6 space-y-6">
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-slate-50 p-4 rounded-2xl text-center border border-slate-100">
+                <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl text-center border border-slate-100 dark:border-slate-700">
                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">Your Token</p>
-                  <p className="text-3xl font-black text-blue-600">#{selectedApp.tokenNumber || 1}</p>
+                  <p className="text-3xl font-black text-blue-600 dark:text-blue-400">#{selectedApp.tokenNumber || 1}</p>
                 </div>
-                <div className="bg-slate-50 p-4 rounded-2xl text-center border border-slate-100">
+                <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl text-center border border-slate-100 dark:border-slate-700">
                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">Verification OTP</p>
-                  <p className="text-3xl font-black text-blue-600 tracking-wider">{selectedApp.visit_otp || '123456'}</p>
+                  <p className="text-3xl font-black text-blue-600 dark:text-blue-400 tracking-wider">{selectedApp.visit_otp || '123456'}</p>
                 </div>
               </div>
 
-              <div className="space-y-3 bg-slate-50 p-5 rounded-[1.8rem] text-xs">
-                <div className="flex justify-between items-center"><span className="font-bold text-slate-400">Doctor:</span><span className="font-black text-slate-800">{selectedApp.doctorName}</span></div>
-                <div className="flex justify-between items-center"><span className="font-bold text-slate-400">Patient:</span><span className="font-black text-slate-800">{selectedApp.patientName}</span></div>
-                <div className="flex justify-between items-center"><span className="font-bold text-slate-400">Slot:</span><span className="font-black text-slate-800">{selectedApp.time}</span></div>
-                <div className="flex justify-between items-center"><span className="font-bold text-slate-400">Fee:</span><span className="font-black text-slate-800">Rs. {selectedApp.consultation_fee_amount}</span></div>
+              <div className="space-y-3 bg-slate-50 dark:bg-slate-800 p-5 rounded-[1.8rem] text-xs">
+                <div className="flex justify-between items-center"><span className="font-bold text-slate-400">Doctor:</span><span className="font-black text-slate-800 dark:text-slate-100">{selectedApp.doctorName}</span></div>
+                <div className="flex justify-between items-center"><span className="font-bold text-slate-400">Patient:</span><span className="font-black text-slate-800 dark:text-slate-100">{selectedApp.patientName}</span></div>
+                <div className="flex justify-between items-center"><span className="font-bold text-slate-400">Date:</span><span className="font-black text-slate-800 dark:text-slate-100">{formatDate(selectedApp.date)}</span></div>
+                <div className="flex justify-between items-center"><span className="font-bold text-slate-400">Slot:</span><span className="font-black text-slate-800 dark:text-slate-100">{selectedApp.time}</span></div>
+                <div className="flex justify-between items-center"><span className="font-bold text-slate-400">Fee:</span><span className="font-black text-slate-800 dark:text-slate-100">Rs. {selectedApp.consultation_fee_amount}</span></div>
               </div>
 
               <div className="flex flex-col gap-3">
                 <div className="flex gap-3">
-                  <Button onClick={() => handleShare(selectedApp)} variant="outline" className="h-14 w-14 bg-slate-50 border-slate-200 rounded-2xl shrink-0">
-                    <Share2 className="h-5 w-5 text-slate-600" />
+                  <Button onClick={() => handleShare(selectedApp)} variant="outline" className="h-14 w-14 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-2xl shrink-0">
+                    <Share2 className="h-5 w-5 text-slate-600 dark:text-slate-300" />
                   </Button>
                   <Button onClick={() => handleDownloadPDF(selectedApp)} disabled={isDownloading} className="flex-1 h-14 bg-blue-600 font-black rounded-2xl gap-2">
                     {isDownloading ? <Loader2 className="animate-spin h-5 w-5" /> : <Download className="h-5 w-5" />}
@@ -387,7 +387,7 @@ export default function AppointmentsPage() {
                   </Button>
                 </div>
                 {activeTab === 'Upcoming' && selectedApp.status !== 'Cancelled' && selectedApp.status !== 'Completed' && (
-                  <Button variant="outline" onClick={() => handleCancel(selectedApp.id)} disabled={isCancelling} className="w-full h-14 bg-red-50 hover:bg-red-100 text-red-600 border-red-200 font-black rounded-2xl gap-2">
+                  <Button variant="outline" onClick={() => handleCancel(selectedApp.id)} disabled={isCancelling} className="w-full h-14 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/50 font-black rounded-2xl gap-2">
                     {isCancelling ? <Loader2 className="animate-spin h-5 w-5" /> : 'Cancel Booking'}
                   </Button>
                 )}

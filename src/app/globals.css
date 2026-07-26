@@ -38,7 +38,7 @@
 }
 
 .mobile-container {
-  @apply w-full max-w-[480px] md:max-w-none md:w-full mx-auto relative min-h-screen bg-white md:bg-slate-50 flex flex-col overflow-hidden md:pl-[250px];
+  @apply w-full max-w-[480px] md:max-w-none md:w-full mx-auto relative min-h-screen bg-white md:bg-slate-50 flex flex-col overflow-hidden;
 }
 
 .scroll-hide::-webkit-scrollbar {

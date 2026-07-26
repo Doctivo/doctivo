@@ -2,11 +2,17 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Users, Calendar, Settings, LayoutGrid } from 'lucide-react';
+import { Home, Users, Calendar, Settings, LayoutGrid, Moon, Sun } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTheme } from 'next-themes';
+import { useEffect, useState } from 'react';
 
 export function BottomNav() {
   const pathname = usePathname();
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   const navItems = [
     { label: 'Home', icon: LayoutGrid, href: '/home' },
@@ -42,15 +48,15 @@ export function BottomNav() {
       </div>
 
       {/* Desktop Top Navbar */}
-      <div className="hidden md:flex sticky top-0 left-0 right-0 h-20 bg-white border-b border-slate-200 z-50 flex-row items-center justify-between px-8 shadow-sm">
+      <div className="hidden md:flex sticky top-0 left-0 right-0 h-20 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 z-50 flex-row items-center justify-between pl-8 pr-12 shadow-sm">
         <Link href="/home" className="flex items-center gap-3">
           <div className="h-10 w-10 bg-primary text-white rounded-xl flex items-center justify-center font-black text-xl shadow-lg shadow-primary/30">
             D
           </div>
-          <span className="font-black text-xl tracking-tight text-slate-800">DOCTIVO</span>
+          <span className="font-black text-xl tracking-tight text-slate-800 dark:text-slate-100">DOCTIVO</span>
         </Link>
         
-        <div className="flex flex-row gap-2 items-center">
+        <div className="flex flex-row gap-6 items-center h-full">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
             return (
@@ -58,15 +64,26 @@ export function BottomNav() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-2 px-5 py-2.5 rounded-2xl transition-all font-black text-sm uppercase tracking-widest",
-                  isActive ? "bg-primary text-white shadow-lg shadow-primary/20" : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                  "flex items-center h-full px-2 transition-all font-black text-[13px] uppercase tracking-widest border-b-2",
+                  isActive ? "border-primary text-primary" : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
                 )}
               >
-                <item.icon className={cn("h-5 w-5", isActive && "stroke-[2.5px]")} />
                 <span>{item.label}</span>
               </Link>
             );
           })}
+          
+          <div className="w-[1px] h-8 bg-slate-200 dark:bg-slate-700 mx-2"></div>
+
+          {mounted && (
+            <button
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="h-10 w-10 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all border border-slate-200 dark:border-slate-700"
+              aria-label="Toggle Dark Mode"
+            >
+              {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </button>
+          )}
         </div>
       </div>
     </>
