@@ -1,84 +1,83 @@
-'use client';
-
-import { useRouter } from 'next/navigation';
-import { ArrowLeft, ShieldCheck } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ArrowLeft, Lock, UserCheck, Share2, Server } from 'lucide-react';
+import Link from 'next/link';
 
 export default function PrivacyPolicy() {
-  const router = useRouter();
-
   return (
     <div className="min-h-screen bg-slate-50 selection:bg-blue-100 pb-20">
       <div className="bg-white border-b border-slate-100 sticky top-0 z-20">
         <div className="max-w-4xl mx-auto px-6 h-16 flex items-center">
-          <Button variant="ghost" onClick={() => router.back()} className="pl-0 hover:bg-transparent hover:text-blue-600 font-bold text-slate-500">
-            <ArrowLeft className="h-5 w-5 mr-2" /> Back
-          </Button>
+          <Link href="/home" className="flex items-center text-slate-500 hover:text-blue-600 font-bold transition-colors">
+            <ArrowLeft className="h-5 w-5 mr-2" /> Back to Home
+          </Link>
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-6 pt-12 md:pt-20">
-        <div className="flex items-center space-x-4 mb-8">
-          <div className="h-12 w-12 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600 shrink-0">
-            <ShieldCheck className="h-6 w-6" />
+      <div className="max-w-3xl mx-auto px-6 pt-12">
+        <div className="mb-12">
+          <div className="h-16 w-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mb-6">
+            <Lock className="h-8 w-8" />
           </div>
-          <div>
-            <h1 className="text-3xl md:text-4xl font-black text-slate-800 tracking-tight">Privacy Policy</h1>
-            <p className="text-slate-500 font-medium mt-1">Last updated: July 2026</p>
-          </div>
+          <h1 className="text-4xl md:text-5xl font-black text-slate-800 tracking-tight mb-4">Privacy Policy</h1>
+          <p className="text-lg text-slate-500 font-medium">Last updated: July 2026</p>
         </div>
 
-        <div className="text-slate-600 text-lg leading-relaxed space-y-6">
-          <h3 className="text-xl font-black text-slate-800 pt-6">1. Overview & Information Collection</h3>
-          <p>
-            Doctivo operates the Doctivo mobile application and provides digital healthcare services, including appointment booking, health record management, and related features.
-          </p>
-          <p>
-            Your privacy is important to us. We collect and use your personal information only to provide, maintain, improve, and secure our services. By using the Doctivo app, you consent to the collection and use of your information in accordance with this Privacy Policy.
-          </p>
-          <p className="font-bold text-slate-800 mt-4">The information we may collect includes:</p>
-          <ul className="list-disc pl-6 space-y-3 marker:text-blue-500">
-            <li>Mobile number (for OTP verification and account security)</li>
-            <li>Basic profile information (such as your name and age, if provided)</li>
-            <li>Appointment details and selected healthcare provider information</li>
-            <li>Health records and medical documents that you voluntarily upload</li>
-            <li>Device and usage information necessary for security, analytics, and app performance</li>
-          </ul>
-          <p>
-            We collect only the information necessary to provide our services and comply with applicable laws. Your personal information is not sold to third parties.
+        <div className="space-y-8 text-slate-600 font-medium leading-relaxed">
+          
+          <section className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
+            <div className="flex items-center mb-4">
+              <UserCheck className="h-6 w-6 text-emerald-500 mr-3" />
+              <h2 className="text-2xl font-bold text-slate-800">1. Information We Collect</h2>
+            </div>
+            <p className="mb-4">
+              To provide you with seamless healthcare services, Doctivo collects essential information when you register and use our platform. This includes:
+            </p>
+            <ul className="space-y-2 list-disc list-inside ml-2">
+              <li><strong>Personal Data:</strong> Your name, phone number, email address, and date of birth.</li>
+              <li><strong>Medical Data:</strong> Symptoms, past medical history, and prescriptions (only shared securely with your selected doctors).</li>
+              <li><strong>Technical Data:</strong> Device type, IP address, and app usage analytics to improve our services.</li>
+            </ul>
+          </section>
+
+          <section className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
+            <div className="flex items-center mb-4">
+              <Server className="h-6 w-6 text-purple-500 mr-3" />
+              <h2 className="text-2xl font-bold text-slate-800">2. How We Use Your Data</h2>
+            </div>
+            <p>
+              Your privacy is our priority. We use your data strictly to:
+            </p>
+            <ul className="space-y-2 list-disc list-inside ml-2 mt-4">
+              <li>Facilitate appointment bookings and connect you with healthcare professionals.</li>
+              <li>Send critical notifications like booking confirmations, delays, or prescription updates.</li>
+              <li>Improve platform security and prevent fraudulent activities.</li>
+              <li>Provide personalized medical recommendations based on your profile (optional).</li>
+            </ul>
+          </section>
+
+          <section className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
+            <div className="flex items-center mb-4">
+              <Share2 className="h-6 w-6 text-blue-500 mr-3" />
+              <h2 className="text-2xl font-bold text-slate-800">3. Data Sharing & Security</h2>
+            </div>
+            <p className="mb-4">
+              <strong>We do not sell your personal or health data to third-party marketers.</strong>
+            </p>
+            <p>
+              Your data is only shared with the specific doctors or clinics you choose to book with. All data is encrypted both in transit and at rest using industry-standard security protocols to ensure it remains confidential and protected against unauthorized access.
+            </p>
+          </section>
+
+          <section className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
+            <h2 className="text-2xl font-bold text-slate-800 mb-4">4. Your Rights</h2>
+            <p>
+              You have the right to request access to the personal data we hold about you. You can also request the deletion of your account and associated data at any time from the app settings. Please note that certain basic records may be retained for legal and compliance purposes.
+            </p>
+          </section>
+
+          <p className="text-sm text-slate-400 text-center mt-12">
+            By using Doctivo, you consent to the data practices described in this Privacy Policy. For any privacy-related concerns, please contact our support team.
           </p>
 
-          <h3 className="text-xl font-black text-slate-800 pt-6">2. Mobile App Permissions</h3>
-          <p>
-            To provide a seamless healthcare experience, DOCTIVO requests certain device permissions. These permissions are used only for the purposes described below:
-          </p>
-          <ul className="list-disc pl-6 space-y-3 marker:text-blue-500">
-            <li><strong className="text-slate-800">Location (Approximate or Precise):</strong> Used to help you find nearby doctors, clinics, and hospitals based on your selected city or current location.</li>
-            <li><strong className="text-slate-800">Camera and Storage (Photos/Media/Files):</strong> Used to capture, upload, and manage documents such as prescriptions, medical records, and profile images.</li>
-            <li><strong className="text-slate-800">Notifications:</strong> Used to send important updates, including appointment confirmations, reminders, token queue updates, and changes to your booking status.</li>
-          </ul>
-          <p>
-            We request only the permissions necessary to provide these features. You can manage or revoke app permissions at any time through your device settings, although doing so may limit certain app functionalities.
-          </p>
-
-          <h3 className="text-xl font-black text-slate-800 pt-6">3. Data Security & Transmission</h3>
-          <p>
-            We take reasonable measures to protect your personal information. All data transmitted between the Doctivo app and our servers, including login tokens, location data, and uploaded prescriptions, is encrypted using secure HTTPS/TLS protocols.
-          </p>
-          <p>
-            Your medical records and uploaded documents are stored in secure cloud infrastructure with appropriate access controls. We do not sell or share your personal information with unauthorized third parties. Data may only be shared with healthcare providers or service providers as necessary to deliver the services, or when required by applicable law.
-          </p>
-
-          <h3 className="text-xl font-black text-slate-800 pt-6">4. Account & Data Deletion</h3>
-          <p>
-            Users may request the deletion of their account and associated personal data at any time through the app by navigating to Profile &gt; Settings &gt; Delete Account.
-          </p>
-          <p>
-            For security purposes, account deletion is confirmed using a one-time password (OTP). Once verified, your personal information, including your name, mobile number, email address (if provided), profile details, and uploaded documents, will be permanently deleted or anonymized within 30 days.
-          </p>
-          <p>
-            Please note that certain information, such as appointment records, transaction logs, and other data required for legal, regulatory, audit, fraud prevention, or accounting purposes, may be retained for the period required by applicable laws. After the applicable retention period expires, such data will be securely deleted or anonymized.
-          </p>
         </div>
       </div>
     </div>

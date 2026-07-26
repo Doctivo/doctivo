@@ -1,9 +1,10 @@
 import { MetadataRoute } from 'next'
+import { getDoctors } from '@/app/actions/doctor-actions'
  
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://doctivo.in'
   
-  return [
+  const staticRoutes: MetadataRoute.Sitemap = [
     {
       url: `${baseUrl}`,
       lastModified: new Date(),
@@ -71,4 +72,16 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.5,
     }
   ]
+
+  // Fetch all approved doctors
+  const doctors = await getDoctors();
+  
+  const doctorRoutes: MetadataRoute.Sitemap = doctors.map((doctor) => ({
+    url: `${baseUrl}/book/${doctor.id}`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly',
+    priority: 0.9,
+  }));
+
+  return [...staticRoutes, ...doctorRoutes];
 }
