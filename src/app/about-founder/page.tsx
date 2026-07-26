@@ -1,10 +1,27 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, Info, Heart, Award, Briefcase, Rocket } from 'lucide-react';
+import { ChevronLeft, Info, Heart, Award, Briefcase, Rocket, Image as ImageIcon } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { getAppSetting } from '@/app/actions/admin-actions';
 
 export default function AboutFounderPage() {
   const router = useRouter();
+  const [images, setImages] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchImages = async () => {
+      try {
+        const res = await getAppSetting('founderImages');
+        if (res.success && res.value) {
+          setImages(res.value);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    fetchImages();
+  }, []);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20 selection:bg-blue-100">
@@ -101,6 +118,26 @@ export default function AboutFounderPage() {
           </p>
         </div>
         
+        {/* Gallery */}
+        {images.length > 0 && (
+          <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 md:p-8 border border-slate-200/60 dark:border-slate-800 shadow-lg shadow-slate-200/20 dark:shadow-none relative overflow-hidden animate-slide-up">
+            <div className="absolute top-0 left-0 w-2 h-full bg-emerald-500"></div>
+            <div className="flex items-center gap-4 mb-6">
+              <div className="h-12 w-12 rounded-2xl bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                <ImageIcon className="h-6 w-6" />
+              </div>
+              <h3 className="text-lg md:text-xl font-black text-slate-800 dark:text-slate-100">Glimpses</h3>
+            </div>
+            <div className="flex overflow-x-auto gap-4 pb-4 snap-x scroll-hide">
+              {images.map((img, idx) => (
+                <div key={idx} className="shrink-0 w-64 md:w-80 aspect-video rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm snap-center group">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={img} alt={`Founder glimpse ${idx + 1}`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

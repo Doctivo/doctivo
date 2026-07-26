@@ -8,8 +8,37 @@ import { ThemeProvider } from '@/components/theme-provider';
 const inter = Inter({ subsets: ['latin'], display: 'swap' });
 
 export const metadata: Metadata = {
-  title: 'DOCTIVO - Book Appointments',
-  description: 'Book Doctor Appointments With Ease',
+  title: 'Doctivo | Book Best Doctors & Clinic Appointments Online',
+  description: 'Book Doctor Appointments With Ease in Gorakhpur and Deoria. Doctivo is your trusted healthcare platform to find and book appointments with the best doctors, physicians, and specialists near you.',
+  keywords: [
+    "doctivo", "appointment booking", "appointment booking in gorakhpur", "appointment booking in deoria", 
+    "appointment booking for gprakhpur", "appointment booking for gkp", "appointment booking in gkp",
+    "best doctor in gorakhpur", "online doctor consultation gorakhpur", "book clinic appointment gkp",
+    "healthcare platform deoria", "doctor appointment app up", "find physician gorakhpur",
+    "medical booking gkp", "top doctors in gorakhpur", "hospital appointment booking gorakhpur"
+  ].join(', '),
+  authors: [{ name: 'Gaurav Singh Shrinet' }, { name: 'Doctivo' }],
+  creator: 'Doctivo',
+  publisher: 'Doctivo',
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  openGraph: {
+    title: 'Doctivo | Book Best Doctors & Clinic Appointments Online',
+    description: 'Book Doctor Appointments With Ease in Gorakhpur and Deoria.',
+    url: 'https://doctivo.in',
+    siteName: 'Doctivo',
+    locale: 'en_IN',
+    type: 'website',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
@@ -32,9 +61,38 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'MedicalOrganization',
+    name: 'Doctivo',
+    alternateName: 'Doctivo Healthcare',
+    url: 'https://doctivo.in',
+    logo: 'https://doctivo.in/562c71b5-1be4-415a-94dc-002e1889eb7c-8.jpg',
+    founder: {
+      '@type': 'Person',
+      name: 'Gaurav Singh Shrinet'
+    },
+    contactPoint: {
+      '@type': 'ContactPoint',
+      contactType: 'customer support',
+      areaServed: ['Gorakhpur', 'Deoria', 'Uttar Pradesh'],
+      availableLanguage: ['English', 'Hindi']
+    },
+    address: {
+      '@type': 'PostalAddress',
+      addressLocality: 'Gorakhpur',
+      addressRegion: 'UP',
+      addressCountry: 'IN'
+    }
+  };
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         {/* Anti-ChunkLoadError & Recovery Script */}
         <script
           dangerouslySetInnerHTML={{

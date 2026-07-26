@@ -121,8 +121,8 @@ function HomeContent() {
               )}>
                 <div className="mb-3 transition-transform group-hover:scale-110">
                   {serverImages && serverImages[`card${idx}`] ? (
-                    <div className="h-12 w-12 md:h-16 md:w-16 relative">
-                      <Image src={serverImages[`card${idx}`]} alt={action.label} fill className="object-contain drop-shadow-sm" />
+                    <div className="h-14 w-14 md:h-16 md:w-16 relative overflow-hidden rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 bg-white">
+                      <Image src={serverImages[`card${idx}`]} alt={action.label} fill className="object-cover" />
                     </div>
                   ) : (
                     <action.icon className={cn("h-10 w-10 md:h-12 md:w-12", action.textColor)} strokeWidth={2.5} />

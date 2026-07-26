@@ -1,6 +1,6 @@
 'use client';
 
-import { Activity, Clock, ShieldCheck, Database, Server, Image as ImageIcon, Save, RefreshCw, Upload } from 'lucide-react';
+import { Activity, Clock, ShieldCheck, Database, Server, Image as ImageIcon, Save, RefreshCw, Upload, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -26,6 +26,7 @@ export default function PlatformSettings() {
     card2: '',
     card3: ''
   });
+  const [founderImages, setFounderImages] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -40,6 +41,10 @@ export default function PlatformSettings() {
       if (res.success && res.value) {
         setImages(res.value);
       }
+      const res2 = await getAppSetting('founderImages');
+      if (res2.success && res2.value) {
+        setFounderImages(res2.value || []);
+      }
     } catch (e) {
       console.error(e);
     }
@@ -50,10 +55,11 @@ export default function PlatformSettings() {
     setIsSaving(true);
     try {
       const res = await setAppSetting('homeCardImages', images);
-      if (res.success) {
-        toast({ title: 'Success', description: 'Home Page Cards updated successfully.' });
+      const res2 = await setAppSetting('founderImages', founderImages);
+      if (res.success && res2.success) {
+        toast({ title: 'Success', description: 'Settings updated successfully.' });
       } else {
-        toast({ variant: 'destructive', title: 'Error', description: 'Failed to update cards.' });
+        toast({ variant: 'destructive', title: 'Error', description: 'Failed to update settings.' });
       }
     } catch (e: any) {
       toast({ variant: 'destructive', title: 'Error', description: e.message });
@@ -104,6 +110,47 @@ export default function PlatformSettings() {
     reader.readAsDataURL(file);
   };
 
+  const handleFounderImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new window.Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX_WIDTH = 800;
+          const MAX_HEIGHT = 800;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          
+          const dataUrl = canvas.toDataURL('image/webp', 0.8);
+          setFounderImages(prev => [...prev, dataUrl]);
+        };
+        img.src = event.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
   return (
     <div className="space-y-8">
       <div>
@@ -114,6 +161,7 @@ export default function PlatformSettings() {
       <Tabs defaultValue="ui" className="w-full">
         <TabsList className="bg-slate-200 p-1 rounded-xl mb-8">
           <TabsTrigger value="ui" className="rounded-lg font-bold data-[state=active]:bg-white data-[state=active]:text-blue-600 px-6">App UI Settings</TabsTrigger>
+          <TabsTrigger value="founder" className="rounded-lg font-bold data-[state=active]:bg-white data-[state=active]:text-blue-600 px-6">Founder Page</TabsTrigger>
           <TabsTrigger value="logs" className="rounded-lg font-bold data-[state=active]:bg-white data-[state=active]:text-blue-600 px-6">Audit Logs</TabsTrigger>
         </TabsList>
 
@@ -167,6 +215,69 @@ export default function PlatformSettings() {
                       )}
                     </div>
                   ))}
+                </div>
+              )}
+              <div className="pt-4 flex justify-end">
+                <Button onClick={handleSave} disabled={isSaving || isLoading} className="h-12 px-8 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl">
+                  {isSaving ? <RefreshCw className="animate-spin h-5 w-5 mr-2" /> : <Save className="h-5 w-5 mr-2" />} Save Changes
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="founder" className="space-y-6">
+          <Card className="border-none shadow-sm rounded-[2rem] bg-white overflow-hidden max-w-4xl">
+            <CardHeader className="p-8 border-b border-slate-50">
+              <CardTitle className="text-xl font-bold text-slate-800 flex items-center">
+                <ImageIcon className="h-6 w-6 mr-3 text-purple-500" /> Founder Images Gallery
+              </CardTitle>
+              <p className="text-sm text-slate-500 font-medium mt-2">
+                Upload multiple images of the founder. These will be displayed as a gallery on the "About Founder" page.
+              </p>
+            </CardHeader>
+            <CardContent className="p-8 space-y-6">
+              {isLoading ? (
+                <div className="py-12 flex justify-center"><RefreshCw className="animate-spin h-8 w-8 text-blue-500" /></div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="flex items-center gap-4">
+                    <div className="relative inline-block">
+                      <Button type="button" className="h-12 px-6 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl flex items-center">
+                        <Upload className="h-5 w-5 mr-2" /> Upload Images
+                      </Button>
+                      <input 
+                        type="file" 
+                        accept="image/*"
+                        multiple
+                        className="absolute inset-0 opacity-0 cursor-pointer"
+                        onChange={handleFounderImageUpload}
+                      />
+                    </div>
+                    <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Select multiple files at once</p>
+                  </div>
+                  
+                  {founderImages.length > 0 && (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+                      {founderImages.map((img, idx) => (
+                        <div key={idx} className="relative group rounded-2xl overflow-hidden border border-slate-200 aspect-square">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={img} alt={`Founder ${idx}`} className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <Button 
+                              type="button" 
+                              variant="destructive" 
+                              size="icon"
+                              className="rounded-full h-10 w-10"
+                              onClick={() => setFounderImages(prev => prev.filter((_, i) => i !== idx))}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
               <div className="pt-4 flex justify-end">
