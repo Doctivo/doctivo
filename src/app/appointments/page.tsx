@@ -60,7 +60,16 @@ export default function AppointmentsPage() {
       setIsDownloading(true);
       const textToShare = `My appointment with ${app.doctorName} is confirmed for ${app.time}. Token: #${app.tokenNumber}`;
       
-      if (navigator.share) {
+      if (typeof window !== 'undefined' && (window as any).DoctivoAppChannel) {
+        const dataUrl = await getPDFBase64(app);
+        const base64Str = dataUrl.split(',')[1];
+        const filename = `Doctivo_Ticket_${String(app.id || '').slice(-6).toUpperCase()}.pdf`;
+        (window as any).DoctivoAppChannel.postMessage(JSON.stringify({
+          action: 'sharePDF',
+          base64: base64Str,
+          filename: filename
+        }));
+      } else if (navigator.share) {
         const dataUrl = await getPDFBase64(app);
         const filename = `Doctivo_Ticket_${String(app.id || '').slice(-6).toUpperCase()}.pdf`;
         
