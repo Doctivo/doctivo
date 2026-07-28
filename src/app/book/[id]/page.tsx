@@ -278,7 +278,7 @@ function BookingContent({ id }: { id: string }) {
           <CardContent className="p-8 space-y-6">
             <div className="flex space-x-6">
               <div className="h-24 w-24 rounded-3xl bg-slate-50 flex items-center justify-center overflow-hidden relative border-2 border-slate-100">
-                {doc.imageUrl ? <Image src={doc.imageUrl} alt={doc.name} fill className="object-cover" /> : <span className="text-4xl">🏥</span>}
+                {doc.imageUrl ? <Image priority src={doc.imageUrl} alt={doc.name} fill className="object-cover" /> : <span className="text-4xl">🏥</span>}
               </div>
               <div className="flex-1 space-y-1">
                 <h2 className="font-black text-slate-900 text-xl uppercase tracking-tight">{doc.name}</h2>

@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { getDoctors } from '@/app/actions/doctor-actions';
 import { Doctor } from '@/lib/types';
@@ -23,8 +24,7 @@ function PhysioContent() {
   
   const [loading, setLoading] = useState(true);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
-  const [locationLoading, setLocationLoading] = useState(false);
-  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [manualAddress, setManualAddress] = useState('');
 
   useEffect(() => {
     async function load() {
@@ -38,49 +38,37 @@ function PhysioContent() {
     load();
   }, [mode]);
 
-  const handleLocate = () => {
-    if (!navigator.geolocation) {
-      toast({ variant: 'destructive', title: 'Not Supported', description: 'Geolocation is not supported.' });
-      return;
-    }
-    setLocationLoading(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        setLocationLoading(false);
-        toast({ title: 'Location Locked', description: 'Showing closest therapists.' });
-      },
-      () => {
-        setLocationLoading(false);
-        toast({ variant: 'destructive', title: 'Denied', description: 'Enable GPS for better results.' });
-      }
-    );
-  };
+
 
   return (
-    <div className="max-w-[480px] mx-auto pb-24 bg-white min-h-screen">
-      <div className="bg-white sticky top-0 z-20 border-b border-slate-100 p-6 pt-10">
+    <div className="max-w-[480px] mx-auto pb-24 bg-white dark:bg-slate-950 min-h-screen">
+      <div className="bg-white dark:bg-slate-900 sticky top-0 z-20 border-b border-slate-100 dark:border-slate-800 p-6 pt-10">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => router.push('/home')} className="h-10 w-10 rounded-full">
-            <ArrowLeft className="h-6 w-6" />
+          <Button variant="ghost" size="icon" onClick={() => router.push('/home')} className="h-10 w-10 rounded-full dark:hover:bg-slate-800">
+            <ArrowLeft className="h-6 w-6 dark:text-slate-200" />
           </Button>
           <div>
-            <h1 className="text-xl font-black text-slate-800">Physiotherapy</h1>
+            <h1 className="text-xl font-black text-slate-800 dark:text-slate-100">Physiotherapy</h1>
             <p className="text-[10px] font-black text-primary uppercase tracking-widest">{mode} Visit Mode</p>
           </div>
         </div>
       </div>
 
       <div className="p-6 space-y-6">
-        <div className="bg-blue-50 p-6 rounded-[2rem] border border-blue-100 space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xs font-black text-blue-700 uppercase tracking-widest">Find Nearby</h3>
-            <Button onClick={handleLocate} disabled={locationLoading} variant="ghost" size="sm" className="h-8 text-[10px] font-black uppercase text-blue-600">
-              {locationLoading ? <Loader2 className="animate-spin h-3 w-3 mr-1" /> : <MapPin className="h-3 w-3 mr-1" />}
-              {coords ? 'Refresh GPS' : 'Use GPS'}
-            </Button>
+        <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-[2rem] border border-blue-100 dark:border-blue-800/30 space-y-4">
+          <div className="space-y-3">
+            <h3 className="text-xs font-black text-blue-700 dark:text-blue-400 uppercase tracking-widest">Your Location</h3>
+            <div className="relative">
+              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-blue-400 dark:text-blue-500" />
+              <Input 
+                placeholder="Enter your address manually..." 
+                className="pl-9 h-11 bg-white dark:bg-slate-900 border-blue-200 dark:border-slate-800 rounded-xl font-medium text-slate-800 dark:text-slate-100 focus-visible:ring-blue-600/20"
+                value={manualAddress}
+                onChange={(e) => setManualAddress(e.target.value)}
+              />
+            </div>
           </div>
-          <p className="text-[11px] text-blue-600 font-medium leading-relaxed">
+          <p className="text-[11px] text-blue-600 dark:text-blue-400 font-medium leading-relaxed">
             {mode === 'Home' 
               ? "Showing specialized therapists who provide therapy at your doorstep." 
               : "Showing professional clinics in Gorakhpur with modern OPD setups."}
@@ -97,13 +85,13 @@ function PhysioContent() {
             <Card 
               key={doc.id} 
               onClick={() => router.push(`/book/${doc.id}?mode=${mode}`)}
-              className="border-border shadow-sm rounded-[2rem] overflow-hidden bg-white border-2 cursor-pointer hover:border-primary/50 active:scale-[0.98] transition-all"
+              className="border-border dark:border-slate-800 shadow-sm rounded-[2rem] overflow-hidden bg-white dark:bg-slate-900 border-2 cursor-pointer hover:border-primary/50 dark:hover:border-primary/50 active:scale-[0.98] transition-all"
             >
               <CardContent className="p-6">
                 <div className="flex justify-between items-start">
                   <div className="flex space-x-4">
                     <div className="h-20 w-20 rounded-2xl bg-slate-50 flex items-center justify-center overflow-hidden relative border border-border">
-                      {doc.imageUrl ? <Image src={doc.imageUrl} alt={doc.name} fill className="object-cover" /> : <span className="text-3xl">💆</span>}
+                      {doc.imageUrl ? <Image priority src={doc.imageUrl} alt={doc.name} fill className="object-cover" /> : <span className="text-3xl">💆</span>}
                     </div>
                     <div className="space-y-0.5">
                       <h3 className="font-black text-slate-900 text-[14px] uppercase tracking-tight">{doc.name}</h3>

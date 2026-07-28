@@ -116,7 +116,7 @@ export default function PublicPrescriptionPage({ params }: { params: Promise<{ i
 
         <div className="absolute top-6 left-12 z-10">
           <div className="h-24 w-24 rounded-3xl overflow-hidden shadow-2xl border-4 border-white/30">
-            <Image src="/562c71b5-1be4-415a-94dc-002e1889eb7c-8.jpg" alt="Logo" width={96} height={96} className="object-contain p-2" />
+            <Image priority src="/562c71b5-1be4-415a-94dc-002e1889eb7c-8.jpg" alt="Logo" width={96} height={96} className="object-contain p-2" />
           </div>
         </div>
 

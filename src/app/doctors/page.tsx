@@ -41,6 +41,45 @@ function DoctorsContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [placeholderText, setPlaceholderText] = useState("");
+
+  const searchPhrases = ["Search doctor, clinic or symptoms...", "Find top physicians...", "Search 'Fever'", "Search 'Dentist'"];
+
+  useEffect(() => {
+    let currentPhraseIndex = 0;
+    let currentCharIndex = 0;
+    let isDeleting = false;
+    let typingSpeed = 100;
+    let timeout: NodeJS.Timeout;
+
+    const type = () => {
+      const currentPhrase = searchPhrases[currentPhraseIndex];
+      
+      if (isDeleting) {
+        setPlaceholderText(currentPhrase.substring(0, currentCharIndex - 1));
+        currentCharIndex--;
+        typingSpeed = 50;
+      } else {
+        setPlaceholderText(currentPhrase.substring(0, currentCharIndex + 1));
+        currentCharIndex++;
+        typingSpeed = 100;
+      }
+
+      if (!isDeleting && currentCharIndex === currentPhrase.length) {
+        typingSpeed = 2000;
+        isDeleting = true;
+      } else if (isDeleting && currentCharIndex === 0) {
+        isDeleting = false;
+        currentPhraseIndex = (currentPhraseIndex + 1) % searchPhrases.length;
+        typingSpeed = 500;
+      }
+
+      timeout = setTimeout(type, typingSpeed);
+    };
+
+    timeout = setTimeout(type, typingSpeed);
+    return () => clearTimeout(timeout);
+  }, []);
 
   useEffect(() => {
     const saved = localStorage.getItem('doctivo_recent_searches');
@@ -133,7 +172,7 @@ function DoctorsContent() {
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input 
-              placeholder="Search doctor, clinic or symptoms..." 
+              placeholder={placeholderText || "Search..."} 
               className="pl-9 pr-10 h-11 bg-slate-50 border-border rounded-xl font-medium focus-visible:ring-primary/20" 
               value={search} 
               onFocus={() => setShowSearchDropdown(true)}
@@ -181,7 +220,7 @@ function DoctorsContent() {
                     {processedDoctors.items.slice(0, 4).map(doc => (
                       <button key={doc.id} onMouseDown={() => router.push(`/book/${doc.id}?mode=${isHomeVisit ? 'Home' : 'Clinic'}${patientId ? `&patientId=${patientId}` : ''}`)} className="w-full text-left p-2 rounded-xl hover:bg-slate-50 flex items-center space-x-3 group">
                         <div className="h-10 w-10 rounded-full bg-slate-100 overflow-hidden relative border border-slate-200 flex-shrink-0">
-                          {doc.imageUrl ? <Image src={doc.imageUrl} alt={doc.name} fill className="object-cover" /> : <UserCircle className="h-6 w-6 m-auto mt-2 text-slate-300" />}
+                          {doc.imageUrl ? <Image priority src={doc.imageUrl} alt={doc.name} fill className="object-cover" /> : <UserCircle className="h-6 w-6 m-auto mt-2 text-slate-300" />}
                         </div>
                         <div>
                           <p className="font-bold text-slate-800 text-sm group-hover:text-primary transition-colors">{doc.name}</p>
@@ -236,7 +275,7 @@ function DoctorsContent() {
                     <div className="absolute -right-10 -top-10 w-32 h-32 bg-primary/20 blur-3xl rounded-full"></div>
                     <div>
                       <div className="h-16 w-16 rounded-2xl bg-slate-800 flex items-center justify-center overflow-hidden mb-4 border border-white/10">
-                        {doc.imageUrl ? <Image src={doc.imageUrl} alt={doc.name} fill className="object-cover" /> : <span className="text-2xl">👨‍⚕️</span>}
+                        {doc.imageUrl ? <Image priority src={doc.imageUrl} alt={doc.name} fill className="object-cover" /> : <span className="text-2xl">👨‍⚕️</span>}
                       </div>
                       <h3 className="font-black text-white text-[16px] uppercase tracking-tight">{doc.name}</h3>
                       <p className="text-[11px] font-bold text-primary leading-tight uppercase mt-1">{doc.specialty}</p>
@@ -276,7 +315,7 @@ function DoctorsContent() {
                 <div className="flex justify-between items-start mt-2">
                   <div className="flex space-x-4">
                     <div className="h-20 w-20 rounded-2xl bg-slate-50 flex items-center justify-center overflow-hidden relative border border-border">
-                      {doc.imageUrl ? <Image src={doc.imageUrl} alt={doc.name} fill className="object-cover" /> : <span className="text-3xl">🏥</span>}
+                      {doc.imageUrl ? <Image priority src={doc.imageUrl} alt={doc.name} fill className="object-cover" /> : <span className="text-3xl">🏥</span>}
                     </div>
                     <div className="space-y-0.5 pt-1">
                       <div className="flex items-center flex-wrap gap-1.5">

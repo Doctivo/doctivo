@@ -12,6 +12,7 @@ interface AppState {
   appointments: Appointment[];
   homeCardImages: Record<string, string>;
   downloadedTickets: string[];
+  language: 'en' | 'hi' | null;
   isAuthenticated: boolean;
   _hasHydrated: boolean;
   
@@ -22,6 +23,7 @@ interface AppState {
   setAppointments: (appointments: Appointment[]) => void;
   setHomeCardImages: (images: Record<string, string>) => void;
   setDownloadedTickets: (tickets: string[]) => void;
+  setLanguage: (lang: 'en' | 'hi') => void;
   setHasHydrated: (val: boolean) => void;
   addPatient: (patient: Patient) => void;
   updatePatient: (id: string, patient: Partial<Patient>) => void;
@@ -40,6 +42,7 @@ export const useStore = create<AppState>()(
       appointments: [],
       homeCardImages: {},
       downloadedTickets: [],
+      language: null,
       isAuthenticated: false,
       _hasHydrated: false,
 
@@ -50,6 +53,7 @@ export const useStore = create<AppState>()(
       setAppointments: (appointments) => set({ appointments }),
       setHomeCardImages: (homeCardImages) => set({ homeCardImages }),
       setDownloadedTickets: (downloadedTickets) => set({ downloadedTickets }),
+      setLanguage: (lang) => set({ language: lang }),
       setHasHydrated: (val) => set({ _hasHydrated: val }),
       addPatient: (patient) => set((state) => ({ 
         patients: [...state.patients.filter(p => p.id !== patient.id), patient] 
@@ -78,7 +82,8 @@ export const useStore = create<AppState>()(
         admin: state.admin,
         patients: state.patients,
         homeCardImages: state.homeCardImages,
-        downloadedTickets: state.downloadedTickets || []
+        downloadedTickets: state.downloadedTickets || [],
+        language: state.language
       }),
     }
   )

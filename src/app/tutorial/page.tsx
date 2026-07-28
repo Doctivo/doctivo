@@ -60,12 +60,11 @@ export default function TutorialPage() {
           "h-48 w-48 rounded-[2.5rem] flex items-center justify-center text-white shadow-2xl transition-all duration-500 transform relative overflow-hidden",
           TUTORIAL_STEPS[currentStep].color
         )}>
-          <Image 
+          <Image priority 
             src="/562c71b5-1be4-415a-94dc-002e1889eb7c-8.jpg" 
             alt="Doctivo Logo" 
             fill 
             className="object-cover"
-            priority
           />
         </div>
 

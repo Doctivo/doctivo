@@ -27,13 +27,18 @@ export default function LandingPage() {
     }
   }, [isAuthenticated, hasHydrated, router]);
 
-  // Prevent hydration mismatch by showing a skeleton/loading state until mounted
-  if (!isMounted || !hasHydrated) {
+  // Prevent hydration mismatch or flash of landing page if authenticated
+  if (!isMounted || !hasHydrated || isAuthenticated) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
-          <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Loading Doctivo...</p>
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center">
+        <div className="flex flex-col items-center gap-6 animate-pulse">
+          <div className="h-24 w-24 bg-blue-600 rounded-3xl flex items-center justify-center shadow-xl shadow-blue-600/20">
+            <span className="text-white font-black text-5xl">D</span>
+          </div>
+          <div className="flex flex-col items-center">
+            <h1 className="text-2xl font-black tracking-tight text-slate-800 leading-none">DOCTIVO</h1>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">Loading...</p>
+          </div>
         </div>
       </div>
     );

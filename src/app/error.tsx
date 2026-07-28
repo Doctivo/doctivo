@@ -42,7 +42,7 @@ export default function Error({
         {/* Branding & Icon */}
         <div className="space-y-6">
           <div className="h-16 w-16 mx-auto rounded-2xl overflow-hidden shadow-md">
-            <Image 
+            <Image priority 
               src="/562c71b5-1be4-415a-94dc-002e1889eb7c-8.jpg" 
               alt="Logo" 
               width={64}
@@ -102,3 +102,4 @@ export default function Error({
     </div>
   );
 }
+

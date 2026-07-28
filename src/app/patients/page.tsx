@@ -206,7 +206,7 @@ export default function PatientsPage() {
       <div className="bg-white dark:bg-slate-900 sticky top-0 z-20 shadow-sm border-b border-border dark:border-slate-800">
         <div className="p-4 flex items-center gap-3">
           <div className="h-12 w-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden relative border border-border dark:border-slate-700 shadow-sm shrink-0">
-            {user?.imageUrl ? <Image src={user.imageUrl} alt="Me" fill className="object-cover" /> : <span className="text-primary font-bold">{user?.name?.charAt(0) || 'U'}</span>}
+            {user?.imageUrl ? <Image priority src={user.imageUrl} alt="Me" fill className="object-cover" /> : <span className="text-primary font-bold">{user?.name?.charAt(0) || 'U'}</span>}
           </div>
           <div className="flex-1 relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -237,7 +237,7 @@ export default function PatientsPage() {
             <div className="flex items-center space-x-5">
               <div className="h-16 w-16 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center overflow-hidden relative border border-border dark:border-slate-700 shrink-0">
                 {patient.imageUrl ? (
-                  <Image src={patient.imageUrl} alt={patient.name} fill className="object-cover" />
+                  <Image priority src={patient.imageUrl} alt={patient.name} fill className="object-cover" />
                 ) : (
                   <span className="text-xl font-bold text-slate-400">{patient.name.charAt(0)}</span>
                 )}
@@ -284,11 +284,11 @@ export default function PatientsPage() {
 
         {displayPatients.length === 0 && !loading && (
           <div className="flex flex-col items-center justify-center py-20 text-center space-y-3 opacity-60">
-            <div className="h-16 w-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-300 border border-dashed border-border">
-              <User className="h-8 w-8" />
+            <div className="h-16 w-16 bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center text-slate-300 dark:text-slate-600 border border-dashed border-border">
+              <Plus className="h-6 w-6" />
             </div>
             <div>
-              <p className="font-black text-slate-900 text-sm uppercase">No Profiles Found</p>
+              <p className="font-black text-slate-900 dark:text-slate-200 text-sm uppercase">No Profiles Found</p>
               <p className="text-[10px] font-bold text-slate-400 uppercase">Your saved family profiles will appear here.</p>
             </div>
           </div>
@@ -296,9 +296,9 @@ export default function PatientsPage() {
       </div>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-[95vw] sm:max-w-md rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl h-[85vh] flex flex-col">
-          <DialogHeader className="p-8 bg-slate-50 border-b border-border">
-            <DialogTitle className="text-2xl font-black tracking-tight text-slate-800">
+        <DialogContent className="max-w-[95vw] sm:max-w-md rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl h-[85vh] flex flex-col bg-white dark:bg-slate-950">
+          <DialogHeader className="p-8 bg-slate-50 dark:bg-slate-900 border-b border-border">
+            <DialogTitle className="text-2xl font-black tracking-tight text-slate-800 dark:text-slate-100">
               {isEditing ? 'Update Profile' : 'Add New Member'}
             </DialogTitle>
           </DialogHeader>
@@ -308,10 +308,10 @@ export default function PatientsPage() {
               <div className="flex flex-col items-center">
                 <div 
                   onClick={() => fileInputRef.current?.click()} 
-                  className="h-32 w-32 rounded-full bg-slate-50 border-2 border-dashed border-border flex flex-col items-center justify-center cursor-pointer relative overflow-hidden group hover:border-primary transition-all"
+                  className="h-32 w-32 rounded-full bg-slate-50 dark:bg-slate-900 border-2 border-dashed border-border flex flex-col items-center justify-center cursor-pointer relative overflow-hidden group hover:border-primary transition-all"
                 >
                   {currentMember.imageUrl ? (
-                    <Image src={currentMember.imageUrl} alt="Preview" fill className="object-cover" />
+                    <Image priority src={currentMember.imageUrl} alt="Preview" fill className="object-cover" />
                   ) : (
                     <Camera className="h-8 w-8 text-slate-300 group-hover:text-primary" />
                   )}
@@ -322,17 +322,17 @@ export default function PatientsPage() {
 
               <div className="space-y-6 mt-6">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Full Name <span className="text-red-500">*</span></Label>
-                  <Input placeholder="Enter Name" className="h-14 rounded-xl bg-slate-50 border-border font-bold" value={currentMember.name || ''} onChange={e => setCurrentMember({...currentMember, name: e.target.value.replace(/[^a-zA-Z\s]/g, '')})} />
+                  <Label className="text-[10px] font-black text-slate-900 dark:text-slate-300 ml-1 uppercase tracking-widest">Full Name <span className="text-red-500">*</span></Label>
+                  <Input placeholder="Enter Name" className="h-14 rounded-xl bg-slate-50 dark:bg-slate-900 dark:text-slate-100 border-border font-bold" value={currentMember.name || ''} onChange={e => setCurrentMember({...currentMember, name: e.target.value.replace(/[^a-zA-Z\s]/g, '')})} />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Age <span className="text-red-500">*</span></Label>
+                    <Label className="text-[10px] font-black text-slate-900 dark:text-slate-300 ml-1 uppercase tracking-widest">Age <span className="text-red-500">*</span></Label>
                     <Input 
                       type="number" 
                       placeholder="Enter Your Age" 
-                      className={cn("h-14 rounded-xl bg-slate-50 border-border font-bold", Number(currentMember.age) > 250 && "border-red-500")}
+                      className={cn("h-14 rounded-xl bg-slate-50 dark:bg-slate-900 dark:text-slate-100 border-border font-bold", Number(currentMember.age) > 250 && "border-red-500")}
                       value={currentMember.age || ''} 
                       min="0"
                       onChange={e => handleNumericInput('age', e.target.value)} 
@@ -340,9 +340,9 @@ export default function PatientsPage() {
                     {Number(currentMember.age) > 250 && <p className="text-red-500 text-[10px] mt-1 font-bold">Age must be less than 250.</p>}
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Blood Group</Label>
+                    <Label className="text-[10px] font-black text-slate-900 dark:text-slate-300 ml-1 uppercase tracking-widest">Blood Group</Label>
                     <Select value={currentMember.blood_group || ''} onValueChange={v => setCurrentMember({...currentMember, blood_group: v})}>
-                      <SelectTrigger className="h-14 rounded-xl bg-slate-50 border-border font-bold"><SelectValue placeholder="Select" /></SelectTrigger>
+                      <SelectTrigger className="h-14 rounded-xl bg-slate-50 dark:bg-slate-900 dark:text-slate-100 border-border font-bold"><SelectValue placeholder="Select" /></SelectTrigger>
                       <SelectContent className="rounded-2xl">
                         {['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-', 'Unknown'].map(bg => (<SelectItem key={bg} value={bg} className="font-bold">{bg}</SelectItem>))}
                       </SelectContent>
@@ -352,11 +352,11 @@ export default function PatientsPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Height (cm)</Label>
+                    <Label className="text-[10px] font-black text-slate-900 dark:text-slate-300 ml-1 uppercase tracking-widest">Height (cm)</Label>
                     <Input 
                       type="number" 
                       placeholder="175" 
-                      className={cn("h-14 rounded-xl bg-slate-50 border-border font-bold", Number(currentMember.height_cm) > 300 && "border-red-500")}
+                      className={cn("h-14 rounded-xl bg-slate-50 dark:bg-slate-900 dark:text-slate-100 border-border font-bold", Number(currentMember.height_cm) > 300 && "border-red-500")}
                       value={currentMember.height_cm || ''} 
                       min="0"
                       onChange={e => handleNumericInput('height_cm', e.target.value)} 
@@ -364,9 +364,9 @@ export default function PatientsPage() {
                     {Number(currentMember.height_cm) > 300 && <p className="text-red-500 text-[10px] mt-1 font-bold">Invalid height.</p>}
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Gender <span className="text-red-500">*</span></Label>
+                    <Label className="text-[10px] font-black text-slate-900 dark:text-slate-300 ml-1 uppercase tracking-widest">Gender <span className="text-red-500">*</span></Label>
                     <Select value={currentMember.gender || ''} onValueChange={v => setCurrentMember({...currentMember, gender: v as Gender})}>
-                      <SelectTrigger className="h-14 rounded-xl bg-slate-50 border-border font-bold"><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="h-14 rounded-xl bg-slate-50 dark:bg-slate-900 dark:text-slate-100 border-border font-bold"><SelectValue /></SelectTrigger>
                       <SelectContent className="rounded-2xl">
                         {['Male', 'Female', 'Other'].map(g => (<SelectItem key={g} value={g} className="font-bold">{g}</SelectItem>))}
                       </SelectContent>
@@ -376,11 +376,11 @@ export default function PatientsPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Weight (kg)</Label>
+                    <Label className="text-[10px] font-black text-slate-900 dark:text-slate-300 ml-1 uppercase tracking-widest">Weight (kg)</Label>
                     <Input 
                       type="number" 
                       placeholder="70" 
-                      className={cn("h-14 rounded-xl bg-slate-50 border-border font-bold", Number(currentMember.weight_kg) > 300 && "border-red-500")}
+                      className={cn("h-14 rounded-xl bg-slate-50 dark:bg-slate-900 dark:text-slate-100 border-border font-bold", Number(currentMember.weight_kg) > 300 && "border-red-500")}
                       value={currentMember.weight_kg || ''} 
                       min="0"
                       onChange={e => handleNumericInput('weight_kg', e.target.value)} 
@@ -388,9 +388,9 @@ export default function PatientsPage() {
                     {Number(currentMember.weight_kg) > 300 && <p className="text-red-500 text-[10px] mt-1 font-bold">Invalid weight.</p>}
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Relation <span className="text-red-500">*</span></Label>
+                    <Label className="text-[10px] font-black text-slate-900 dark:text-slate-300 ml-1 uppercase tracking-widest">Relation <span className="text-red-500">*</span></Label>
                     <Select value={currentMember.relation || ''} onValueChange={v => setCurrentMember({...currentMember, relation: v})}>
-                      <SelectTrigger className="h-14 rounded-xl bg-slate-50 border-border font-bold"><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="h-14 rounded-xl bg-slate-50 dark:bg-slate-900 dark:text-slate-100 border-border font-bold"><SelectValue /></SelectTrigger>
                       <SelectContent className="rounded-2xl">
                         {['Father', 'Mother', 'Spouse', 'Child', 'Sibling', 'Other'].map(r => (<SelectItem key={r} value={r} className="font-bold">{r}</SelectItem>))}
                       </SelectContent>
@@ -399,14 +399,14 @@ export default function PatientsPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Mobile Number (10 Digits)</Label>
+                  <Label className="text-[10px] font-black text-slate-900 dark:text-slate-300 ml-1 uppercase tracking-widest">Mobile Number (10 Digits)</Label>
                   <div className="relative">
                     <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                     <Input 
                       type="tel" 
                       placeholder="Mobile Number" 
                       maxLength={10}
-                      className="h-14 rounded-xl bg-slate-50 border-border pl-12 font-bold" 
+                      className="h-14 rounded-xl bg-slate-50 dark:bg-slate-900 dark:text-slate-100 border-border pl-12 font-bold" 
                       value={currentMember.phone || ''} 
                       onChange={e => setCurrentMember({...currentMember, phone: e.target.value.replace(/\D/g, '').slice(0, 10)})} 
                     />
@@ -416,20 +416,20 @@ export default function PatientsPage() {
                 <hr className="border-border my-6" />
 
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Medical History (Optional)</Label>
+                  <Label className="text-[10px] font-black text-slate-900 dark:text-slate-300 ml-1 uppercase tracking-widest">Medical History (Optional)</Label>
                   <Textarea 
                     placeholder="Brief history of illnesses, surgeries, or chronic conditions..." 
-                    className="rounded-xl bg-slate-50 border-border font-bold min-h-[100px]" 
+                    className="rounded-xl bg-slate-50 dark:bg-slate-900 dark:text-slate-100 border-border font-bold min-h-[100px]" 
                     value={currentMember.medicalHistory || ''} 
                     onChange={e => setCurrentMember({...currentMember, medicalHistory: e.target.value})} 
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Allergies (Optional)</Label>
+                  <Label className="text-[10px] font-black text-slate-900 dark:text-slate-300 ml-1 uppercase tracking-widest">Allergies (Optional)</Label>
                   <Textarea 
                     placeholder="Mention any drug, food, or environmental allergies..." 
-                    className="rounded-xl bg-slate-50 border-border font-bold min-h-[100px]" 
+                    className="rounded-xl bg-slate-50 dark:bg-slate-900 dark:text-slate-100 border-border font-bold min-h-[100px]" 
                     value={currentMember.allergies || ''} 
                     onChange={e => setCurrentMember({...currentMember, allergies: e.target.value})} 
                   />
@@ -438,7 +438,7 @@ export default function PatientsPage() {
             </div>
           </ScrollArea>
           
-          <div className="p-8 bg-white border-t border-border z-50">
+          <div className="p-8 bg-white dark:bg-slate-950 border-t border-border z-50">
             <Button className="w-full h-16 bg-primary font-black text-lg rounded-2xl shadow-xl shadow-primary/20 hover:bg-primary/90 transition-all" onClick={handleSavePatient} disabled={isSaving}>
               {isSaving ? <Loader2 className="animate-spin h-6 w-6" /> : (isEditing ? 'Save Changes' : 'Add Profile')}
             </Button>
@@ -448,14 +448,14 @@ export default function PatientsPage() {
 
       {isCropping && (
         <Dialog open={isCropping} onOpenChange={setIsCropping}>
-          <DialogContent className="max-w-[90vw] h-[550px] flex flex-col rounded-[2.5rem] p-0 overflow-hidden border-none z-[1000]">
-            <DialogHeader className="p-6 bg-white border-b border-border">
-              <DialogTitle className="text-center font-black">Adjust Photo</DialogTitle>
+          <DialogContent className="max-w-[90vw] h-[550px] flex flex-col rounded-[2.5rem] p-0 overflow-hidden border-none z-[1000] bg-white dark:bg-slate-950">
+            <DialogHeader className="p-6 bg-white dark:bg-slate-900 border-b border-border">
+              <DialogTitle className="text-center font-black dark:text-slate-100">Adjust Photo</DialogTitle>
             </DialogHeader>
             <div className="relative flex-1 bg-slate-900">
               <Cropper image={imageToCrop || ''} crop={crop} zoom={zoom} aspect={1} onCropChange={setCrop} onCropComplete={onCropComplete} onZoomChange={setZoom} />
             </div>
-            <div className="p-8 bg-white space-y-6">
+            <div className="p-8 bg-white dark:bg-slate-950 space-y-6">
               <input type="range" min={1} max={3} step={0.1} value={zoom} onChange={e => setZoom(Number(e.target.value))} className="w-full accent-primary" />
               <Button onClick={getCroppedImg} className="w-full h-16 bg-primary text-white font-black text-lg rounded-2xl shadow-xl shadow-primary/20">Confirm Photo</Button>
             </div>
@@ -466,3 +466,4 @@ export default function PatientsPage() {
     </div>
   );
 }
+

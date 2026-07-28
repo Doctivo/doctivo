@@ -4,10 +4,20 @@ import { useRouter } from 'next/navigation';
 import { ChevronLeft, Info, Heart, Award, Briefcase, Rocket, Image as ImageIcon } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { getAppSetting } from '@/app/actions/admin-actions';
+import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 
 export default function AboutFounderPage() {
   const router = useRouter();
   const [images, setImages] = useState<string[]>([]);
+  const [api, setApi] = useState<any>();
+
+  useEffect(() => {
+    if (!api) return;
+    const interval = setInterval(() => {
+      api.scrollNext();
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [api]);
 
   useEffect(() => {
     const fetchImages = async () => {
@@ -128,17 +138,22 @@ export default function AboutFounderPage() {
               </div>
               <h3 className="text-lg md:text-xl font-black text-slate-800 dark:text-slate-100">Glimpses</h3>
             </div>
-            <div className="flex overflow-x-auto gap-4 pb-4 snap-x scroll-hide">
-              {images.map((img, idx) => (
-                <div key={idx} className="shrink-0 w-64 md:w-80 aspect-video rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm snap-center group">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={img} alt={`Founder glimpse ${idx + 1}`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                </div>
-              ))}
-            </div>
+            <Carousel setApi={setApi} opts={{ loop: true, align: "center" }} className="w-full max-w-sm mx-auto">
+              <CarouselContent>
+                {images.map((img, idx) => (
+                  <CarouselItem key={idx}>
+                    <div className="w-full aspect-[9/16] rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-xl group">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={img} alt={`Founder glimpse ${idx + 1}`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+            </Carousel>
           </div>
         )}
       </div>
     </div>
   );
 }
+

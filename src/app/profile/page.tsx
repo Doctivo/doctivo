@@ -88,7 +88,7 @@ export default function ProfilePage() {
       <div className="bg-white dark:bg-slate-900 p-4 pt-6 rounded-b-2xl shadow-sm flex flex-col items-center border-b border-slate-100 dark:border-slate-800">
         <div className="h-20 w-20 bg-slate-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center mb-3 relative ring-2 ring-slate-100 dark:ring-slate-800 overflow-hidden border border-slate-200 dark:border-slate-700">
           {user?.imageUrl ? (
-            <Image src={user.imageUrl} alt="P" fill className="object-cover" />
+            <Image priority src={user.imageUrl} alt="P" fill className="object-cover" />
           ) : (
             <UserCircle className="h-10 w-10 text-slate-300 dark:text-slate-600" />
           )}
@@ -195,7 +195,7 @@ export default function ProfilePage() {
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-slate-900 dark:text-slate-100 text-center">Delete Account?</DialogTitle>
             <DialogDescription className="text-slate-500 dark:text-slate-400 font-medium text-[13px] pt-2 text-center leading-relaxed">
-              Deleting your account is permanent and cannot be undone. Once your account is deleted, you will lose access to your profile, and your personal information will be permanently removed.
+              Deleting your account is permanent and cannot be undone. Once your account is deleted, you will lose access to your profile, and your personal information will be permanently removed or anonymized, except where retention is required by applicable law. Your medical appointment history and related records may be retained for legal, regulatory, compliance, or audit purposes, as required by law.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex-row gap-3 pt-6 sm:justify-center">
@@ -221,3 +221,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+

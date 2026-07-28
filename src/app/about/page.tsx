@@ -24,7 +24,7 @@ export default function AboutDoctivoPage() {
         {/* App Card */}
         <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-200 dark:border-slate-800 shadow-sm text-center">
           <div className="h-24 w-24 mx-auto bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center mb-5 border border-slate-200 dark:border-slate-700 overflow-hidden relative">
-            <Image src="/562c71b5-1be4-415a-94dc-002e1889eb7c-8.jpg" alt="Logo" fill className="object-cover p-2" />
+            <Image priority src="/562c71b5-1be4-415a-94dc-002e1889eb7c-8.jpg" alt="Logo" fill className="object-cover p-2" />
           </div>
           <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">DOCTIVO</h2>
           <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-1">YOUR HEALTH PARTNER</p>
@@ -81,3 +81,4 @@ export default function AboutDoctivoPage() {
     </div>
   );
 }
+

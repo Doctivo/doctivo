@@ -88,6 +88,7 @@ export default function OnboardingPage() {
 
   const handleNumericInput = (field: string, val: string) => {
     const num = val.replace(/\D/g, '');
+    if (field === 'age' && parseInt(num) > 250) return;
     setFormData({ ...formData, [field]: num });
   };
 
@@ -125,7 +126,7 @@ export default function OnboardingPage() {
             className="h-32 w-32 rounded-full bg-slate-50 border-2 border-dashed border-border flex flex-col items-center justify-center cursor-pointer relative overflow-hidden shadow-sm hover:border-primary transition-all group"
           >
             {formData.imageUrl ? (
-              <Image src={formData.imageUrl} alt="P" fill className="object-cover" />
+              <Image priority src={formData.imageUrl} alt="P" fill className="object-cover" />
             ) : (
               <Camera className="h-10 w-10 text-slate-300 group-hover:text-primary transition-colors" />
             )}
@@ -256,3 +257,4 @@ export default function OnboardingPage() {
     </div>
   );
 }
+

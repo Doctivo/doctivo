@@ -191,7 +191,7 @@ export default function DoctorCatalog() {
                  <div className="p-8 space-y-8">
                   <div className="flex flex-col items-center">
                     <div onClick={() => fileInputRef.current?.click()} className="h-32 w-32 rounded-[2rem] bg-white border-2 border-dashed border-slate-200 flex flex-col items-center justify-center cursor-pointer relative overflow-hidden group hover:border-blue-400 transition-all">
-                      {newDoc.imageUrl ? <Image src={newDoc.imageUrl} alt="P" fill className="object-cover" /> : <Camera className="h-8 w-8 text-slate-300 group-hover:text-blue-500 transition-colors" />}
+                      {newDoc.imageUrl ? <Image priority src={newDoc.imageUrl} alt="P" fill className="object-cover" /> : <Camera className="h-8 w-8 text-slate-300 group-hover:text-blue-500 transition-colors" />}
                       <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageSelect} />
                     </div>
                     <p className="text-[10px] font-black text-slate-400 uppercase mt-2 tracking-widest">Upload Profile Photo</p>
@@ -357,7 +357,7 @@ export default function DoctorCatalog() {
                   <td onClick={() => { setEditingDoc({...doc, reasons_for_visit_str: Array.isArray(doc.reasons_for_visit) ? doc.reasons_for_visit.join(', ') : ''}); setIsEditOpen(true); }} className="px-10 py-8">
                     <div className="flex items-center space-x-5">
                       <div className="h-16 w-16 rounded-2xl bg-slate-100 overflow-hidden relative border border-slate-200 flex items-center justify-center">
-                        {doc.image_url ? <Image src={doc.image_url} alt="D" fill className="object-cover" /> : <User className="h-8 w-8 text-slate-300" />}
+                        {doc.image_url ? <Image priority src={doc.image_url} alt="D" fill className="object-cover" /> : <User className="h-8 w-8 text-slate-300" />}
                       </div>
                       <div>
                         <p className="font-black text-slate-800 text-lg group-hover:text-blue-600 transition-colors">{doc.full_name}</p>
@@ -426,7 +426,7 @@ export default function DoctorCatalog() {
                 {/* Photo & Basic Info */}
                 <div className="flex items-center space-x-8">
                   <div onClick={() => fileInputRef.current?.click()} className="h-32 w-32 rounded-[2rem] bg-slate-50 border-2 border-dashed border-slate-200 flex flex-col items-center justify-center cursor-pointer relative overflow-hidden group hover:border-blue-400 transition-all shrink-0">
-                    {editingDoc.image_url ? <Image src={editingDoc.image_url} alt="P" fill className="object-cover" /> : <Camera className="h-8 w-8 text-slate-300" />}
+                    {editingDoc.image_url ? <Image priority src={editingDoc.image_url} alt="P" fill className="object-cover" /> : <Camera className="h-8 w-8 text-slate-300" />}
                     <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageSelect} />
                   </div>
                   <div className="space-y-4 flex-1">
@@ -597,3 +597,4 @@ export default function DoctorCatalog() {
     </div>
   );
 }
+

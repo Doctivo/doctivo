@@ -68,11 +68,19 @@ export default function LoginPage() {
   }, [isAuthenticated, user, admin, router]);
 
   const handleLogin = async () => {
-    if (!loginInput.trim()) return;
+    const inputStr = loginInput.trim();
+    if (!inputStr) return;
+
+    // Strict validation: if input is only digits, it must be a valid 10-digit Indian number
+    const phoneRegex = /^[6-9]\d{9}$/;
+    if (/^\d+$/.test(inputStr) && !phoneRegex.test(inputStr)) {
+      toast({ variant: 'destructive', title: 'Invalid Format', description: 'Please enter a valid 10-digit Indian phone number.' });
+      return;
+    }
     
     setIsLoading(true);
     try {
-      const result = await unifiedLogin(loginInput.trim());
+      const result = await unifiedLogin(inputStr);
       
       if (result.success) {
         if (result.requireOtp) {
@@ -228,7 +236,7 @@ export default function LoginPage() {
         <div className="w-full max-w-[440px] flex flex-col min-h-[85vh] lg:min-h-0 justify-between lg:justify-center lg:space-y-10 py-8">
           <div className="flex flex-col items-center space-y-3 lg:hidden">
             <div className="h-16 w-16 rounded-2xl flex items-center justify-center shadow-lg relative overflow-hidden">
-              <Image src="/562c71b5-1be4-415a-94dc-002e1889eb7c-8.jpg" alt="Logo" fill className="object-contain p-2" priority />
+              <Image priority src="/562c71b5-1be4-415a-94dc-002e1889eb7c-8.jpg" alt="Logo" fill className="object-contain p-2" />
              </div>
              <div className="text-center">
                <h1 className="text-xl font-black tracking-tight text-slate-800">DOCTIVO</h1>
@@ -242,7 +250,7 @@ export default function LoginPage() {
                {otpSent ? `Enter the 6-digit code sent to ${otpEmail}` : (isMobile ? "Enter your mobile number to continue" : "Access your portal using credentials")}
              </p>
 
-             <Card className="w-full bg-white border-none shadow-[0_4px_25px_rgba(0,0,0,0.03)] rounded-[2.5rem] overflow-hidden">
+             <Card className="w-full bg-white dark:bg-slate-900 border-none shadow-[0_4px_25px_rgba(0,0,0,0.03)] dark:shadow-none rounded-[2.5rem] overflow-hidden">
                <CardContent className="pt-10 px-8 pb-10 space-y-10">
                  {otpSent ? (
                    <div className="space-y-6">
