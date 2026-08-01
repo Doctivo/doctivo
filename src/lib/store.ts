@@ -11,6 +11,8 @@ interface AppState {
   patients: Patient[];
   appointments: Appointment[];
   homeCardImages: Record<string, string>;
+  homeBanners: string[];
+  homeDataLastFetched: number | null;
   downloadedTickets: string[];
   language: 'en' | 'hi' | null;
   isAuthenticated: boolean;
@@ -22,6 +24,8 @@ interface AppState {
   setPatients: (patients: Patient[]) => void;
   setAppointments: (appointments: Appointment[]) => void;
   setHomeCardImages: (images: Record<string, string>) => void;
+  setHomeBanners: (banners: string[]) => void;
+  setHomeDataLastFetched: (timestamp: number) => void;
   setDownloadedTickets: (tickets: string[]) => void;
   setLanguage: (lang: 'en' | 'hi') => void;
   setHasHydrated: (val: boolean) => void;
@@ -41,6 +45,8 @@ export const useStore = create<AppState>()(
       patients: [],
       appointments: [],
       homeCardImages: {},
+      homeBanners: [],
+      homeDataLastFetched: null,
       downloadedTickets: [],
       language: null,
       isAuthenticated: false,
@@ -52,6 +58,8 @@ export const useStore = create<AppState>()(
       setPatients: (patients) => set({ patients }),
       setAppointments: (appointments) => set({ appointments }),
       setHomeCardImages: (homeCardImages) => set({ homeCardImages }),
+      setHomeBanners: (homeBanners) => set({ homeBanners }),
+      setHomeDataLastFetched: (timestamp) => set({ homeDataLastFetched: timestamp }),
       setDownloadedTickets: (downloadedTickets) => set({ downloadedTickets }),
       setLanguage: (lang) => set({ language: lang }),
       setHasHydrated: (val) => set({ _hasHydrated: val }),
@@ -82,6 +90,8 @@ export const useStore = create<AppState>()(
         admin: state.admin,
         patients: state.patients,
         homeCardImages: state.homeCardImages,
+        homeBanners: state.homeBanners,
+        homeDataLastFetched: state.homeDataLastFetched,
         downloadedTickets: state.downloadedTickets || [],
         language: state.language
       }),

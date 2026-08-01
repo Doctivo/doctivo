@@ -27,6 +27,12 @@ function HomeContent() {
   const user = useStore(state => state.user);
   const isAuthenticated = useStore(state => state.isAuthenticated);
   const hasHydrated = useStore(state => state._hasHydrated);
+  const homeCardImagesStore = useStore(state => state.homeCardImages);
+  const homeBannersStore = useStore(state => state.homeBanners);
+  const homeDataLastFetched = useStore(state => state.homeDataLastFetched);
+  const setHomeCardImages = useStore(state => state.setHomeCardImages);
+  const setHomeBannersStore = useStore(state => state.setHomeBanners);
+  const setHomeDataLastFetched = useStore(state => state.setHomeDataLastFetched);
   
   const [isPhysioOpen, setIsPhysioOpen] = useState(false);
   const [serverImages, setServerImages] = useState<any>(null);
@@ -85,21 +91,37 @@ function HomeContent() {
 
   useEffect(() => {
     async function loadImages() {
+      const now = Date.now();
+      const THIRTY_MINUTES = 30 * 60 * 1000;
+      
+      if (
+        homeDataLastFetched && 
+        (now - homeDataLastFetched < THIRTY_MINUTES) &&
+        Object.keys(homeCardImagesStore).length > 0
+      ) {
+        setServerImages(homeCardImagesStore);
+        setHomeBanners(homeBannersStore);
+        return;
+      }
+
       try {
         const res = await getAppSetting('homeCardImages');
         if (res.success && res.value) {
           setServerImages(res.value);
+          setHomeCardImages(res.value);
         }
         const res2 = await getAppSetting('homeBanners');
         if (res2.success && res2.value) {
           setHomeBanners(res2.value);
+          setHomeBannersStore(res2.value);
         }
+        setHomeDataLastFetched(now);
       } catch (e) {
         console.error('Failed to load settings', e);
       }
     }
     loadImages();
-  }, []);
+  }, [homeDataLastFetched, homeCardImagesStore, homeBannersStore, setHomeCardImages, setHomeBannersStore, setHomeDataLastFetched]);
 
   useEffect(() => {
     if (!hasHydrated) return;
@@ -184,6 +206,33 @@ function HomeContent() {
       </div>
 
       <div className="p-6 md:p-12 pt-10 space-y-12 flex-1">
+        {homeBanners && homeBanners.length > 0 ? (
+          <Carousel setApi={setBannerApi} opts={{ loop: true, align: "start" }} className="w-full">
+            <CarouselContent>
+              {homeBanners.map((img, idx) => (
+                <CarouselItem key={idx}>
+                  <div className="w-full aspect-[21/9] md:aspect-[3/1] rounded-[2rem] overflow-hidden shadow-lg border border-slate-100 dark:border-slate-800">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={img} alt={`Banner ${idx}`} className="w-full h-full object-cover" />
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+          </Carousel>
+        ) : (
+          <div className="hidden md:block bg-slate-900 rounded-[3rem] p-10 text-white relative overflow-hidden w-full max-w-full">
+            <div className="relative z-10 space-y-4 max-w-2xl">
+              <h2 className="text-3xl font-black leading-tight">Welcome Back, {user?.name?.split(' ')[0]}</h2>
+              <p className="text-slate-400 font-medium">Access Gorakhpur's premium medical network. Track your live OPD queue and arrive exactly on time.</p>
+              <Link href="/doctors">
+                <Button className="bg-blue-600 hover:bg-blue-700 h-12 px-8 rounded-xl font-bold mt-4">Start Booking Now</Button>
+              </Link>
+            </div>
+            <div className="absolute top-0 right-0 h-full w-1/3 bg-gradient-to-l from-blue-600/20 to-transparent"></div>
+            <Stethoscope className="absolute bottom-[-20px] right-10 h-40 w-40 text-white/5 rotate-12" />
+          </div>
+        )}
+
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
           {quickActions.map((action, idx) => {
             const Content = (
@@ -213,33 +262,6 @@ function HomeContent() {
             );
           })}
         </div>
-        
-        {homeBanners && homeBanners.length > 0 ? (
-          <Carousel setApi={setBannerApi} opts={{ loop: true, align: "start" }} className="w-full">
-            <CarouselContent>
-              {homeBanners.map((img, idx) => (
-                <CarouselItem key={idx}>
-                  <div className="w-full aspect-[21/9] md:aspect-[3/1] rounded-[2rem] overflow-hidden shadow-lg border border-slate-100 dark:border-slate-800">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={img} alt={`Banner ${idx}`} className="w-full h-full object-cover" />
-                  </div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-          </Carousel>
-        ) : (
-          <div className="hidden md:block bg-slate-900 rounded-[3rem] p-10 text-white relative overflow-hidden w-full max-w-full">
-            <div className="relative z-10 space-y-4 max-w-2xl">
-              <h2 className="text-3xl font-black leading-tight">Welcome Back, {user?.name?.split(' ')[0]}</h2>
-              <p className="text-slate-400 font-medium">Access Gorakhpur's premium medical network. Track your live OPD queue and arrive exactly on time.</p>
-              <Link href="/doctors">
-                <Button className="bg-blue-600 hover:bg-blue-700 h-12 px-8 rounded-xl font-bold mt-4">Start Booking Now</Button>
-              </Link>
-            </div>
-            <div className="absolute top-0 right-0 h-full w-1/3 bg-gradient-to-l from-blue-600/20 to-transparent"></div>
-            <Stethoscope className="absolute bottom-[-20px] right-10 h-40 w-40 text-white/5 rotate-12" />
-          </div>
-        )}
       </div>
 
 

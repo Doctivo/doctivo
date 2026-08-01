@@ -49,6 +49,22 @@ export default function AboutFounderPage() {
       </div>
 
       <div className="max-w-3xl mx-auto p-4 md:p-8 space-y-6 md:space-y-8 mt-4">
+        
+        {images.length > 0 && (
+          <Carousel setApi={setApi} opts={{ loop: true, align: "center" }} className="w-full mx-auto">
+            <CarouselContent>
+              {images.map((img, idx) => (
+                <CarouselItem key={idx}>
+                  <div className="w-full aspect-[4/5] sm:aspect-[16/9] md:aspect-[21/9] rounded-[2.5rem] overflow-hidden shadow-xl group">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={img} alt={`Founder ${idx + 1}`} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+          </Carousel>
+        )}
+
         {/* Profile Card Premium */}
         <div className="relative rounded-[2.5rem] p-8 md:p-12 text-center overflow-hidden border border-slate-200/60 dark:border-slate-800 shadow-xl shadow-slate-200/40 dark:shadow-none bg-white dark:bg-slate-900 group">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-white to-purple-50/50 dark:from-blue-950/20 dark:via-slate-900 dark:to-purple-950/20 z-0"></div>
@@ -127,33 +143,7 @@ export default function AboutFounderPage() {
             Driven by innovation and social impact, Gaurav is passionate about building technology solutions that solve real-world problems. His long-term vision is to establish DOCTIVO as one of India's most trusted digital healthcare platforms, enabling millions of patients to access quality healthcare seamlessly through technology.
           </p>
         </div>
-        
-        {/* Gallery */}
-        {images.length > 0 && (
-          <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 md:p-8 border border-slate-200/60 dark:border-slate-800 shadow-lg shadow-slate-200/20 dark:shadow-none relative overflow-hidden animate-slide-up">
-            <div className="absolute top-0 left-0 w-2 h-full bg-emerald-500"></div>
-            <div className="flex items-center gap-4 mb-6">
-              <div className="h-12 w-12 rounded-2xl bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                <ImageIcon className="h-6 w-6" />
-              </div>
-              <h3 className="text-lg md:text-xl font-black text-slate-800 dark:text-slate-100">Glimpses</h3>
-            </div>
-            <Carousel setApi={setApi} opts={{ loop: true, align: "center" }} className="w-full max-w-sm mx-auto">
-              <CarouselContent>
-                {images.map((img, idx) => (
-                  <CarouselItem key={idx}>
-                    <div className="w-full aspect-[9/16] rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-xl group">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={img} alt={`Founder glimpse ${idx + 1}`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                    </div>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-            </Carousel>
-          </div>
-        )}
       </div>
     </div>
   );
 }
-

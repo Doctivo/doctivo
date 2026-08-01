@@ -304,6 +304,8 @@ export default function PlatformSettings() {
               </CardTitle>
               <p className="text-sm text-slate-500 font-medium mt-2">
                 Upload images for the home page auto-slider banner.
+                <br />
+                <span className="text-blue-500 font-bold">Note:</span> Recommended Aspect Ratio is 3:1 (e.g. 1200x400) or 21:9 for Mobile viewing.
               </p>
             </CardHeader>
             <CardContent className="p-8 space-y-6">
