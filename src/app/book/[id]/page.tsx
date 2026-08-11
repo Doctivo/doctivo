@@ -394,8 +394,8 @@ function BookingContent({ id }: { id: string }) {
         <div className="space-y-4">
           <h3 className="text-xs font-black uppercase text-slate-400 px-1">Select Date</h3>
           {doc?.stops_booking_at_midnight && (
-            <div className="bg-amber-50 border border-amber-200 text-amber-700 px-3 py-2.5 rounded-xl text-xs font-bold">
-              please book next day oppointment till 11:59pm
+            <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-900/50 text-amber-700 dark:text-amber-400 px-3 py-2.5 rounded-xl text-xs font-bold">
+              Please book next day appointment till 11:59pm
             </div>
           )}
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
@@ -461,9 +461,9 @@ function BookingContent({ id }: { id: string }) {
       </div>
 
       <Dialog open={showCompleteProfile} onOpenChange={setShowCompleteProfile}>
-        <DialogContent className="max-w-[90vw] rounded-[2.5rem] p-6 border-none shadow-2xl">
+        <DialogContent className="max-w-[90vw] rounded-[2.5rem] p-6 border-none shadow-2xl bg-white dark:bg-slate-900">
           <DialogHeader>
-            <DialogTitle className="text-xl font-black text-slate-800 text-center">Complete Your Profile</DialogTitle>
+            <DialogTitle className="text-xl font-black text-slate-800 dark:text-slate-100 text-center">Complete Your Profile</DialogTitle>
             <p className="text-xs text-slate-500 font-bold text-center mt-2">
               Age and gender are required to book this appointment for better diagnosis.
             </p>
@@ -471,25 +471,25 @@ function BookingContent({ id }: { id: string }) {
           
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Age <span className="text-red-500">*</span></Label>
+              <Label className="text-[10px] font-black text-slate-900 dark:text-slate-100 ml-1 uppercase tracking-widest">Age <span className="text-red-500">*</span></Label>
               <Input 
                 type="number" 
                 placeholder="Enter Age" 
-                className="h-14 rounded-xl bg-slate-50 border-border font-bold"
+                className="h-14 rounded-xl bg-slate-50 dark:bg-slate-800 border-border font-bold text-slate-900 dark:text-slate-100"
                 value={tempAge} 
                 onChange={(e) => setTempAge(e.target.value.replace(/\D/g, ''))}
               />
             </div>
             
             <div className="space-y-2">
-              <Label className="text-[10px] font-black text-slate-900 ml-1 uppercase tracking-widest">Gender <span className="text-red-500">*</span></Label>
+              <Label className="text-[10px] font-black text-slate-900 dark:text-slate-100 ml-1 uppercase tracking-widest">Gender <span className="text-red-500">*</span></Label>
               <Select value={tempGender} onValueChange={setTempGender}>
-                <SelectTrigger className="h-14 rounded-xl bg-slate-50 border-border font-bold">
+                <SelectTrigger className="h-14 rounded-xl bg-slate-50 dark:bg-slate-800 border-border font-bold text-slate-900 dark:text-slate-100">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="rounded-2xl">
+                <SelectContent className="rounded-2xl dark:bg-slate-900">
                   {['Male', 'Female', 'Other'].map(g => (
-                    <SelectItem key={g} value={g} className="font-bold">{g}</SelectItem>
+                    <SelectItem key={g} value={g} className="font-bold dark:text-slate-100">{g}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
