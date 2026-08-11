@@ -42,6 +42,17 @@ export default function AppointmentsPage() {
   const [isCancelling, setIsCancelling] = useState(false);
 
   const handleCancel = async (appId: string) => {
+    const app = appointments.find(a => a.id === appId);
+    if (app) {
+      const appDateStr = String(app.date).split('T')[0];
+      const now = new Date();
+      const todayStr = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+      if (appDateStr === todayStr && now.getHours() >= 2) {
+        toast({ variant: 'destructive', title: 'Cancellation Blocked', description: 'Appointments cannot be cancelled after 2:00 AM on the day of the appointment.' });
+        return;
+      }
+    }
+
     if (!confirm('Are you sure you want to cancel this booking?')) return;
     setIsCancelling(true);
     const res = await updateAppointmentStatus(appId, 'Cancelled');
@@ -397,9 +408,23 @@ export default function AppointmentsPage() {
                   </Button>
                 </div>
                 {activeTab === 'Upcoming' && selectedApp.status !== 'Cancelled' && selectedApp.status !== 'Completed' && (
-                  <Button variant="outline" onClick={() => handleCancel(selectedApp.id)} disabled={isCancelling} className="w-full h-14 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/50 font-black rounded-2xl gap-2">
-                    {isCancelling ? <Loader2 className="animate-spin h-5 w-5" /> : 'Cancel Booking'}
-                  </Button>
+                  <div className="flex gap-3">
+                    <Button variant="outline" onClick={() => handleCancel(selectedApp.id)} disabled={isCancelling} className="flex-1 h-14 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/50 font-black rounded-2xl gap-2">
+                      {isCancelling ? <Loader2 className="animate-spin h-5 w-5" /> : 'Cancel'}
+                    </Button>
+                    <Button variant="outline" onClick={() => {
+                      const appDateStr = String(selectedApp.date).split('T')[0];
+                      const now = new Date();
+                      const todayStr = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+                      if (appDateStr === todayStr && now.getHours() >= 2) {
+                        toast({ variant: 'destructive', title: 'Action Blocked', description: 'Appointments cannot be rescheduled after 2:00 AM on the day of the appointment.' });
+                        return;
+                      }
+                      router.push(`/book/${selectedApp.doctorId}?reschedule=${selectedApp.id}`);
+                    }} disabled={isCancelling} className="flex-1 h-14 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-900/50 font-black rounded-2xl gap-2">
+                      Reschedule
+                    </Button>
+                  </div>
                 )}
               </div>
             </div>

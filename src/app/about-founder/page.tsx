@@ -55,9 +55,15 @@ export default function AboutFounderPage() {
             <CarouselContent>
               {images.map((img, idx) => (
                 <CarouselItem key={idx}>
-                  <div className="w-full aspect-[4/5] sm:aspect-[16/9] md:aspect-[21/9] rounded-[2.5rem] overflow-hidden shadow-xl group">
+                  <div className="w-full aspect-square md:aspect-[4/5] rounded-[2.5rem] overflow-hidden shadow-xl group relative">
+                    <div className="absolute top-0 left-0 w-full p-6 md:p-8 flex justify-between items-start z-10 bg-gradient-to-b from-black/60 to-transparent">
+                      <h2 className="text-2xl md:text-3xl font-black text-white drop-shadow-lg max-w-[50%] leading-tight">Gaurav Singh Shrinet</h2>
+                      <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white shrink-0">
+                        <p className="text-[10px] md:text-xs font-black tracking-widest uppercase shadow-sm">FOUNDER & CEO, DOCTIVO</p>
+                      </div>
+                    </div>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={img} alt={`Founder ${idx + 1}`} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                    <img src={img} alt={`Founder ${idx + 1}`} className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105" />
                   </div>
                 </CarouselItem>
               ))}
@@ -65,20 +71,7 @@ export default function AboutFounderPage() {
           </Carousel>
         )}
 
-        {/* Profile Card Premium */}
-        <div className="relative rounded-[2.5rem] p-8 md:p-12 text-center overflow-hidden border border-slate-200/60 dark:border-slate-800 shadow-xl shadow-slate-200/40 dark:shadow-none bg-white dark:bg-slate-900 group">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-white to-purple-50/50 dark:from-blue-950/20 dark:via-slate-900 dark:to-purple-950/20 z-0"></div>
-          
-          <div className="relative z-10">
-            <div className="h-28 w-28 mx-auto bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/50 dark:to-purple-900/50 rounded-full flex items-center justify-center mb-6 ring-4 ring-white dark:ring-slate-950 shadow-lg group-hover:scale-105 transition-transform duration-500">
-              <span className="text-5xl drop-shadow-md">👨‍💻</span>
-            </div>
-            <h2 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-2">Gaurav Singh Shrinet</h2>
-            <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
-              <p className="text-[10px] md:text-xs font-black text-slate-500 dark:text-slate-400 tracking-widest uppercase">FOUNDER & CEO, DOCTIVO</p>
-            </div>
-          </div>
-        </div>
+
 
         {/* Introduction */}
         <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 md:p-8 border border-slate-200/60 dark:border-slate-800 shadow-lg shadow-slate-200/20 dark:shadow-none relative overflow-hidden">

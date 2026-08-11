@@ -54,7 +54,8 @@ export default function DoctorCatalog() {
     current_active_campaign: '',
     imageUrl: '',
     consultation_modes: 'Clinic,Home',
-    reasons_for_visit_str: ''
+    reasons_for_visit_str: '',
+    stops_booking_at_midnight: false
   });
   const [isSaving, setIsSaving] = useState(false);
 
@@ -273,6 +274,17 @@ export default function DoctorCatalog() {
                       <div className="col-span-2 space-y-2">
                         <Label className="text-[10px] font-black uppercase text-slate-400">Reasons for Visit (Comma separated)</Label>
                         <Input className="h-12 bg-slate-50 border-none font-bold rounded-xl" placeholder="e.g. Back Pain, Neck Pain, Post Surgery" value={newDoc.reasons_for_visit_str} onChange={e => setNewDoc({...newDoc, reasons_for_visit_str: e.target.value})} />
+                      </div>
+                      <div className="col-span-2 flex items-center space-x-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                        <Checkbox 
+                          id="stops_midnight" 
+                          checked={newDoc.stops_booking_at_midnight} 
+                          onCheckedChange={(checked) => setNewDoc({...newDoc, stops_booking_at_midnight: checked === true})}
+                        />
+                        <div className="space-y-1 leading-none">
+                          <Label htmlFor="stops_midnight" className="text-sm font-bold text-slate-700 cursor-pointer">Stop midnight booking for next day?</Label>
+                          <p className="text-[10px] text-slate-500 font-medium">If enabled, same day booking is not allowed. Users can only book for the next day.</p>
+                        </div>
                       </div>
                       {newDoc.specialty === 'Physiotherapist' && (
                         <div className="col-span-2 p-6 rounded-3xl bg-slate-50 border border-slate-100 space-y-4">
@@ -536,6 +548,17 @@ export default function DoctorCatalog() {
                     <div className="space-y-1.5">
                       <Label className="text-[10px] font-black uppercase text-slate-400">Reasons for Visit (Comma separated)</Label>
                       <Input className="h-14 bg-slate-50 border-none font-bold rounded-xl" value={editingDoc.reasons_for_visit_str || ''} onChange={e => setEditingDoc({...editingDoc, reasons_for_visit_str: e.target.value})} />
+                    </div>
+                    <div className="flex items-center space-x-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                      <Checkbox 
+                        id="edit_stops_midnight" 
+                        checked={editingDoc.stops_booking_at_midnight} 
+                        onCheckedChange={(checked) => setEditingDoc({...editingDoc, stops_booking_at_midnight: checked === true})}
+                      />
+                      <div className="space-y-1 leading-none">
+                        <Label htmlFor="edit_stops_midnight" className="text-sm font-bold text-slate-700 cursor-pointer">Stop midnight booking for next day?</Label>
+                        <p className="text-[10px] text-slate-500 font-medium">If enabled, users cannot book appointments for this doctor between 12:00 AM and 6:00 AM for the current day.</p>
+                      </div>
                     </div>
                     {editingDoc.specialty === 'Physiotherapist' && (
                     <div className="p-6 rounded-3xl bg-slate-50 border border-slate-100 space-y-4">

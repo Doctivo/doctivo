@@ -1,14 +1,16 @@
+'use client';
 import { ArrowLeft, Lock, UserCheck, Share2, Server } from 'lucide-react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function PrivacyPolicy() {
+  const router = useRouter();
   return (
     <div className="min-h-screen bg-slate-50 selection:bg-blue-100 pb-20">
       <div className="bg-white border-b border-slate-100 sticky top-0 z-20">
         <div className="max-w-4xl mx-auto px-6 h-16 flex items-center">
-          <Link href="/home" className="flex items-center text-slate-500 hover:text-blue-600 font-bold transition-colors">
-            <ArrowLeft className="h-5 w-5 mr-2" /> Back to Home
-          </Link>
+          <button onClick={() => router.back()} className="flex items-center text-slate-500 hover:text-blue-600 font-bold transition-colors">
+            <ArrowLeft className="h-5 w-5 mr-2" /> Back
+          </button>
         </div>
       </div>
 

@@ -15,6 +15,7 @@ import { logoutSession } from '@/app/actions/auth-actions';
 import { deletePatientAccount } from '@/app/actions/patient-actions';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -22,6 +23,7 @@ export default function ProfilePage() {
   const user = useStore(state => state.user);
   const logout = useStore(state => state.logout);
   const isAuthenticated = useStore(state => state.isAuthenticated);
+  const { t } = useTranslation();
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -73,13 +75,13 @@ export default function ProfilePage() {
   const completionPercentage = Math.round((filledFields / profileFields.length) * 100);
 
   const menuItems = [
-    { label: 'Edit Profile', icon: Edit3, color: 'bg-blue-50 text-blue-500', href: '/onboarding' },
-    { label: 'Help & Support', icon: MessageCircleQuestion, color: 'bg-yellow-50 text-yellow-500', href: '/support' },
-    { label: 'About DOCTIVO', icon: Info, color: 'bg-indigo-50 text-indigo-500', href: '/about' },
-    { label: 'About Founder', icon: Info, color: 'bg-purple-50 text-purple-500', href: '/about-founder' },
-    { label: 'Terms of Service', icon: FileText, color: 'bg-slate-100 text-slate-500', href: '/terms' },
-    { label: 'Privacy Policy', icon: ShieldCheck, color: 'bg-slate-100 text-slate-500', href: '/privacy-policy' },
-    { label: 'Refund Policy', icon: RefreshCcw, color: 'bg-slate-100 text-slate-500', href: '/refund-policy' },
+    { label: t('Edit Profile'), icon: Edit3, color: 'bg-blue-50 text-blue-500', href: '/onboarding' },
+    { label: t('Help & Support'), icon: MessageCircleQuestion, color: 'bg-yellow-50 text-yellow-500', href: '/support' },
+    { label: t('About DOCTIVO'), icon: Info, color: 'bg-indigo-50 text-indigo-500', href: '/about' },
+    { label: t('About Founder'), icon: Info, color: 'bg-purple-50 text-purple-500', href: '/about-founder' },
+    { label: t('Terms of Service'), icon: FileText, color: 'bg-slate-100 text-slate-500', href: '/terms' },
+    { label: t('Privacy Policy'), icon: ShieldCheck, color: 'bg-slate-100 text-slate-500', href: '/privacy-policy' },
+    { label: t('Refund Policy'), icon: RefreshCcw, color: 'bg-slate-100 text-slate-500', href: '/refund-policy' },
   ];
 
   return (
@@ -114,7 +116,7 @@ export default function ProfilePage() {
 
         <div className="w-full max-w-xs mt-4 bg-slate-50 dark:bg-slate-800 rounded-xl p-3 border border-slate-100 dark:border-slate-700">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Profile Completeness</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{t("Profile Completeness")}</span>
             <span className="text-xs font-black text-primary">{completionPercentage}%</span>
           </div>
           <div className="h-2 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
@@ -122,7 +124,7 @@ export default function ProfilePage() {
           </div>
           {completionPercentage < 100 && (
             <p onClick={() => router.push('/onboarding')} className="text-[10px] text-center font-bold text-slate-400 mt-3 cursor-pointer hover:text-primary">
-              Tap to complete your profile
+              {t("Tap to complete your profile")}
             </p>
           )}
         </div>
@@ -131,7 +133,7 @@ export default function ProfilePage() {
       <div className="p-6 space-y-6">
         {/* Settings Group */}
         <div>
-          <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-4 px-2">Settings</h3>
+          <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-4 px-2">{t("Settings")}</h3>
           <div className="flex flex-col gap-3">
             {/* Dark Mode Toggle */}
             <div className="w-full bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 flex items-center justify-between">
@@ -140,7 +142,7 @@ export default function ProfilePage() {
                   <Moon className="h-5 w-5" />
                 </div>
                 <div className="ml-4 flex-1 text-left min-w-0">
-                  <p className="text-sm font-bold text-slate-800 dark:text-slate-200">Dark Mode</p>
+                  <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{t("Dark Mode")}</p>
                 </div>
               </div>
               <Switch 
@@ -174,7 +176,7 @@ export default function ProfilePage() {
             className="w-full h-14 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 font-bold rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 transition-all"
             onClick={handleLogout}
           >
-            <LogOut className="mr-2 h-4 w-4" /> Log Out
+            <LogOut className="mr-2 h-4 w-4" /> {t("Log Out")}
           </Button>
 
           <Button 
@@ -182,7 +184,7 @@ export default function ProfilePage() {
             className="w-full h-14 bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 font-bold rounded-2xl border border-red-100 dark:border-red-900/50 shadow-sm flex items-center justify-center hover:bg-red-100 dark:hover:bg-red-900/50 active:scale-95 transition-all"
             onClick={() => setIsDeleteDialogOpen(true)}
           >
-            <Trash2 className="mr-2 h-4 w-4" /> Delete Account
+            <Trash2 className="mr-2 h-4 w-4" /> {t("Delete Account")}
           </Button>
         </div>
       </div>
@@ -193,9 +195,9 @@ export default function ProfilePage() {
             <Trash2 className="h-8 w-8 text-red-500 dark:text-red-400" />
           </div>
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-slate-900 dark:text-slate-100 text-center">Delete Account?</DialogTitle>
+            <DialogTitle className="text-xl font-bold text-slate-900 dark:text-slate-100 text-center">{t("Delete Account?")}</DialogTitle>
             <DialogDescription className="text-slate-500 dark:text-slate-400 font-medium text-[13px] pt-2 text-center leading-relaxed">
-              Deleting your account is permanent and cannot be undone. Once your account is deleted, you will lose access to your profile, and your personal information will be permanently removed or anonymized, except where retention is required by applicable law. Your medical appointment history and related records may be retained for legal, regulatory, compliance, or audit purposes, as required by law.
+              {t("Deleting your account is permanent and cannot be undone. Once your account is deleted, you will lose access to your profile, and your personal information will be permanently removed or anonymized, except where retention is required by applicable law. Your medical appointment history and related records may be retained for legal, regulatory, compliance, or audit purposes, as required by law.")}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex-row gap-3 pt-6 sm:justify-center">
@@ -205,7 +207,7 @@ export default function ProfilePage() {
               className="flex-1 h-12 rounded-xl font-bold border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300"
               disabled={isDeleting}
             >
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button 
               variant="destructive" 
@@ -213,7 +215,7 @@ export default function ProfilePage() {
               className="flex-1 h-12 rounded-xl font-bold"
               disabled={isDeleting}
             >
-              {isDeleting ? 'Deleting...' : 'Delete Account'}
+              {isDeleting ? t('Deleting...') : t('Delete Account')}
             </Button>
           </DialogFooter>
         </DialogContent>

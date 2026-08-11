@@ -113,17 +113,17 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="mobile-container flex flex-col p-6 bg-white overflow-y-auto pb-32">
+    <div className="mobile-container flex flex-col p-6 bg-white dark:bg-slate-950 overflow-y-auto pb-32 min-h-screen">
       <div className="mb-12 pt-8 text-center space-y-3">
-        <h1 className="text-3xl font-black text-slate-900 tracking-tight">Profile Details</h1>
-        <p className="text-slate-500 text-sm font-bold px-4">Complete your profile to access healthcare services.</p>
+        <h1 className="text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight">Profile Details</h1>
+        <p className="text-slate-500 dark:text-slate-400 text-sm font-bold px-4">Complete your profile to access healthcare services.</p>
       </div>
 
       <div className="space-y-10">
         <div className="flex flex-col items-center">
           <div 
             onClick={() => fileInputRef.current?.click()} 
-            className="h-32 w-32 rounded-full bg-slate-50 border-2 border-dashed border-border flex flex-col items-center justify-center cursor-pointer relative overflow-hidden shadow-sm hover:border-primary transition-all group"
+            className="h-32 w-32 rounded-full bg-slate-50 dark:bg-slate-900 border-2 border-dashed border-border dark:border-slate-700 flex flex-col items-center justify-center cursor-pointer relative overflow-hidden shadow-sm hover:border-primary dark:hover:border-primary transition-all group"
           >
             {formData.imageUrl ? (
               <Image priority src={formData.imageUrl} alt="P" fill className="object-cover" />
@@ -137,10 +137,10 @@ export default function OnboardingPage() {
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">Full Name <span className="text-red-500">*</span></Label>
+              <Label className="text-xs font-black text-slate-900 dark:text-slate-300 ml-1 uppercase tracking-widest">Full Name <span className="text-red-500">*</span></Label>
               <Input 
                 placeholder="Enter Your Name" 
-                className="h-14 rounded-2xl bg-slate-50 border-border font-bold" 
+                className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-900 border-border dark:border-slate-800 font-bold dark:text-slate-100" 
                 value={formData.name || ''} 
                 onChange={e => setFormData({...formData, name: e.target.value})} 
               />
@@ -148,21 +148,21 @@ export default function OnboardingPage() {
             
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">Age <span className="text-red-500">*</span></Label>
+                <Label className="text-xs font-black text-slate-900 dark:text-slate-300 ml-1 uppercase tracking-widest">Age <span className="text-red-500">*</span></Label>
                 <Input 
                   placeholder="e.g. 28" 
-                  className="h-14 rounded-2xl bg-slate-50 border-border font-bold" 
+                  className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-900 border-border dark:border-slate-800 font-bold dark:text-slate-100" 
                   value={formData.age || ''} 
                   onChange={e => handleNumericInput('age', e.target.value)} 
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">Gender <span className="text-red-500">*</span></Label>
+                <Label className="text-xs font-black text-slate-900 dark:text-slate-300 ml-1 uppercase tracking-widest">Gender <span className="text-red-500">*</span></Label>
                 <Select value={formData.gender} onValueChange={(val: Gender) => setFormData({...formData, gender: val})}>
-                  <SelectTrigger className="h-14 rounded-2xl bg-slate-50 border-border font-bold">
+                  <SelectTrigger className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-900 border-border dark:border-slate-800 font-bold dark:text-slate-100">
                     <SelectValue placeholder="Gender" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="dark:bg-slate-900 dark:border-slate-800">
                     <SelectItem value="Male">Male</SelectItem>
                     <SelectItem value="Female">Female</SelectItem>
                     <SelectItem value="Other">Other</SelectItem>
@@ -172,12 +172,12 @@ export default function OnboardingPage() {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">Phone Number (Optional)</Label>
+              <Label className="text-xs font-black text-slate-900 dark:text-slate-300 ml-1 uppercase tracking-widest">Phone Number (Optional)</Label>
               <div className="relative">
                 <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                 <Input 
                   placeholder="Secondary Phone" 
-                  className="h-14 pl-12 rounded-2xl bg-slate-50 border-border font-bold" 
+                  className="h-14 pl-12 rounded-2xl bg-slate-50 dark:bg-slate-900 border-border dark:border-slate-800 font-bold dark:text-slate-100" 
                   value={formData.secondaryPhone || ''} 
                   onChange={e => handleNumericInput('secondaryPhone', e.target.value)} 
                   maxLength={10}
@@ -187,23 +187,23 @@ export default function OnboardingPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">State</Label>
+                <Label className="text-xs font-black text-slate-900 dark:text-slate-300 ml-1 uppercase tracking-widest">State</Label>
                 <Select value={formData.state || ''} onValueChange={val => setFormData({...formData, state: val, city: ''})}>
-                  <SelectTrigger className="h-14 rounded-2xl bg-slate-50 border-border font-bold">
+                  <SelectTrigger className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-900 border-border dark:border-slate-800 font-bold dark:text-slate-100">
                     <SelectValue placeholder="State" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="dark:bg-slate-900 dark:border-slate-800">
                     {STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">City</Label>
+                <Label className="text-xs font-black text-slate-900 dark:text-slate-300 ml-1 uppercase tracking-widest">City</Label>
                 <Select value={formData.city || ''} onValueChange={val => setFormData({...formData, city: val})} disabled={!formData.state}>
-                  <SelectTrigger className="h-14 rounded-2xl bg-slate-50 border-border font-bold">
+                  <SelectTrigger className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-900 border-border dark:border-slate-800 font-bold dark:text-slate-100">
                     <SelectValue placeholder="City" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="dark:bg-slate-900 dark:border-slate-800">
                     {(CITIES[formData.state as string] || []).map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                   </SelectContent>
                 </Select>
@@ -211,20 +211,20 @@ export default function OnboardingPage() {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">Medical History</Label>
+              <Label className="text-xs font-black text-slate-900 dark:text-slate-300 ml-1 uppercase tracking-widest">Medical History</Label>
               <Textarea 
                 placeholder="Any previous illnesses, surgeries, or chronic conditions..." 
-                className="rounded-2xl bg-slate-50 border-border font-medium resize-none min-h-[100px]" 
+                className="rounded-2xl bg-slate-50 dark:bg-slate-900 border-border dark:border-slate-800 font-medium resize-none min-h-[100px] dark:text-slate-100" 
                 value={formData.medicalHistory || ''} 
                 onChange={e => setFormData({...formData, medicalHistory: e.target.value})} 
               />
             </div>
             
             <div className="space-y-2">
-              <Label className="text-xs font-black text-slate-900 ml-1 uppercase tracking-widest">Allergies</Label>
+              <Label className="text-xs font-black text-slate-900 dark:text-slate-300 ml-1 uppercase tracking-widest">Allergies</Label>
               <Textarea 
                 placeholder="Any allergies to medicines or food..." 
-                className="rounded-2xl bg-slate-50 border-border font-medium resize-none min-h-[80px]" 
+                className="rounded-2xl bg-slate-50 dark:bg-slate-900 border-border dark:border-slate-800 font-medium resize-none min-h-[80px] dark:text-slate-100" 
                 value={formData.allergies || ''} 
                 onChange={e => setFormData({...formData, allergies: e.target.value})} 
               />
@@ -232,9 +232,9 @@ export default function OnboardingPage() {
           </div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 p-6 bg-white/95 backdrop-blur-md border-t border-slate-200 z-50">
+      <div className="fixed bottom-0 left-0 right-0 p-6 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 z-50">
         <Button className="w-full h-18 text-xl font-black bg-primary rounded-2xl shadow-2xl shadow-primary/30" onClick={handleComplete} disabled={isLoading}>
-          {isLoading ? <Loader2 className="animate-spin h-6 w-6" /> : 'Save Profile'}
+          {isLoading ? <Loader2 className="animate-spin h-6 w-6 text-white" /> : 'Save Profile'}
         </Button>
       </div>
 

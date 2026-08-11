@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Pencil, Edit3, Trash2, Plus, Loader2, Camera, Phone, User, Search, Heart } from 'lucide-react';
+import { Pencil, Edit3, Trash2, Plus, Loader2, Camera, Phone, User, Search, Heart, Calendar } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -17,6 +17,7 @@ import { Textarea } from '@/components/ui/textarea';
 import Image from 'next/image';
 import Cropper from 'react-easy-crop';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const INITIAL_PATIENT_STATE: Partial<Patient> = {
   name: '', age: '', gender: 'Male', relation: 'Other', 
@@ -35,10 +36,13 @@ export default function PatientsPage() {
   const updatePatientStore = useStore(state => state.updatePatient);
   const isAuthenticated = useStore(state => state.isAuthenticated);
   const hasHydrated = useStore(state => state._hasHydrated);
+  const { t } = useTranslation();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [viewPatient, setViewPatient] = useState<Patient | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [search, setSearch] = useState('');
@@ -132,7 +136,7 @@ export default function PatientsPage() {
 
   const handleSavePatient = async () => {
     // Strict Validation
-    if (!currentMember.name || !currentMember.age || !currentMember.gender || !currentMember.relation) {
+    if (!currentMember.name || !currentMember.age || !currentMember.gender || !currentMember.relation || !currentMember.phone) {
       toast({ variant: 'destructive', title: 'Missing Details', description: 'Please fill in all mandatory fields (*).' });
       return;
     }
@@ -142,7 +146,7 @@ export default function PatientsPage() {
       return;
     }
 
-    if (currentMember.phone && currentMember.phone.length !== 10) {
+    if (currentMember.phone.length !== 10) {
       toast({ variant: 'destructive', title: 'Invalid Phone', description: 'Phone number must be exactly 10 digits.' });
       return;
     }
@@ -211,7 +215,7 @@ export default function PatientsPage() {
           <div className="flex-1 relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input 
-              placeholder="Search profiles..." 
+              placeholder={t("Search...")} 
               className="pl-11 h-12 bg-slate-50 dark:bg-slate-800 border-border dark:border-slate-700 rounded-full font-medium focus-visible:ring-primary/20 dark:text-slate-100" 
               value={search || ''} 
               onChange={(e) => setSearch(e.target.value)} 
@@ -227,58 +231,78 @@ export default function PatientsPage() {
       </div>
 
       <div className="bg-slate-50/50 dark:bg-slate-900/50 px-6 py-3 border-b border-border dark:border-slate-800 flex justify-between items-center">
-        <h2 className="text-[10px] font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest">Patient Profiles</h2>
-        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{displayPatients.length} Active Accounts</span>
+        <h2 className="text-[10px] font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest">{t("Patient Profiles")}</h2>
+        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{displayPatients.length} {t("Active Accounts")}</span>
       </div>
 
-      <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 bg-slate-50 dark:bg-slate-950">
+      <div className="p-6 flex flex-col gap-4 bg-slate-50 dark:bg-slate-950 max-w-6xl mx-auto">
         {displayPatients.map((patient) => (
-          <div key={patient.id} className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 border border-border dark:border-slate-800 shadow-sm hover:shadow-lg transition-all relative">
-            <div className="flex items-center space-x-5">
-              <div className="h-16 w-16 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center overflow-hidden relative border border-border dark:border-slate-700 shrink-0">
+          <div key={patient.id} className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-4">
+            
+            {/* Left Side: Info */}
+            <div className="flex items-center gap-6">
+              <div className="h-16 w-16 md:h-20 md:w-20 rounded-full bg-blue-50 dark:bg-slate-800 flex items-center justify-center overflow-hidden border-4 border-white dark:border-slate-800 shadow-sm shrink-0">
                 {patient.imageUrl ? (
                   <Image priority src={patient.imageUrl} alt={patient.name} fill className="object-cover" />
                 ) : (
-                  <span className="text-xl font-bold text-slate-400">{patient.name.charAt(0)}</span>
+                  <span className="text-2xl font-black text-slate-400">{patient.name.charAt(0)}</span>
                 )}
               </div>
-              <div className="flex-1 min-w-0 pr-4">
-                <h3 className="text-xl font-black text-slate-900 dark:text-slate-100 truncate tracking-tight">{patient.name}</h3>
-                <p className="text-[10px] font-black text-primary uppercase tracking-widest mt-1 mb-2">{patient.relation}</p>
-                <div className="flex items-center text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                  <User className="h-3 w-3 mr-1" />
-                  <span className="truncate">{patient.age} Years • {patient.gender}</span>
-                </div>
-              </div>
-              <div className="flex flex-col items-end space-y-3 shrink-0">
-                <div className="flex items-center space-x-1 bg-blue-50 dark:bg-blue-900/20 px-3 py-1 rounded-full border border-border dark:border-slate-700 shadow-sm">
-                  <Heart className="h-3 w-3 text-blue-500 fill-blue-500" />
-                  <span className="text-[10px] font-black text-blue-700 dark:text-blue-400 uppercase tracking-widest">
-                    {patient.blood_group || 'Unknown'}
+              
+              <div className="flex flex-col space-y-2">
+                <div className="flex items-center gap-3">
+                  <h3 className="text-lg md:text-xl font-bold text-slate-900 dark:text-slate-100">{patient.name}</h3>
+                  <span className={cn(
+                    "text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md", 
+                    patient.relation === 'Self' ? "bg-green-100 text-green-700" : "bg-purple-100 text-purple-700"
+                  )}>
+                    {t(patient.relation)}
                   </span>
                 </div>
-                <div className="flex space-x-2">
-                  <Button 
-                    variant="outline" 
-                    size="icon" 
-                    onClick={() => patient.relation === 'Self' ? router.push('/onboarding') : openEditModal(patient)}
-                    className="h-10 w-10 rounded-full bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-400 dark:text-slate-300 border border-border dark:border-slate-700 p-0 shadow-sm"
-                  >
-                    <Edit3 className="h-4 w-4" />
-                  </Button>
-                  {patient.relation !== 'Self' && (
-                    <Button 
-                      variant="outline" 
-                      size="icon"
-                      onClick={() => handleDelete(patient.id)}
-                      className="h-10 w-10 rounded-full bg-white dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-400 dark:text-red-400 border border-border dark:border-slate-700 p-0 shadow-sm"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  )}
+                
+                <div className="flex flex-wrap items-center text-xs text-slate-500 gap-x-4 gap-y-1 font-medium">
+                  <span className="flex items-center"><User className="h-3.5 w-3.5 mr-1 text-slate-400" /> {t(patient.gender)} • {patient.age} {t("Years")} • {patient.blood_group || 'O+'}</span>
+                  {patient.phone && <span className="flex items-center"><Phone className="h-3.5 w-3.5 mr-1 text-slate-400" /> +91 {patient.phone}</span>}
+                </div>
+                
+                <div className="flex flex-wrap items-center text-[11px] font-medium text-slate-400 gap-4 mt-1">
+                  <span className="flex items-center"><Calendar className="h-3 w-3 mr-1" /> Last Visit: 01 Jul 2026</span>
+                  <span className="flex items-center text-green-600"><span className="h-1.5 w-1.5 rounded-full bg-green-500 mr-1.5"></span> Active</span>
                 </div>
               </div>
             </div>
+
+            {/* Right Side: Actions */}
+            <div className="flex items-center gap-3 mt-4 md:mt-0 pt-4 md:pt-0 border-t md:border-t-0 border-slate-100 dark:border-slate-800 w-full md:w-auto justify-end">
+              <Button onClick={() => { setViewPatient(patient as Patient); setIsViewModalOpen(true); }} variant="outline" className="rounded-xl h-10 px-4 text-xs font-bold text-blue-600 border-blue-100 hover:bg-blue-50 dark:border-slate-700 dark:text-blue-400 dark:hover:bg-slate-800">
+                View Profile
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => patient.relation === 'Self' ? router.push('/onboarding') : openEditModal(patient)}
+                className="rounded-xl h-10 px-4 text-xs font-bold text-slate-600 hover:text-slate-900 border-slate-200 dark:border-slate-700 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800"
+              >
+                Edit
+              </Button>
+              <Button 
+                onClick={() => router.push('/doctors')}
+                className="rounded-xl h-10 px-5 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-600/20"
+              >
+                Book Appointment
+              </Button>
+              
+              {patient.relation !== 'Self' && (
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={() => handleDelete(patient.id)}
+                  className="rounded-full h-10 w-10 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors ml-1"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+            
           </div>
         ))}
 
@@ -288,8 +312,8 @@ export default function PatientsPage() {
               <Plus className="h-6 w-6" />
             </div>
             <div>
-              <p className="font-black text-slate-900 dark:text-slate-200 text-sm uppercase">No Profiles Found</p>
-              <p className="text-[10px] font-bold text-slate-400 uppercase">Your saved family profiles will appear here.</p>
+              <p className="font-black text-slate-900 dark:text-slate-200 text-sm uppercase">{t("No Profiles Found")}</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase">{t("Your saved family profiles will appear here.")}</p>
             </div>
           </div>
         )}
@@ -299,7 +323,7 @@ export default function PatientsPage() {
         <DialogContent className="max-w-[95vw] sm:max-w-md rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl h-[85vh] flex flex-col bg-white dark:bg-slate-950">
           <DialogHeader className="p-8 bg-slate-50 dark:bg-slate-900 border-b border-border">
             <DialogTitle className="text-2xl font-black tracking-tight text-slate-800 dark:text-slate-100">
-              {isEditing ? 'Update Profile' : 'Add New Member'}
+              {isEditing ? t('Update Profile') : t('Add New Member')}
             </DialogTitle>
           </DialogHeader>
           
@@ -317,21 +341,21 @@ export default function PatientsPage() {
                   )}
                   <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageSelect} />
                 </div>
-                <span className="text-[10px] font-black text-slate-400 mt-2 uppercase tracking-widest">Update Photo</span>
+                <span className="text-[10px] font-black text-slate-400 mt-2 uppercase tracking-widest">{t("Update Photo")}</span>
               </div>
 
               <div className="space-y-6 mt-6">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black text-slate-900 dark:text-slate-300 ml-1 uppercase tracking-widest">Full Name <span className="text-red-500">*</span></Label>
-                  <Input placeholder="Enter Name" className="h-14 rounded-xl bg-slate-50 dark:bg-slate-900 dark:text-slate-100 border-border font-bold" value={currentMember.name || ''} onChange={e => setCurrentMember({...currentMember, name: e.target.value.replace(/[^a-zA-Z\s]/g, '')})} />
+                  <Label className="text-[10px] font-black text-slate-900 dark:text-slate-300 ml-1 uppercase tracking-widest">{t("Full Name")} <span className="text-red-500">*</span></Label>
+                  <Input placeholder={t("Enter Name")} className="h-14 rounded-xl bg-slate-50 dark:bg-slate-900 dark:text-slate-100 border-border font-bold" value={currentMember.name || ''} onChange={e => setCurrentMember({...currentMember, name: e.target.value.replace(/[^a-zA-Z\s]/g, '')})} />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black text-slate-900 dark:text-slate-300 ml-1 uppercase tracking-widest">Age <span className="text-red-500">*</span></Label>
+                    <Label className="text-[10px] font-black text-slate-900 dark:text-slate-300 ml-1 uppercase tracking-widest">{t("Age")} <span className="text-red-500">*</span></Label>
                     <Input 
                       type="number" 
-                      placeholder="Enter Your Age" 
+                      placeholder={t("Enter Your Age")} 
                       className={cn("h-14 rounded-xl bg-slate-50 dark:bg-slate-900 dark:text-slate-100 border-border font-bold", Number(currentMember.age) > 250 && "border-red-500")}
                       value={currentMember.age || ''} 
                       min="0"
@@ -340,9 +364,9 @@ export default function PatientsPage() {
                     {Number(currentMember.age) > 250 && <p className="text-red-500 text-[10px] mt-1 font-bold">Age must be less than 250.</p>}
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black text-slate-900 dark:text-slate-300 ml-1 uppercase tracking-widest">Blood Group</Label>
+                    <Label className="text-[10px] font-black text-slate-900 dark:text-slate-300 ml-1 uppercase tracking-widest">{t("Blood Group")}</Label>
                     <Select value={currentMember.blood_group || ''} onValueChange={v => setCurrentMember({...currentMember, blood_group: v})}>
-                      <SelectTrigger className="h-14 rounded-xl bg-slate-50 dark:bg-slate-900 dark:text-slate-100 border-border font-bold"><SelectValue placeholder="Select" /></SelectTrigger>
+                      <SelectTrigger className="h-14 rounded-xl bg-slate-50 dark:bg-slate-900 dark:text-slate-100 border-border font-bold"><SelectValue placeholder={t("Select")} /></SelectTrigger>
                       <SelectContent className="rounded-2xl">
                         {['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-', 'Unknown'].map(bg => (<SelectItem key={bg} value={bg} className="font-bold">{bg}</SelectItem>))}
                       </SelectContent>
@@ -352,7 +376,7 @@ export default function PatientsPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black text-slate-900 dark:text-slate-300 ml-1 uppercase tracking-widest">Height (cm)</Label>
+                    <Label className="text-[10px] font-black text-slate-900 dark:text-slate-300 ml-1 uppercase tracking-widest">{t("Height (cm)")}</Label>
                     <Input 
                       type="number" 
                       placeholder="175" 
@@ -364,11 +388,11 @@ export default function PatientsPage() {
                     {Number(currentMember.height_cm) > 300 && <p className="text-red-500 text-[10px] mt-1 font-bold">Invalid height.</p>}
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black text-slate-900 dark:text-slate-300 ml-1 uppercase tracking-widest">Gender <span className="text-red-500">*</span></Label>
+                    <Label className="text-[10px] font-black text-slate-900 dark:text-slate-300 ml-1 uppercase tracking-widest">{t("Gender")} <span className="text-red-500">*</span></Label>
                     <Select value={currentMember.gender || ''} onValueChange={v => setCurrentMember({...currentMember, gender: v as Gender})}>
                       <SelectTrigger className="h-14 rounded-xl bg-slate-50 dark:bg-slate-900 dark:text-slate-100 border-border font-bold"><SelectValue /></SelectTrigger>
                       <SelectContent className="rounded-2xl">
-                        {['Male', 'Female', 'Other'].map(g => (<SelectItem key={g} value={g} className="font-bold">{g}</SelectItem>))}
+                        {['Male', 'Female', 'Other'].map(g => (<SelectItem key={g} value={g} className="font-bold">{t(g)}</SelectItem>))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -376,7 +400,7 @@ export default function PatientsPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black text-slate-900 dark:text-slate-300 ml-1 uppercase tracking-widest">Weight (kg)</Label>
+                    <Label className="text-[10px] font-black text-slate-900 dark:text-slate-300 ml-1 uppercase tracking-widest">{t("Weight (kg)")}</Label>
                     <Input 
                       type="number" 
                       placeholder="70" 
@@ -388,23 +412,23 @@ export default function PatientsPage() {
                     {Number(currentMember.weight_kg) > 300 && <p className="text-red-500 text-[10px] mt-1 font-bold">Invalid weight.</p>}
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black text-slate-900 dark:text-slate-300 ml-1 uppercase tracking-widest">Relation <span className="text-red-500">*</span></Label>
+                    <Label className="text-[10px] font-black text-slate-900 dark:text-slate-300 ml-1 uppercase tracking-widest">{t("Relation")} <span className="text-red-500">*</span></Label>
                     <Select value={currentMember.relation || ''} onValueChange={v => setCurrentMember({...currentMember, relation: v})}>
                       <SelectTrigger className="h-14 rounded-xl bg-slate-50 dark:bg-slate-900 dark:text-slate-100 border-border font-bold"><SelectValue /></SelectTrigger>
                       <SelectContent className="rounded-2xl">
-                        {['Father', 'Mother', 'Spouse', 'Child', 'Sibling', 'Other'].map(r => (<SelectItem key={r} value={r} className="font-bold">{r}</SelectItem>))}
+                        {['Father', 'Mother', 'Spouse', 'Child', 'Sibling', 'Other'].map(r => (<SelectItem key={r} value={r} className="font-bold">{t(r)}</SelectItem>))}
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black text-slate-900 dark:text-slate-300 ml-1 uppercase tracking-widest">Mobile Number (10 Digits)</Label>
+                  <Label className="text-[10px] font-black text-slate-900 dark:text-slate-300 ml-1 uppercase tracking-widest">{t("Mobile Number (10 Digits)")} <span className="text-red-500">*</span></Label>
                   <div className="relative">
                     <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                     <Input 
                       type="tel" 
-                      placeholder="Mobile Number" 
+                      placeholder={t("Mobile Number")} 
                       maxLength={10}
                       className="h-14 rounded-xl bg-slate-50 dark:bg-slate-900 dark:text-slate-100 border-border pl-12 font-bold" 
                       value={currentMember.phone || ''} 
@@ -416,9 +440,9 @@ export default function PatientsPage() {
                 <hr className="border-border my-6" />
 
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black text-slate-900 dark:text-slate-300 ml-1 uppercase tracking-widest">Medical History (Optional)</Label>
+                  <Label className="text-[10px] font-black text-slate-900 dark:text-slate-300 ml-1 uppercase tracking-widest">{t("Medical History (Optional)")}</Label>
                   <Textarea 
-                    placeholder="Brief history of illnesses, surgeries, or chronic conditions..." 
+                    placeholder={t("Brief history of illnesses, surgeries, or chronic conditions...")} 
                     className="rounded-xl bg-slate-50 dark:bg-slate-900 dark:text-slate-100 border-border font-bold min-h-[100px]" 
                     value={currentMember.medicalHistory || ''} 
                     onChange={e => setCurrentMember({...currentMember, medicalHistory: e.target.value})} 
@@ -426,9 +450,9 @@ export default function PatientsPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black text-slate-900 dark:text-slate-300 ml-1 uppercase tracking-widest">Allergies (Optional)</Label>
+                  <Label className="text-[10px] font-black text-slate-900 dark:text-slate-300 ml-1 uppercase tracking-widest">{t("Allergies (Optional)")}</Label>
                   <Textarea 
-                    placeholder="Mention any drug, food, or environmental allergies..." 
+                    placeholder={t("Mention any drug, food, or environmental allergies...")} 
                     className="rounded-xl bg-slate-50 dark:bg-slate-900 dark:text-slate-100 border-border font-bold min-h-[100px]" 
                     value={currentMember.allergies || ''} 
                     onChange={e => setCurrentMember({...currentMember, allergies: e.target.value})} 
@@ -440,7 +464,7 @@ export default function PatientsPage() {
           
           <div className="p-8 bg-white dark:bg-slate-950 border-t border-border z-50">
             <Button className="w-full h-16 bg-primary font-black text-lg rounded-2xl shadow-xl shadow-primary/20 hover:bg-primary/90 transition-all" onClick={handleSavePatient} disabled={isSaving}>
-              {isSaving ? <Loader2 className="animate-spin h-6 w-6" /> : (isEditing ? 'Save Changes' : 'Add Profile')}
+              {isSaving ? <Loader2 className="animate-spin h-6 w-6" /> : (isEditing ? t('Save Changes') : t('Add Profile'))}
             </Button>
           </div>
         </DialogContent>
@@ -450,19 +474,70 @@ export default function PatientsPage() {
         <Dialog open={isCropping} onOpenChange={setIsCropping}>
           <DialogContent className="max-w-[90vw] h-[550px] flex flex-col rounded-[2.5rem] p-0 overflow-hidden border-none z-[1000] bg-white dark:bg-slate-950">
             <DialogHeader className="p-6 bg-white dark:bg-slate-900 border-b border-border">
-              <DialogTitle className="text-center font-black dark:text-slate-100">Adjust Photo</DialogTitle>
+              <DialogTitle className="text-center font-black dark:text-slate-100">{t("Adjust Photo")}</DialogTitle>
             </DialogHeader>
             <div className="relative flex-1 bg-slate-900">
               <Cropper image={imageToCrop || ''} crop={crop} zoom={zoom} aspect={1} onCropChange={setCrop} onCropComplete={onCropComplete} onZoomChange={setZoom} />
             </div>
             <div className="p-8 bg-white dark:bg-slate-950 space-y-6">
               <input type="range" min={1} max={3} step={0.1} value={zoom} onChange={e => setZoom(Number(e.target.value))} className="w-full accent-primary" />
-              <Button onClick={getCroppedImg} className="w-full h-16 bg-primary text-white font-black text-lg rounded-2xl shadow-xl shadow-primary/20">Confirm Photo</Button>
+              <Button onClick={getCroppedImg} className="w-full h-16 bg-primary text-white font-black text-lg rounded-2xl shadow-xl shadow-primary/20">{t("Confirm Photo")}</Button>
             </div>
           </DialogContent>
         </Dialog>
       )}
 
+      {/* View Profile Modal */}
+      <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
+        <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-3xl">
+          {viewPatient && (
+            <div className="flex flex-col">
+              <div className="bg-gradient-to-br from-blue-600 to-indigo-600 p-8 flex flex-col items-center justify-center text-white relative">
+                <div className="absolute inset-0 bg-white/10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.15) 1px, transparent 0)', backgroundSize: '16px 16px' }}></div>
+                <div className="relative h-24 w-24 rounded-full bg-white/20 flex items-center justify-center overflow-hidden border-4 border-white/30 shadow-lg mb-4">
+                  {viewPatient.imageUrl ? (
+                    <Image src={viewPatient.imageUrl} alt={viewPatient.name} fill className="object-cover" />
+                  ) : (
+                    <span className="text-4xl font-black">{viewPatient.name?.charAt(0)}</span>
+                  )}
+                </div>
+                <h2 className="text-2xl font-black z-10">{viewPatient.name}</h2>
+                <p className="text-sm font-bold text-blue-100 mt-1 z-10">{t(viewPatient.relation || 'Other')} • {viewPatient.blood_group || 'Unknown Blood Group'}</p>
+              </div>
+              <div className="p-6 space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{t("Gender")}</p>
+                    <p className="font-bold text-slate-800 dark:text-slate-200">{t(viewPatient.gender || 'N/A')}</p>
+                  </div>
+                  <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{t("Age")}</p>
+                    <p className="font-bold text-slate-800 dark:text-slate-200">{viewPatient.age || 'N/A'} {t("Years")}</p>
+                  </div>
+                </div>
+                {viewPatient.phone && (
+                  <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 flex items-center gap-3">
+                    <Phone className="h-5 w-5 text-slate-400" />
+                    <div>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t("Contact")}</p>
+                      <p className="font-bold text-slate-800 dark:text-slate-200">+91 {viewPatient.phone}</p>
+                    </div>
+                  </div>
+                )}
+                {viewPatient.medicalHistory && (
+                  <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{t("Medical History")}</p>
+                    <p className="text-sm font-medium text-slate-600 dark:text-slate-400">{viewPatient.medicalHistory}</p>
+                  </div>
+                )}
+                <Button onClick={() => setIsViewModalOpen(false)} className="w-full bg-slate-200 hover:bg-slate-300 text-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 rounded-xl font-bold h-12 mt-4">
+                  Close
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

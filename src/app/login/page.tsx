@@ -236,7 +236,7 @@ export default function LoginPage() {
         <div className="w-full max-w-[440px] flex flex-col min-h-[85vh] lg:min-h-0 justify-between lg:justify-center lg:space-y-10 py-8">
           <div className="flex flex-col items-center space-y-3 lg:hidden">
             <div className="h-16 w-16 rounded-2xl flex items-center justify-center shadow-lg relative overflow-hidden">
-              <Image priority src="/562c71b5-1be4-415a-94dc-002e1889eb7c-8.jpg" alt="Logo" fill className="object-contain p-2" />
+              <Image priority src="/562c71b5-1be4-415a-94dc-002e1889eb7c-8.jpg" alt="Logo" fill sizes="(max-width: 768px) 100vw, 33vw" className="object-contain p-2" />
              </div>
              <div className="text-center">
                <h1 className="text-xl font-black tracking-tight text-slate-800">DOCTIVO</h1>

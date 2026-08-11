@@ -164,12 +164,9 @@ export default function RootLayout({
       </head>
       <body className={`antialiased bg-slate-50 min-h-screen selection:bg-blue-100 ${inter.className}`} suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-          <div className="main-wrapper w-full min-h-screen flex flex-col">
-            <GlobalSidebar />
-            <div className="flex-1">
-              {children}
-            </div>
-          </div>
+          <GlobalSidebar>
+            {children}
+          </GlobalSidebar>
           <Toaster />
         </ThemeProvider>
       </body>

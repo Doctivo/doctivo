@@ -67,6 +67,11 @@ export async function createAppointment(app: Partial<Appointment>) {
     return { success: false, error: 'Database accepted query but no rows were saved.' };
   } catch (error: any) {
     console.error('CRITICAL DB ERROR during createAppointment:', error.message);
+    
+    if (error.code === '23505' && error.constraint === 'idx_unique_appointment') {
+      return { success: false, error: 'This time slot is already booked. Please choose another slot.' };
+    }
+    
     return { 
       success: false, 
       error: error.message || 'Failed to record booking in database.' 
@@ -228,5 +233,41 @@ export async function getBookedSlots(doctorId: string, date: string) {
   } catch (error) {
     console.error('Error fetching booked slots:', error);
     return [];
+  }
+}
+
+export async function rescheduleAppointment(appId: string, newDate: string, newTime: string) {
+  try {
+    const app = await query("SELECT doctor_id FROM appointments WHERE appointment_id = $1", [appId]);
+    if (!app.rows.length) return { success: false, error: 'Appointment not found' };
+    const doctorId = app.rows[0].doctor_id;
+
+    const existingCheck = await query(
+      "SELECT appointment_id FROM appointments WHERE doctor_id = $1 AND appointment_date = $2 AND appointment_time_slot = $3 AND status != 'Cancelled'",
+      [doctorId, newDate, newTime]
+    );
+    if (existingCheck.rows.length > 0) {
+      return { success: false, error: 'This time slot is already booked. Please choose another slot.' };
+    }
+
+    const tokenResult = await query(
+      "SELECT COUNT(*) as count FROM appointments WHERE doctor_id = $1 AND appointment_date = $2",
+      [doctorId, newDate]
+    );
+    const tokenNumber = parseInt(tokenResult.rows[0].count || '0') + 1;
+
+    await query(`
+      UPDATE appointments 
+      SET appointment_date = $1, appointment_time_slot = $2, token_number = $3 
+      WHERE appointment_id = $4
+    `, [newDate, newTime, tokenNumber, appId]);
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Reschedule error:', error);
+    if (error.code === '23505' && error.constraint === 'idx_unique_appointment') {
+      return { success: false, error: 'This time slot is already booked. Please choose another slot.' };
+    }
+    return { success: false, error: error.message || 'Failed to reschedule.' };
   }
 }

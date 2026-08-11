@@ -1,14 +1,14 @@
 'use client';
 
 import { use, useState, useEffect, Suspense } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { 
   ChevronLeft, Star, MapPin, Loader2, Award, Briefcase, Info 
 } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
-import { createAppointment, getBookedSlots } from '@/app/actions/appointment-actions';
+import { createAppointment, getBookedSlots, rescheduleAppointment } from '@/app/actions/appointment-actions';
 import { getDoctorById } from '@/app/actions/doctor-actions';
 import { getFamilyMembers } from '@/app/actions/patient-actions';
 import { useToast } from '@/hooks/use-toast';
@@ -21,6 +21,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import Link from 'next/link';
 
 const generateTimeSlots = (start: string, end: string, duration: number, selectedDate: string) => {
   const slots = [];
@@ -57,6 +59,8 @@ const generateTimeSlots = (start: string, end: string, duration: number, selecte
 
 function BookingContent({ id }: { id: string }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const rescheduleAppId = searchParams?.get('reschedule');
   const patients = useStore(state => state.patients);
   const setPatientsStore = useStore(state => state.setPatients);
   const addAppointmentStore = useStore(state => state.addAppointment);
@@ -73,10 +77,16 @@ function BookingContent({ id }: { id: string }) {
   const [isBooking, setIsBooking] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [bypassTxnId, setBypassTxnId] = useState<string | null>(null);
 
   const getNext7Days = () => {
     const dates = [];
-    for (let i = 0; i < 7; i++) {
+    const now = new Date();
+    const isRestricted = doc?.stops_booking_at_midnight === true;
+    const startOffset = isRestricted ? 1 : 0;
+    
+    for (let i = startOffset; i < startOffset + 7; i++) {
       const d = new Date();
       d.setDate(d.getDate() + i);
       dates.push({
@@ -92,6 +102,19 @@ function BookingContent({ id }: { id: string }) {
     async function load() {
       const data = await getDoctorById(id);
       setDoc(data);
+      
+      const isRestricted = data?.stops_booking_at_midnight === true;
+      const startOffset = isRestricted ? 1 : 0;
+      
+      const firstValidDate = new Date();
+      firstValidDate.setDate(firstValidDate.getDate() + startOffset);
+      const firstValidDateStr = firstValidDate.toISOString().split('T')[0];
+
+      if (selectedDate < firstValidDateStr) {
+        setSelectedDate(firstValidDateStr);
+        return; // Effect will re-run with the updated selectedDate
+      }
+
       const booked = await getBookedSlots(id, selectedDate);
       setBookedSlots(booked);
       setIsFetching(false);
@@ -117,8 +140,24 @@ function BookingContent({ id }: { id: string }) {
       setShowCompleteProfile(true);
       return;
     }
-
     setIsBooking(true);
+
+    if (bypassTxnId) {
+      finalizeBooking(bypassTxnId, patient);
+      return;
+    }
+    
+    if (rescheduleAppId) {
+      const res = await rescheduleAppointment(rescheduleAppId, selectedDate, selectedSlot);
+      if (res.success) {
+        toast({ title: 'Success', description: 'Appointment rescheduled successfully.' });
+        router.push('/appointments');
+      } else {
+        toast({ variant: 'destructive', title: 'Failed', description: res.error || 'Failed to reschedule.' });
+      }
+      setIsBooking(false);
+      return;
+    }
     
     try {
       // 1. Create order on backend
@@ -235,9 +274,11 @@ function BookingContent({ id }: { id: string }) {
     if (res.success) {
       addAppointmentStore({...appData, tokenNumber: res.data.token_number, visit_otp: res.data.visit_otp} as any);
       router.push(`/success?id=${appData.id}`);
+      setBypassTxnId(null);
     } else {
       setIsBooking(false);
-      toast({ variant: 'destructive', title: 'Failed', description: res.error });
+      setBypassTxnId(txnId);
+      toast({ variant: 'destructive', title: 'Booking Failed', description: res.error + ' (Your payment was successful. Please select a different slot and try again to book without paying.)' });
     }
   };
 
@@ -263,58 +304,58 @@ function BookingContent({ id }: { id: string }) {
   if (!doc) return <div className="p-10 text-center">Doctor not found</div>;
 
   return (
-    <div className="mobile-container pb-60 bg-slate-50 min-h-screen overflow-y-auto">
-      <div className="bg-white p-4 flex items-center justify-between sticky top-0 z-30 border-b border-border shadow-sm">
+    <div className="mobile-container pb-60 bg-slate-50 dark:bg-slate-950 min-h-screen overflow-y-auto">
+      <div className="bg-white dark:bg-slate-900 p-4 flex items-center justify-between sticky top-0 z-30 border-b border-border shadow-sm">
         <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="h-10 w-10 flex items-center justify-center bg-slate-100 rounded-full border border-border">
-            <ChevronLeft className="h-6 w-6 text-slate-700" />
+          <button onClick={() => router.back()} className="h-10 w-10 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-full border border-border">
+            <ChevronLeft className="h-6 w-6 text-slate-700 dark:text-slate-300" />
           </button>
-          <h1 className="text-xl font-black text-slate-800 tracking-tight">Doctor Details</h1>
+          <h1 className="text-xl font-black text-slate-800 dark:text-slate-100 tracking-tight">Doctor Details</h1>
         </div>
       </div>
 
       <div className="p-6 space-y-8">
-        <Card className="border-border shadow-sm rounded-[2.5rem] overflow-hidden bg-white border-2">
+        <Card className="border-border dark:border-slate-800 shadow-sm rounded-[2.5rem] overflow-hidden bg-white dark:bg-slate-900 border-2">
           <CardContent className="p-8 space-y-6">
             <div className="flex space-x-6">
-              <div className="h-24 w-24 rounded-3xl bg-slate-50 flex items-center justify-center overflow-hidden relative border-2 border-slate-100">
+              <div className="h-24 w-24 rounded-3xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center overflow-hidden relative border-2 border-slate-100 dark:border-slate-700">
                 {doc.imageUrl ? <Image priority src={doc.imageUrl} alt={doc.name} fill className="object-cover" /> : <span className="text-4xl">🏥</span>}
               </div>
               <div className="flex-1 space-y-1">
-                <h2 className="font-black text-slate-900 text-xl uppercase tracking-tight">{doc.name}</h2>
+                <h2 className="font-black text-slate-900 dark:text-slate-100 text-xl uppercase tracking-tight">{doc.name}</h2>
                 <p className="text-sm font-bold text-primary uppercase tracking-widest">{doc.specialty}</p>
-                <div className="flex items-center text-[11px] font-black text-yellow-600 bg-yellow-50 px-2.5 py-1 rounded-full border border-yellow-200 w-fit">
+                <div className="flex items-center text-[11px] font-black text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/30 px-2.5 py-1 rounded-full border border-yellow-200 dark:border-yellow-900/50 w-fit">
                   <Star className="h-3 w-3 fill-yellow-600 mr-1" /> {doc.rating} Rating
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 py-4 border-y border-slate-50">
+            <div className="grid grid-cols-2 gap-4 py-4 border-y border-slate-50 dark:border-slate-800">
               <div className="flex items-center space-x-3">
-                <div className="h-10 w-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center"><Award className="h-5 w-5" /></div>
-                <div><p className="text-[10px] font-black text-slate-400 uppercase">Education</p><p className="text-xs font-bold text-slate-800">{doc.qualification || 'MBBS, MD'}</p></div>
+                <div className="h-10 w-10 rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center"><Award className="h-5 w-5" /></div>
+                <div><p className="text-[10px] font-black text-slate-400 uppercase">Education</p><p className="text-xs font-bold text-slate-800 dark:text-slate-200">{doc.qualification || 'MBBS, MD'}</p></div>
               </div>
               <div className="flex items-center space-x-3">
-                <div className="h-10 w-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center"><Briefcase className="h-5 w-5" /></div>
-                <div><p className="text-[10px] font-black text-slate-400 uppercase">Experience</p><p className="text-xs font-bold text-slate-800">{doc.experience}</p></div>
+                <div className="h-10 w-10 rounded-xl bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 flex items-center justify-center"><Briefcase className="h-5 w-5" /></div>
+                <div><p className="text-[10px] font-black text-slate-400 uppercase">Experience</p><p className="text-xs font-bold text-slate-800 dark:text-slate-200">{doc.experience}</p></div>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Alert className="bg-blue-50 border-blue-100 rounded-2xl">
-          <Info className="h-4 w-4 text-blue-600" />
-          <AlertTitle className="text-blue-700 font-black text-xs uppercase tracking-widest">Arrival Instruction</AlertTitle>
-          <AlertDescription className="text-blue-600 text-xs font-bold">
+        <Alert className="bg-blue-50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-900/50 rounded-2xl">
+          <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+          <AlertTitle className="text-blue-700 dark:text-blue-300 font-black text-xs uppercase tracking-widest">Arrival Instruction</AlertTitle>
+          <AlertDescription className="text-blue-600 dark:text-blue-400 text-xs font-bold">
             Please arrive at least 10 minutes prior to your selected slot on <strong>{selectedDate}</strong> for smooth check-in.
           </AlertDescription>
         </Alert>
 
         <div className="space-y-4">
           <h3 className="text-xs font-black uppercase text-slate-400 px-1">Select Patient</h3>
-          <select value={selectedPatientId} onChange={e => setSelectedPatientId(e.target.value)} className="w-full h-14 rounded-2xl bg-white border-2 border-slate-100 px-4 font-bold outline-none">
+          <select value={selectedPatientId} onChange={e => setSelectedPatientId(e.target.value)} className="w-full h-14 rounded-2xl bg-white dark:bg-slate-900 dark:text-slate-100 border-2 border-slate-100 dark:border-slate-800 px-4 font-bold outline-none focus:border-primary/50">
             <option value="">Select a profile</option>
-            {patients.map(p => <option key={p.id} value={p.id}>{p.name} ({p.relation})</option>)}
+            {patients.map(p => <option key={p.id} value={p.id} className="bg-white dark:bg-slate-800">{p.name} ({p.relation})</option>)}
           </select>
         </div>
 
@@ -327,7 +368,7 @@ function BookingContent({ id }: { id: string }) {
                 onClick={() => toggleReason(reason)}
                 className={cn(
                   "px-4 py-2 rounded-xl text-xs font-bold border-2 transition-all",
-                  selectedReasons.includes(reason) ? "bg-primary border-primary text-white" : "bg-white border-slate-100 text-slate-600"
+                  selectedReasons.includes(reason) ? "bg-primary border-primary text-white" : "bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-300"
                 )}
               >
                 {reason}
@@ -335,7 +376,7 @@ function BookingContent({ id }: { id: string }) {
             ))}
             <button 
               onClick={() => setShowCustomSymptom(!showCustomSymptom)}
-              className={cn("px-4 py-2 rounded-xl text-xs font-bold border-2 border-dashed", showCustomSymptom ? "bg-slate-100 border-slate-300" : "border-slate-300 text-slate-400")}
+              className={cn("px-4 py-2 rounded-xl text-xs font-bold border-2 border-dashed", showCustomSymptom ? "bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700" : "border-slate-300 dark:border-slate-700 text-slate-400 dark:text-slate-500")}
             >
               + Other
             </button>
@@ -345,13 +386,18 @@ function BookingContent({ id }: { id: string }) {
               placeholder="Describe your symptoms briefly..." 
               value={symptoms} 
               onChange={e => setSymptoms(e.target.value)} 
-              className="mt-3 rounded-2xl bg-white border-2 border-slate-100 font-bold"
+              className="mt-3 rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 text-slate-800 dark:text-slate-200 font-bold"
             />
           )}
         </div>
 
         <div className="space-y-4">
           <h3 className="text-xs font-black uppercase text-slate-400 px-1">Select Date</h3>
+          {doc?.stops_booking_at_midnight && (
+            <div className="bg-amber-50 border border-amber-200 text-amber-700 px-3 py-2.5 rounded-xl text-xs font-bold">
+              please book next day oppointment till 11:59pm
+            </div>
+          )}
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
             {getNext7Days().map((d) => (
               <button 
@@ -361,11 +407,11 @@ function BookingContent({ id }: { id: string }) {
                   "min-w-[70px] h-20 rounded-2xl flex flex-col items-center justify-center font-black border-2 transition-all shrink-0",
                   selectedDate === d.fullDate 
                     ? "bg-primary border-primary text-white shadow-lg shadow-primary/30" 
-                    : "bg-white border-slate-100 text-slate-400 hover:border-slate-300"
+                    : "bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-400 hover:border-slate-300 dark:hover:border-slate-700"
                 )}
               >
                 <span className="text-[10px] uppercase tracking-widest opacity-80">{d.dayName}</span>
-                <span className={cn("text-xl mt-1", selectedDate === d.fullDate ? "text-white" : "text-slate-800")}>{d.dayNumber}</span>
+                <span className={cn("text-xl mt-1", selectedDate === d.fullDate ? "text-white" : "text-slate-800 dark:text-slate-200")}>{d.dayNumber}</span>
               </button>
             ))}
           </div>
@@ -383,8 +429,8 @@ function BookingContent({ id }: { id: string }) {
                   onClick={() => setSelectedSlot(slot)} 
                   className={cn(
                     "py-3 rounded-xl font-black text-[10px] border-2 transition-all", 
-                    isBooked ? "bg-slate-100 border-slate-100 text-slate-300 cursor-not-allowed line-through" :
-                    selectedSlot === slot ? "bg-primary border-primary text-white" : "bg-white border-slate-100 text-slate-800"
+                    isBooked ? "bg-slate-100 dark:bg-slate-800 border-slate-100 dark:border-slate-800 text-slate-300 dark:text-slate-600 cursor-not-allowed line-through" :
+                    selectedSlot === slot ? "bg-primary border-primary text-white" : "bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-800 dark:text-slate-200"
                   )}
                 >
                   {slot}
@@ -395,12 +441,22 @@ function BookingContent({ id }: { id: string }) {
         </div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 p-6 bg-white border-t border-border z-40 shadow-xl">
-        <div className="max-w-[480px] mx-auto flex items-center gap-6">
-          <div className="flex-1"><span className="text-slate-400 text-[10px] font-black block">FEES</span><span className="text-slate-900 text-2xl font-black">₹{doc.fees}</span></div>
-          <Button className="h-14 px-10 text-lg font-black bg-primary rounded-2xl flex-1" disabled={!selectedSlot || !selectedPatientId || isBooking} onClick={processPayment}>
-            {isBooking ? <Loader2 className="animate-spin" /> : 'Confirm Booking'}
-          </Button>
+      <div className="fixed bottom-0 left-0 right-0 p-6 bg-white dark:bg-slate-900 border-t border-border dark:border-slate-800 z-40 shadow-xl">
+        <div className="max-w-[480px] mx-auto space-y-4">
+          <div className="flex items-start space-x-3 px-1">
+            <Checkbox id="terms" checked={acceptedTerms} onCheckedChange={(checked) => setAcceptedTerms(checked as boolean)} className="mt-1" />
+            <label htmlFor="terms" className="text-[11px] text-slate-500 font-medium leading-tight">
+              I agree to the <Link href="/privacy-policy" className="text-primary hover:underline font-bold">Privacy Policy</Link>, <Link href="/terms" className="text-primary hover:underline font-bold">Terms & Conditions</Link>, and <Link href="/refund-policy" className="text-primary hover:underline font-bold">Refund Policy</Link>.
+            </label>
+          </div>
+          <div className="flex items-center gap-6">
+            {!rescheduleAppId && (
+              <div className="flex-1"><span className="text-slate-400 text-[10px] font-black block">FEES</span><span className="text-slate-900 dark:text-slate-100 text-2xl font-black">₹{doc.fees}</span></div>
+            )}
+            <Button className="h-14 px-10 text-lg font-black bg-primary rounded-2xl flex-1" disabled={!selectedSlot || !selectedPatientId || !acceptedTerms || isBooking} onClick={processPayment}>
+              {isBooking ? <Loader2 className="animate-spin" /> : rescheduleAppId ? 'Confirm Reschedule' : 'Confirm Booking'}
+            </Button>
+          </div>
         </div>
       </div>
 

@@ -54,6 +54,7 @@ export interface Doctor {
   longitude?: number;
   distance?: number;
   consultationModes?: string;
+  stops_booking_at_midnight?: boolean;
 }
 
 export interface UserProfile extends Patient {

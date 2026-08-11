@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { getDoctors } from '@/app/actions/doctor-actions';
+import { useTranslation } from '@/hooks/useTranslation';
 import { Doctor } from '@/lib/types';
 import Image from 'next/image';
 
@@ -25,6 +26,7 @@ function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
 function DoctorsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t } = useTranslation();
   const filterSpecialtyFromQuery = searchParams.get('specialty');
   const isAuthenticated = useStore(state => state.isAuthenticated);
   const hasHydrated = useStore(state => state._hasHydrated);
@@ -144,12 +146,16 @@ function DoctorsContent() {
     }
     if (debouncedSearch) {
       // Fuzzy matching logic approximation: check if all characters exist in order, or simple includes
-      const term = debouncedSearch.toLowerCase().trim();
-      list = list.filter(doc => 
-        doc.name.toLowerCase().includes(term) || 
-        doc.specialty.toLowerCase().includes(term) ||
-        (doc.reasonsForVisit || []).some((r: string) => r.toLowerCase().includes(term))
-      );
+      const terms = debouncedSearch.toLowerCase().trim().split(/\s+/);
+      list = list.filter(doc => {
+        const searchableText = [
+          doc.name, 
+          doc.specialty, 
+          ...(doc.reasonsForVisit || [])
+        ].join(' ').toLowerCase();
+        // Check if ALL search terms are found anywhere in the searchable text
+        return terms.every(term => searchableText.includes(term));
+      });
     }
     if (isHomeVisit && !isNaN(userLat) && !isNaN(userLng)) {
       list = list.map(doc => ({ ...doc, distance: getDistance(userLat, userLng, doc.latitude ?? 26.7606, doc.longitude ?? 83.3731) }));
@@ -245,7 +251,7 @@ function DoctorsContent() {
 
       <div className="p-6 space-y-6">
         <div className="flex justify-between items-center">
-          <h2 className="text-xl font-black text-slate-900 tracking-tight">Available Doctors</h2>
+          <h2 className="text-xl font-black text-slate-900 tracking-tight">{t("Available Doctors")}</h2>
           <Button onClick={loadDoctors} variant="ghost" size="icon" className="h-8 w-8 text-slate-400"><RefreshCcw className={isLoading ? "animate-spin" : ""} /></Button>
         </div>
 
@@ -295,7 +301,7 @@ function DoctorsContent() {
           </div>
         )}
 
-        <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">All Specialists</h3>
+        <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">{t("Our Specialists")}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-20"><Loader2 className="h-10 w-10 animate-spin text-primary mb-4" /><p className="text-xs font-black text-slate-400 uppercase tracking-widest">Searching Profiles...</p></div>
@@ -341,7 +347,7 @@ function DoctorsContent() {
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Fee</span>
                     <span className="text-lg font-black text-slate-900 leading-none">₹{doc.fees}</span>
                   </div>
-                  <Button size="sm" className="h-11 px-8 rounded-xl font-black bg-primary shadow-lg shadow-primary/20 text-xs">Book Slot</Button>
+                  <Button size="sm" className="h-11 px-8 rounded-xl font-black bg-primary shadow-lg shadow-primary/20 text-xs">{t("Book Now")}</Button>
                 </div>
               </CardContent>
             </Card>
