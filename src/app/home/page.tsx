@@ -243,11 +243,14 @@ const quickActions = [
               <CarouselContent>
                 <CarouselItem key="static-banner-1">
                   <div className={cn("w-full aspect-[21/9] rounded-[2rem] overflow-hidden shadow-lg border border-slate-100 dark:border-slate-800 relative flex items-center bg-blue-600")}>
-                    <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent"></div>
-                    <div className="relative z-10 p-6 flex flex-col justify-center h-full w-2/3 text-white">
+                    <div className="absolute right-0 top-0 bottom-0 w-2/3 overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-l from-transparent via-blue-600/60 to-blue-600 z-10" />
+                      <img src="/modern_clinic.jpg" alt="Clinic" className="w-full h-full object-cover opacity-60 mix-blend-overlay" />
+                    </div>
+                    <div className="relative z-20 p-6 flex flex-col justify-center h-full w-2/3 text-white">
                       <h3 className="font-black text-lg leading-tight mb-1">Welcome to Doctivo</h3>
                       <p className="text-[10px] font-medium opacity-90 mb-3 line-clamp-2">Your trusted partner for accessible and organized healthcare.</p>
-                      <Link href="/doctors" className="bg-white text-black px-4 py-1.5 rounded-full text-[10px] font-bold w-fit hover:bg-slate-100 transition-colors">
+                      <Link href="/doctors" className="bg-white text-black px-4 py-1.5 rounded-full text-[10px] font-bold w-fit hover:bg-slate-100 transition-colors shadow-lg">
                         Book Now
                       </Link>
                     </div>
@@ -404,18 +407,18 @@ const quickActions = [
           </div>
         ) : (
           <div className="w-full h-64 rounded-[2.5rem] overflow-hidden shadow-lg border border-slate-100 dark:border-slate-800 relative flex items-center px-16 justify-between bg-blue-600 mb-8">
-            <div className="relative z-10 space-y-4">
+            <div className="absolute right-0 top-0 bottom-0 w-1/2 overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-l from-transparent via-blue-600/80 to-blue-600 z-10" />
+              <img src="/modern_clinic.jpg" alt="Clinic" className="w-full h-full object-cover opacity-80 mix-blend-overlay" />
+            </div>
+            <div className="relative z-20 space-y-4">
               <h2 className="text-3xl lg:text-4xl font-black text-white tracking-tight leading-tight">
                 {t("Welcome back")}, {user?.name?.split(' ')[0]}! 👋
               </h2>
-              <p className="text-slate-300 font-medium text-base lg:text-lg">
-                {t("Book appointments, manage your visits and")}<br/>{t("access your health information easily.")}
+              
+              <p className="text-sm font-medium opacity-90 text-white max-w-md leading-relaxed">
+                {t("Find the best doctors and book your appointments easily.")}
               </p>
-            </div>
-            <div className="hidden lg:flex relative z-10 right-10">
-              <div className="relative w-48 h-40">
-                <div className="absolute right-6 top-0 w-36 h-36 bg-blue-600 rounded-2xl transform rotate-6 shadow-xl flex flex-col overflow-hidden">
-                  <div className="h-8 bg-blue-700 flex justify-around items-center px-4">
                     <div className="w-3 h-6 bg-white rounded-full -mt-4 shadow-sm"></div>
                     <div className="w-3 h-6 bg-white rounded-full -mt-4 shadow-sm"></div>
                   </div>
