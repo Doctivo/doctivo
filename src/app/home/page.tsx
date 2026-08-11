@@ -241,21 +241,7 @@ const quickActions = [
           <div className="relative">
             <Carousel setApi={setMobileBannerApi} opts={{ loop: true, align: "start" }} className="w-full">
               <CarouselContent>
-                <CarouselItem key="static-banner-1">
-                  <div className={cn("w-full aspect-[21/9] rounded-[2rem] overflow-hidden shadow-lg border border-slate-100 dark:border-slate-800 relative flex items-center bg-blue-600")}>
-                    <div className="absolute right-0 top-0 bottom-0 w-2/3 overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-to-l from-transparent via-blue-600/60 to-blue-600 z-10" />
-                      <img src="/modern_clinic.jpg" alt="Clinic" className="w-full h-full object-cover opacity-60 mix-blend-overlay" />
-                    </div>
-                    <div className="relative z-20 p-6 flex flex-col justify-center h-full w-2/3 text-white">
-                      <h3 className="font-black text-lg leading-tight mb-1">Welcome to Doctivo</h3>
-                      <p className="text-[10px] font-medium opacity-90 mb-3 line-clamp-2">Your trusted partner for accessible and organized healthcare.</p>
-                      <Link href="/doctors" className="bg-white text-black px-4 py-1.5 rounded-full text-[10px] font-bold w-fit hover:bg-slate-100 transition-colors shadow-lg">
-                        Book Now
-                      </Link>
-                    </div>
-                  </div>
-                </CarouselItem>
+
                 {homeBanners.map((banner, idx) => {
                   const b = typeof banner === 'string' ? { imageUrl: banner } : banner;
                   const validBg = b.bgColor && b.bgColor.includes('gradient') ? b.bgColor : "bg-gradient-to-r from-blue-500 to-blue-600";
@@ -279,8 +265,9 @@ const quickActions = [
                           )}
                         </div>
                         {b.imageUrl && (
-                          <div className="h-[72px] w-[72px] bg-white rounded-2xl p-2 flex items-center justify-center shrink-0 shadow-lg z-10">
-                            <img src={b.imageUrl} alt={`Banner ${idx}`} className="w-full h-full object-contain" />
+                          <div className="absolute right-0 top-0 bottom-0 w-1/2 overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-l from-transparent to-black/40 z-10" />
+                            <img src={b.imageUrl} alt={`Banner ${idx}`} className="w-full h-full object-cover opacity-50 mix-blend-overlay" />
                           </div>
                         )}
                       </div>
@@ -291,7 +278,7 @@ const quickActions = [
             </Carousel>
             
             <div className="flex justify-center gap-1.5 mt-4">
-              {Array.from({ length: 1 + homeBanners.length }).map((_, i) => (
+              {homeBanners.map((_, i) => (
                 <button
                   key={i}
                   className={cn(
@@ -380,8 +367,9 @@ const quickActions = [
                           )}
                         </div>
                         {b.imageUrl && (
-                          <div className="h-40 w-40 bg-white rounded-[2rem] p-4 flex items-center justify-center shrink-0 shadow-2xl z-10 rotate-3 hover:rotate-0 transition-transform">
-                            <img src={b.imageUrl} alt={`Banner ${idx}`} className="w-full h-full object-contain" />
+                          <div className="absolute right-0 top-0 bottom-0 w-1/2 overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-l from-transparent to-black/40 z-10" />
+                            <img src={b.imageUrl} alt={`Banner ${idx}`} className="w-full h-full object-cover opacity-50 mix-blend-overlay" />
                           </div>
                         )}
                       </div>
@@ -415,34 +403,14 @@ const quickActions = [
               <h2 className="text-3xl lg:text-4xl font-black text-white tracking-tight leading-tight">
                 {t("Welcome back")}, {user?.name?.split(' ')[0]}! 👋
               </h2>
-              
               <p className="text-sm font-medium opacity-90 text-white max-w-md leading-relaxed">
                 {t("Find the best doctors and book your appointments easily.")}
               </p>
-                    <div className="w-3 h-6 bg-white rounded-full -mt-4 shadow-sm"></div>
-                    <div className="w-3 h-6 bg-white rounded-full -mt-4 shadow-sm"></div>
-                  </div>
-                  <div className="flex-1 bg-white p-3 grid grid-cols-4 gap-2">
-                    {[...Array(12)].map((_, i) => (
-                      <div key={i} className="bg-blue-50 rounded-sm"></div>
-                    ))}
-                  </div>
-                </div>
-                <div className="absolute left-0 bottom-0 w-24 h-24 bg-blue-500 rounded-full border-4 border-white shadow-2xl flex items-center justify-center">
-                  <div className="relative w-full h-full">
-                    <div className="absolute top-[10%] left-1/2 -translate-x-1/2 w-1 h-2 bg-blue-100 rounded-full"></div>
-                    <div className="absolute bottom-[10%] left-1/2 -translate-x-1/2 w-1 h-2 bg-blue-100 rounded-full"></div>
-                    <div className="absolute left-[10%] top-1/2 -translate-y-1/2 w-2 h-1 bg-blue-100 rounded-full"></div>
-                    <div className="absolute right-[10%] top-1/2 -translate-y-1/2 w-2 h-1 bg-blue-100 rounded-full"></div>
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-full w-1.5 h-8 bg-white rounded-full origin-bottom rotate-45"></div>
-                    <div className="absolute top-1/2 left-1/2 -translate-y-1/2 w-6 h-1.5 bg-white rounded-full origin-left -rotate-12"></div>
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full"></div>
-                  </div>
-                </div>
-                <div className="absolute -right-4 top-10 w-16 h-24 opacity-20 bg-green-500 rounded-full blur-2xl"></div>
-              </div>
+              
+              <Link href="/doctors" className="bg-white text-blue-600 px-8 py-3 rounded-2xl font-black w-fit hover:bg-slate-50 transition-colors mt-2 shadow-xl shadow-black/10 inline-block">
+                {t("Book Appointment")}
+              </Link>
             </div>
-            <div className="absolute top-0 right-0 h-full w-1/3 bg-gradient-to-l from-blue-500/20 to-transparent"></div>
           </div>
         )}
 
