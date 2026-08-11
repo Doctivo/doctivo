@@ -63,7 +63,8 @@ export async function getDoctors(specialty?: string, searchQuery?: string) {
         reasonsForVisit: safeParseJson(row.reasons_for_visit, []),
         latitude: row.latitude ? parseFloat(String(row.latitude)) : 26.7606,
         longitude: row.longitude ? parseFloat(String(row.longitude)) : 83.3731,
-        consultationModes: row.consultation_modes || 'Clinic,Home'
+        consultationModes: row.consultation_modes || 'Clinic,Home',
+        stops_booking_at_midnight: Boolean(row.stops_booking_at_midnight)
       };
     }) as Doctor[];
   } catch (error) {
@@ -104,7 +105,8 @@ export async function getDoctorById(id: string) {
       reasonsForVisit: safeParseJson(row.reasons_for_visit, []),
       latitude: row.latitude ? parseFloat(String(row.latitude)) : 26.7606,
       longitude: row.longitude ? parseFloat(String(row.longitude)) : 83.3731,
-      consultationModes: row.consultation_modes || 'Clinic,Home'
+      consultationModes: row.consultation_modes || 'Clinic,Home',
+      stops_booking_at_midnight: Boolean(row.stops_booking_at_midnight)
     } as Doctor;
   } catch (error) {
     console.error('Error fetching doctor by id:', error);
