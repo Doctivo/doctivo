@@ -231,10 +231,11 @@ const quickActions = [
                 </CarouselItem>
                 {homeBanners.map((banner, idx) => {
                   const b = typeof banner === 'string' ? { imageUrl: banner } : banner;
+                  const validBg = b.bgColor && b.bgColor.startsWith('bg-') ? b.bgColor : "bg-gradient-to-r from-blue-500 to-blue-600";
                   
                   return (
                     <CarouselItem key={idx}>
-                      <div className={cn("w-full aspect-[21/9] rounded-[2rem] overflow-hidden shadow-lg border border-slate-100 dark:border-slate-800 relative flex items-center px-6 justify-between", b.bgColor || "bg-gradient-to-r from-blue-500 to-blue-600")}>
+                      <div className={cn("w-full aspect-[21/9] rounded-[2rem] overflow-hidden shadow-lg border border-slate-100 dark:border-slate-800 relative flex items-center px-6 justify-between", validBg)}>
                         <div className="relative z-10 flex flex-col justify-center h-full w-[60%] text-white space-y-1">
                           {b.heading && <h3 className="font-black text-lg leading-tight">{b.heading}</h3>}
                           {b.paragraph && <p className="text-[10px] font-medium opacity-90 leading-relaxed line-clamp-2">{b.paragraph}</p>}

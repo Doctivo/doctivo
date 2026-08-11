@@ -338,7 +338,7 @@ export default function PlatformSettings() {
                           {/* Banner Live Preview */}
                           <div className="mb-6 w-full max-w-sm mx-auto">
                             <label className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2 block text-center">Live Preview (Mobile Size)</label>
-                            <div className={cn("w-full aspect-[21/9] rounded-[2rem] overflow-hidden shadow-lg border border-slate-100 relative flex items-center px-5 justify-between", banner.bgColor || "bg-gradient-to-r from-blue-500 to-blue-600")}>
+                            <div className={cn("w-full aspect-[21/9] rounded-[2rem] overflow-hidden shadow-lg border border-slate-100 relative flex items-center px-5 justify-between", banner.bgColor && banner.bgColor.startsWith('bg-') ? banner.bgColor : "bg-gradient-to-r from-blue-500 to-blue-600")}>
                               <div className="relative z-10 flex flex-col justify-center h-full w-[60%] text-white space-y-1">
                                 <h2 className="text-sm font-black tracking-tight leading-tight">{banner.heading || 'Welcome to O-Parchee'}</h2>
                                 {banner.paragraph && <p className="text-[9px] font-medium opacity-90 line-clamp-2 leading-relaxed">{banner.paragraph}</p>}
