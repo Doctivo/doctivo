@@ -231,7 +231,7 @@ const quickActions = [
                 </CarouselItem>
                 {homeBanners.map((banner, idx) => {
                   const b = typeof banner === 'string' ? { imageUrl: banner } : banner;
-                  const validBg = b.bgColor && b.bgColor.startsWith('bg-') ? b.bgColor : "bg-gradient-to-r from-blue-500 to-blue-600";
+                  const validBg = b.bgColor && b.bgColor.includes('gradient') ? b.bgColor : "bg-gradient-to-r from-blue-500 to-blue-600";
                   
                   return (
                     <CarouselItem key={idx}>
@@ -303,9 +303,10 @@ const quickActions = [
               <CarouselContent>
                 {homeBanners.map((banner, idx) => {
                   const b = typeof banner === 'string' ? { imageUrl: banner } : banner;
+                  const validBg = b.bgColor && b.bgColor.includes('gradient') ? b.bgColor : "bg-gradient-to-r from-blue-500 to-blue-600";
                   return (
                     <CarouselItem key={idx}>
-                      <div className={cn("w-full h-64 rounded-[2.5rem] overflow-hidden shadow-lg border border-slate-100 dark:border-slate-800 relative flex items-center px-16 justify-between", b.bgColor || "bg-gradient-to-r from-blue-500 to-blue-600")}>
+                      <div className={cn("w-full h-64 rounded-[2.5rem] overflow-hidden shadow-lg border border-slate-100 dark:border-slate-800 relative flex items-center px-16 justify-between", validBg)}>
                         <div className="relative z-10 flex flex-col justify-center h-full w-2/3 text-white space-y-4">
                           {b.heading ? (
                             <h2 className="text-3xl lg:text-4xl font-black tracking-tight leading-tight">{b.heading}</h2>
