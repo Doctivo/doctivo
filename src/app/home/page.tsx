@@ -39,7 +39,10 @@ function HomeContent() {
   const [serverImages, setServerImages] = useState<Record<string, string>>({});
   const [homeBanners, setHomeBanners] = useState<any[]>([]);
   const [isPhysioOpen, setIsPhysioOpen] = useState(false);
-  const [bannerApi, setBannerApi] = useState<any>();
+  const [mobileBannerApi, setMobileBannerApi] = useState<any>();
+  const [desktopBannerApi, setDesktopBannerApi] = useState<any>();
+  const [mobileCurrent, setMobileCurrent] = useState(0);
+  const [desktopCurrent, setDesktopCurrent] = useState(0);
   
   const { t } = useTranslation();
   const language = useStore(state => state.language);
@@ -85,12 +88,32 @@ function HomeContent() {
   }, []);
 
   useEffect(() => {
-    if (!bannerApi) return;
+    if (!mobileBannerApi) return;
+    const updateCurrent = () => setMobileCurrent(mobileBannerApi.selectedScrollSnap());
+    mobileBannerApi.on("select", updateCurrent);
+    updateCurrent();
     const interval = setInterval(() => {
-      bannerApi.scrollNext();
+      mobileBannerApi.scrollNext();
     }, 4000);
-    return () => clearInterval(interval);
-  }, [bannerApi]);
+    return () => {
+      clearInterval(interval);
+      mobileBannerApi.off("select", updateCurrent);
+    };
+  }, [mobileBannerApi]);
+
+  useEffect(() => {
+    if (!desktopBannerApi) return;
+    const updateCurrent = () => setDesktopCurrent(desktopBannerApi.selectedScrollSnap());
+    desktopBannerApi.on("select", updateCurrent);
+    updateCurrent();
+    const interval = setInterval(() => {
+      desktopBannerApi.scrollNext();
+    }, 4000);
+    return () => {
+      clearInterval(interval);
+      desktopBannerApi.off("select", updateCurrent);
+    };
+  }, [desktopBannerApi]);
 
   useEffect(() => {
     async function loadImages() {
@@ -215,7 +238,8 @@ const quickActions = [
         </div>
 
         <div className="p-6 pt-10 space-y-12">
-            <Carousel setApi={setBannerApi} opts={{ loop: true, align: "start" }} className="w-full">
+          <div className="relative">
+            <Carousel setApi={setMobileBannerApi} opts={{ loop: true, align: "start" }} className="w-full">
               <CarouselContent>
                 <CarouselItem key="static-banner-1">
                   <div className={cn("w-full aspect-[21/9] rounded-[2rem] overflow-hidden shadow-lg border border-slate-100 dark:border-slate-800 relative flex items-center bg-blue-600")}>
@@ -262,6 +286,21 @@ const quickActions = [
                 })}
               </CarouselContent>
             </Carousel>
+            
+            <div className="flex justify-center gap-1.5 mt-4">
+              {Array.from({ length: 1 + homeBanners.length }).map((_, i) => (
+                <button
+                  key={i}
+                  className={cn(
+                    "h-1.5 rounded-full transition-all duration-300",
+                    i === mobileCurrent ? "w-6 bg-primary" : "w-1.5 bg-slate-200 dark:bg-slate-700"
+                  )}
+                  onClick={() => mobileBannerApi?.scrollTo(i)}
+                  aria-label={`Go to slide ${i + 1}`}
+                />
+              ))}
+            </div>
+          </div>
 
           <div className="grid grid-cols-2 gap-4">
             {quickActions.map((action, idx) => {
@@ -299,7 +338,8 @@ const quickActions = [
         
         {/* Desktop Carousel Banner replacing static Welcome banner */}
         {homeBanners && homeBanners.length > 0 ? (
-            <Carousel setApi={setBannerApi} opts={{ loop: true, align: "start" }} className="w-full mb-8">
+          <div className="w-full mb-8">
+            <Carousel setApi={setDesktopBannerApi} opts={{ loop: true, align: "start" }} className="w-full">
               <CarouselContent>
                 {homeBanners.map((banner, idx) => {
                   const b = typeof banner === 'string' ? { imageUrl: banner } : banner;
@@ -347,8 +387,23 @@ const quickActions = [
                 })}
               </CarouselContent>
             </Carousel>
+
+            <div className="flex justify-center gap-2 mt-4">
+              {homeBanners.map((_, i) => (
+                <button
+                  key={i}
+                  className={cn(
+                    "h-2 rounded-full transition-all duration-300",
+                    i === desktopCurrent ? "w-8 bg-primary" : "w-2 bg-slate-200 dark:bg-slate-700"
+                  )}
+                  onClick={() => desktopBannerApi?.scrollTo(i)}
+                  aria-label={`Go to slide ${i + 1}`}
+                />
+              ))}
+            </div>
+          </div>
         ) : (
-          <div className="flex justify-between items-center bg-slate-900 rounded-[2.5rem] p-10 mb-8 relative overflow-hidden text-white shadow-lg">
+          <div className="w-full h-64 rounded-[2.5rem] overflow-hidden shadow-lg border border-slate-100 dark:border-slate-800 relative flex items-center px-16 justify-between bg-blue-600 mb-8">
             <div className="relative z-10 space-y-4">
               <h2 className="text-3xl lg:text-4xl font-black text-white tracking-tight leading-tight">
                 {t("Welcome back")}, {user?.name?.split(' ')[0]}! 👋
