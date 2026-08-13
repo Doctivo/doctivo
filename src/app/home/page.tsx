@@ -19,7 +19,7 @@ import { getAppSetting } from '@/app/actions/admin-actions';
 import dynamic from 'next/dynamic';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Globe } from 'lucide-react';
-import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
+import Banner from '@/components/Banner';
 
 const PhysioDialog = dynamic(() => import('@/components/PhysioDialog'), { ssr: false });
 
@@ -39,10 +39,6 @@ function HomeContent() {
   const [serverImages, setServerImages] = useState<Record<string, string>>({});
   const [homeBanners, setHomeBanners] = useState<any[]>([]);
   const [isPhysioOpen, setIsPhysioOpen] = useState(false);
-  const [mobileBannerApi, setMobileBannerApi] = useState<any>();
-  const [desktopBannerApi, setDesktopBannerApi] = useState<any>();
-  const [mobileCurrent, setMobileCurrent] = useState(0);
-  const [desktopCurrent, setDesktopCurrent] = useState(0);
   
   const { t } = useTranslation();
   const language = useStore(state => state.language);
@@ -86,34 +82,6 @@ function HomeContent() {
     timeout = setTimeout(type, typingSpeed);
     return () => clearTimeout(timeout);
   }, []);
-
-  useEffect(() => {
-    if (!mobileBannerApi) return;
-    const updateCurrent = () => setMobileCurrent(mobileBannerApi.selectedScrollSnap());
-    mobileBannerApi.on("select", updateCurrent);
-    updateCurrent();
-    const interval = setInterval(() => {
-      mobileBannerApi.scrollNext();
-    }, 4000);
-    return () => {
-      clearInterval(interval);
-      mobileBannerApi.off("select", updateCurrent);
-    };
-  }, [mobileBannerApi]);
-
-  useEffect(() => {
-    if (!desktopBannerApi) return;
-    const updateCurrent = () => setDesktopCurrent(desktopBannerApi.selectedScrollSnap());
-    desktopBannerApi.on("select", updateCurrent);
-    updateCurrent();
-    const interval = setInterval(() => {
-      desktopBannerApi.scrollNext();
-    }, 4000);
-    return () => {
-      clearInterval(interval);
-      desktopBannerApi.off("select", updateCurrent);
-    };
-  }, [desktopBannerApi]);
 
   useEffect(() => {
     async function loadImages() {
@@ -238,59 +206,7 @@ const quickActions = [
         </div>
 
         <div className="p-6 pt-10 space-y-12">
-          <div className="relative">
-            <Carousel setApi={setMobileBannerApi} opts={{ loop: true, align: "start" }} className="w-full">
-              <CarouselContent>
-
-                {homeBanners.map((banner, idx) => {
-                  const b = typeof banner === 'string' ? { imageUrl: banner } : banner;
-                  const validBg = b.bgColor && b.bgColor.includes('gradient') ? b.bgColor : "bg-gradient-to-r from-blue-500 to-blue-600";
-                  
-                  return (
-                    <CarouselItem key={idx}>
-                      <div className={cn("w-full aspect-[21/9] rounded-[2rem] overflow-hidden shadow-lg border border-slate-100 dark:border-slate-800 relative flex items-center px-6 justify-between", validBg)}>
-                        <div className="relative z-10 flex flex-col justify-center h-full w-[60%] text-white space-y-1">
-                          {b.heading && <h3 className="font-black text-lg leading-tight">{b.heading}</h3>}
-                          {b.paragraph && <p className="text-[10px] font-medium opacity-90 leading-relaxed line-clamp-2">{b.paragraph}</p>}
-                          {b.ctaText && b.ctaLink && (
-                            b.ctaLink.startsWith('http') ? (
-                              <a href={b.ctaLink} target="_blank" rel="noopener noreferrer" className="bg-white text-slate-900 px-3 py-1.5 rounded-full text-[10px] font-black w-fit hover:bg-slate-100 transition-colors mt-2">
-                                {b.ctaText}
-                              </a>
-                            ) : (
-                              <Link href={b.ctaLink} className="bg-white text-slate-900 px-3 py-1.5 rounded-full text-[10px] font-black w-fit hover:bg-slate-100 transition-colors mt-2">
-                                {b.ctaText}
-                              </Link>
-                            )
-                          )}
-                        </div>
-                        {b.imageUrl && (
-                          <div className="absolute right-0 top-0 bottom-0 w-1/2 overflow-hidden">
-                            <div className="absolute inset-0 bg-gradient-to-l from-transparent to-black/40 z-10" />
-                            <img src={b.imageUrl} alt={`Banner ${idx}`} className="w-full h-full object-cover opacity-50 mix-blend-overlay" />
-                          </div>
-                        )}
-                      </div>
-                    </CarouselItem>
-                  );
-                })}
-              </CarouselContent>
-            </Carousel>
-            
-            <div className="flex justify-center gap-1.5 mt-4">
-              {homeBanners.map((_, i) => (
-                <button
-                  key={i}
-                  className={cn(
-                    "h-1.5 rounded-full transition-all duration-300",
-                    i === mobileCurrent ? "w-6 bg-primary" : "w-1.5 bg-slate-200 dark:bg-slate-700"
-                  )}
-                  onClick={() => mobileBannerApi?.scrollTo(i)}
-                  aria-label={`Go to slide ${i + 1}`}
-                />
-              ))}
-            </div>
-          </div>
+          <Banner homeBanners={homeBanners} user={user} isMobile={true} />
 
           <div className="grid grid-cols-2 gap-4">
             {quickActions.map((action, idx) => {
@@ -327,92 +243,7 @@ const quickActions = [
       <div className="hidden md:flex flex-col max-w-6xl mx-auto p-10">
         
         {/* Desktop Carousel Banner replacing static Welcome banner */}
-        {homeBanners && homeBanners.length > 0 ? (
-          <div className="w-full mb-8">
-            <Carousel setApi={setDesktopBannerApi} opts={{ loop: true, align: "start" }} className="w-full">
-              <CarouselContent>
-                {homeBanners.map((banner, idx) => {
-                  const b = typeof banner === 'string' ? { imageUrl: banner } : banner;
-                  const validBg = b.bgColor && b.bgColor.includes('gradient') ? b.bgColor : "bg-gradient-to-r from-blue-500 to-blue-600";
-                  return (
-                    <CarouselItem key={idx}>
-                      <div className={cn("w-full h-64 rounded-[2.5rem] overflow-hidden shadow-lg border border-slate-100 dark:border-slate-800 relative flex items-center px-16 justify-between", validBg)}>
-                        <div className="relative z-10 flex flex-col justify-center h-full w-2/3 text-white space-y-4">
-                          {b.heading ? (
-                            <h2 className="text-3xl lg:text-4xl font-black tracking-tight leading-tight">{b.heading}</h2>
-                          ) : (
-                            <h2 className="text-3xl lg:text-4xl font-black tracking-tight leading-tight">
-                              {t("Welcome back")}, {user?.name?.split(' ')[0]}! 👋
-                            </h2>
-                          )}
-                          
-                          {b.paragraph ? (
-                            <p className="text-sm font-medium opacity-90 max-w-lg leading-relaxed">{b.paragraph}</p>
-                          ) : (
-                            <p className="text-sm font-medium opacity-90 max-w-md leading-relaxed">
-                              {t("Find the best doctors and book your appointments easily.")}
-                            </p>
-                          )}
-                          
-                          {b.ctaText && b.ctaLink && (
-                            b.ctaLink.startsWith('http') ? (
-                              <a href={b.ctaLink} target="_blank" rel="noopener noreferrer" className="bg-white text-slate-900 px-8 py-3 rounded-2xl font-black w-fit hover:bg-slate-50 transition-colors mt-2 shadow-xl shadow-black/10">
-                                {b.ctaText}
-                              </a>
-                            ) : (
-                              <Link href={b.ctaLink} className="bg-white text-slate-900 px-8 py-3 rounded-2xl font-black w-fit hover:bg-slate-50 transition-colors mt-2 shadow-xl shadow-black/10">
-                                {b.ctaText}
-                              </Link>
-                            )
-                          )}
-                        </div>
-                        {b.imageUrl && (
-                          <div className="absolute right-0 top-0 bottom-0 w-1/2 overflow-hidden">
-                            <div className="absolute inset-0 bg-gradient-to-l from-transparent to-black/40 z-10" />
-                            <img src={b.imageUrl} alt={`Banner ${idx}`} className="w-full h-full object-cover opacity-50 mix-blend-overlay" />
-                          </div>
-                        )}
-                      </div>
-                    </CarouselItem>
-                  );
-                })}
-              </CarouselContent>
-            </Carousel>
-
-            <div className="flex justify-center gap-2 mt-4">
-              {homeBanners.map((_, i) => (
-                <button
-                  key={i}
-                  className={cn(
-                    "h-2 rounded-full transition-all duration-300",
-                    i === desktopCurrent ? "w-8 bg-primary" : "w-2 bg-slate-200 dark:bg-slate-700"
-                  )}
-                  onClick={() => desktopBannerApi?.scrollTo(i)}
-                  aria-label={`Go to slide ${i + 1}`}
-                />
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className="w-full h-64 rounded-[2.5rem] overflow-hidden shadow-lg border border-slate-100 dark:border-slate-800 relative flex items-center px-16 justify-between bg-blue-600 mb-8">
-            <div className="absolute right-0 top-0 bottom-0 w-1/2 overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-l from-transparent via-blue-600/80 to-blue-600 z-10" />
-              <img src="/modern_clinic.jpg" alt="Clinic" className="w-full h-full object-cover opacity-80 mix-blend-overlay" />
-            </div>
-            <div className="relative z-20 space-y-4">
-              <h2 className="text-3xl lg:text-4xl font-black text-white tracking-tight leading-tight">
-                {t("Welcome back")}, {user?.name?.split(' ')[0]}! 👋
-              </h2>
-              <p className="text-sm font-medium opacity-90 text-white max-w-md leading-relaxed">
-                {t("Find the best doctors and book your appointments easily.")}
-              </p>
-              
-              <Link href="/doctors" className="bg-white text-blue-600 px-8 py-3 rounded-2xl font-black w-fit hover:bg-slate-50 transition-colors mt-2 shadow-xl shadow-black/10 inline-block">
-                {t("Book Appointment")}
-              </Link>
-            </div>
-          </div>
-        )}
+        <Banner homeBanners={homeBanners} user={user} isMobile={false} />
 
         {/* Quick Actions Grid */}
         <div className="grid grid-cols-4 gap-6 mb-8">

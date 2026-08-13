@@ -3,7 +3,7 @@
 import { query } from '@/lib/db';
 import { getPatientByPhone, getFamilyMembers } from './patient-actions';
 import { getUserAppointments } from './appointment-actions';
-import { cookies } from 'next/headers';
+import { createSession, destroySession } from '@/lib/auth/session';
 
 // Rate Limiting Map: phone/email -> { attempts, lockUntil }
 const otpLimitMap = new Map<string, { attempts: number; lockUntil: number }>();
@@ -16,8 +16,6 @@ export async function unifiedLogin(identifier: string) {
   if (!identifier) {
     throw new Error('Login identifier is required');
   }
-
-  const cookieStore = await cookies();
 
   try {
     // 1. Check if 10-digit phone number
@@ -57,9 +55,8 @@ export async function unifiedLogin(identifier: string) {
         };
       }
 
-      // Set cookies for Patient
-      cookieStore.set('session_role', 'Patient', { path: '/', maxAge: 30 * 24 * 60 * 60 }); // 30 days
-      cookieStore.set('session_id', patientData.id, { path: '/', maxAge: 30 * 24 * 60 * 60 });
+      // Set cookies for Patient using new architecture
+      await createSession(patientData.id, 'Patient');
 
       return {
         success: true,
@@ -129,8 +126,7 @@ export async function unifiedLogin(identifier: string) {
     const attendantRes = await query('SELECT * FROM attendants WHERE attendant_id = $1 OR attendant_id = $2', [identifier, identifier.toUpperCase()]);
     if (attendantRes.rows.length > 0) {
       const attendantData = attendantRes.rows[0];
-      cookieStore.set('session_role', 'Attendant', { path: '/', maxAge: 30 * 24 * 60 * 60 }); // 30 days
-      cookieStore.set('session_id', attendantData.attendant_id, { path: '/', maxAge: 30 * 24 * 60 * 60 });
+      await createSession(attendantData.attendant_id, 'Attendant');
       return {
         success: true,
         role: 'Attendant',
@@ -147,9 +143,7 @@ export async function unifiedLogin(identifier: string) {
 }
 
 export async function logoutSession() {
-  const cookieStore = await cookies();
-  cookieStore.delete('session_role');
-  cookieStore.delete('session_id');
+  await destroySession();
 }
 
 export async function sendAdminOtp(email: string) {
@@ -225,7 +219,6 @@ export async function sendAdminOtp(email: string) {
 }
 
 export async function verifyAdminOtp(email: string, otp: string) {
-  const cookieStore = await cookies();
   
   // Rate Limit Check
   const identifier = email.trim().toLowerCase();
@@ -284,8 +277,7 @@ export async function verifyAdminOtp(email: string, otp: string) {
           admins: { view: true, edit: true, delete: true }
         }
       };
-      cookieStore.set('session_role', 'Admin', { path: '/', maxAge: 60 * 60 });
-      cookieStore.set('session_id', 'SUPER-1', { path: '/', maxAge: 60 * 60 });
+      await createSession('SUPER-1', 'Super Admin');
       return {
         success: true,
         role: 'Admin',
@@ -297,8 +289,7 @@ export async function verifyAdminOtp(email: string, otp: string) {
     const adminRes = await query('SELECT * FROM admins WHERE LOWER(email) = $1', [identifier]);
     if (adminRes.rows.length > 0) {
       const adminData = adminRes.rows[0];
-      cookieStore.set('session_role', 'Admin', { path: '/', maxAge: 60 * 60 });
-      cookieStore.set('session_id', adminData.admin_id || adminData.id || 'admin', { path: '/', maxAge: 60 * 60 });
+      await createSession(adminData.admin_id || adminData.id || 'admin', 'Admin');
       return {
         success: true,
         role: 'Admin',
@@ -310,8 +301,7 @@ export async function verifyAdminOtp(email: string, otp: string) {
     const docRes = await query('SELECT * FROM doctors WHERE LOWER(email) = $1', [identifier]);
     if (docRes.rows.length > 0) {
       const doctorData = docRes.rows[0];
-      cookieStore.set('session_role', 'Doctor', { path: '/', maxAge: 30 * 24 * 60 * 60 });
-      cookieStore.set('session_id', doctorData.doctor_id, { path: '/', maxAge: 30 * 24 * 60 * 60 });
+      await createSession(doctorData.doctor_id, 'Doctor');
       return {
         success: true,
         role: 'Doctor',

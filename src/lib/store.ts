@@ -14,7 +14,7 @@ interface AppState {
   homeBanners: string[];
   homeDataLastFetched: number | null;
   downloadedTickets: string[];
-  language: 'en' | 'hi' | null;
+  language: 'en' | null;
   isAuthenticated: boolean;
   _hasHydrated: boolean;
   
@@ -27,7 +27,7 @@ interface AppState {
   setHomeBanners: (banners: string[]) => void;
   setHomeDataLastFetched: (timestamp: number) => void;
   setDownloadedTickets: (tickets: string[]) => void;
-  setLanguage: (lang: 'en' | 'hi') => void;
+  setLanguage: (lang: 'en') => void;
   setHasHydrated: (val: boolean) => void;
   addPatient: (patient: Patient) => void;
   updatePatient: (id: string, patient: Partial<Patient>) => void;

@@ -76,7 +76,7 @@ export default function RootLayout({
       '@type': 'ContactPoint',
       contactType: 'customer support',
       areaServed: ['Gorakhpur', 'Deoria', 'Uttar Pradesh'],
-      availableLanguage: ['English', 'Hindi']
+      availableLanguage: ['English']
     },
     address: {
       '@type': 'PostalAddress',

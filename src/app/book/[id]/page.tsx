@@ -79,6 +79,7 @@ function BookingContent({ id }: { id: string }) {
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [bypassTxnId, setBypassTxnId] = useState<string | null>(null);
+  const [conflictData, setConflictData] = useState<{ txnId: string, errorMsg: string } | null>(null);
 
   const getNext7Days = () => {
     const dates = [];
@@ -150,10 +151,10 @@ function BookingContent({ id }: { id: string }) {
     if (rescheduleAppId) {
       const res = await rescheduleAppointment(rescheduleAppId, selectedDate, selectedSlot);
       if (res.success) {
-        toast({ title: 'Success', description: 'Appointment rescheduled successfully.' });
+        toast({ title: 'Success', description: 'Appointment rescheduled successfully.', duration: 100000 });
         router.push('/appointments');
       } else {
-        toast({ variant: 'destructive', title: 'Failed', description: res.error || 'Failed to reschedule.' });
+        toast({ variant: 'destructive', title: 'Failed', description: res.error || 'Failed to reschedule.', duration: 100000 });
       }
       setIsBooking(false);
       return;
@@ -170,7 +171,7 @@ function BookingContent({ id }: { id: string }) {
 
       if (!resOrder.ok) {
         setIsBooking(false);
-        toast({ variant: 'destructive', title: 'Order Failed', description: orderData.error || 'Failed to create payment order.' });
+        toast({ variant: 'destructive', title: 'Order Failed', description: orderData.error || 'Failed to create payment order.', duration: 100000 });
         return;
       }
 
@@ -185,7 +186,7 @@ function BookingContent({ id }: { id: string }) {
 
       if (!resScript || !(window as any).Razorpay) {
         setIsBooking(false);
-        toast({ variant: 'destructive', title: 'Script Error', description: 'Failed to load Razorpay checkout script.' });
+        toast({ variant: 'destructive', title: 'Script Error', description: 'Failed to load Razorpay checkout script.', duration: 100000 });
         return;
       }
 
@@ -198,6 +199,7 @@ function BookingContent({ id }: { id: string }) {
         order_id: orderData.order_id, // Pass order ID generated from backend
         handler: async function (response: any) {
           setIsBooking(true);
+          toast({ title: 'Processing', description: 'Please wait, verifying your payment...', duration: 100000 });
           
           // 3. Verify Signature on backend
           try {
@@ -217,11 +219,11 @@ function BookingContent({ id }: { id: string }) {
               finalizeBooking(response.razorpay_payment_id, patient);
             } else {
               setIsBooking(false);
-              toast({ variant: 'destructive', title: 'Verification Failed', description: verifyData.error || 'Payment verification failed' });
+              toast({ variant: 'destructive', title: 'Verification Failed', description: verifyData.error || 'Payment verification failed', duration: 100000 });
             }
           } catch (err) {
             setIsBooking(false);
-            toast({ variant: 'destructive', title: 'Error', description: 'Error verifying payment signature' });
+            toast({ variant: 'destructive', title: 'Error', description: 'Error verifying payment signature', duration: 100000 });
           }
         },
         prefill: {
@@ -239,13 +241,13 @@ function BookingContent({ id }: { id: string }) {
       const rzp = new (window as any).Razorpay(options);
       rzp.on('payment.failed', function (response: any){
         setIsBooking(false);
-        toast({ variant: 'destructive', title: 'Payment Failed', description: response.error.description });
+        toast({ variant: 'destructive', title: 'Payment Failed', description: response.error.description, duration: 100000 });
       });
       rzp.open();
 
     } catch (err) {
       setIsBooking(false);
-      toast({ variant: 'destructive', title: 'Error', description: 'An unexpected error occurred during payment initiation.' });
+      toast({ variant: 'destructive', title: 'Error', description: 'An unexpected error occurred during payment initiation.', duration: 100000 });
     }
   };
 
@@ -278,13 +280,38 @@ function BookingContent({ id }: { id: string }) {
     } else {
       setIsBooking(false);
       setBypassTxnId(txnId);
-      toast({ variant: 'destructive', title: 'Booking Failed', description: res.error + ' (Your payment was successful. Please select a different slot and try again to book without paying.)' });
+      if (res.error && res.error.includes('already booked')) {
+        setConflictData({ txnId, errorMsg: res.error });
+      } else {
+        toast({ variant: 'destructive', title: 'Booking Failed', description: res.error + ' (Your payment was successful. Please select a different slot and try again to book without paying.)', duration: 100000 });
+      }
+    }
+  };
+
+  const handleRefund = async () => {
+    if (!conflictData) return;
+    try {
+      const res = await fetch('/api/refund-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transactionId: conflictData.txnId }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast({ title: 'Refund Successful', description: 'Your money has been refunded to your source account.', duration: 100000 });
+        setConflictData(null);
+        setBypassTxnId(null);
+      } else {
+        toast({ variant: 'destructive', title: 'Refund Failed', description: data.error || 'Failed to process refund.', duration: 100000 });
+      }
+    } catch (e) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to process refund.', duration: 100000 });
     }
   };
 
   const handleUpdateProfile = () => {
     if (!tempAge || !tempGender) {
-      toast({ variant: 'destructive', title: 'Required', description: 'Please provide age and gender.' });
+      toast({ variant: 'destructive', title: 'Required', description: 'Please provide age and gender.', duration: 100000 });
       return;
     }
     
@@ -499,6 +526,25 @@ function BookingContent({ id }: { id: string }) {
           <DialogFooter>
             <Button className="w-full h-14 bg-primary text-white font-black text-lg rounded-xl shadow-lg" onClick={handleUpdateProfile}>
               Save & Pay Now
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!conflictData} onOpenChange={(open) => { if (!open) setConflictData(null); }}>
+        <DialogContent className="max-w-[90vw] rounded-[2.5rem] p-6 border-none shadow-2xl bg-white dark:bg-slate-900">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-black text-slate-800 dark:text-slate-100 text-center text-red-500">Slot Already Booked!</DialogTitle>
+            <p className="text-xs text-slate-500 font-bold text-center mt-2">
+              Unfortunately, the slot you selected was just booked by someone else. Since your payment was successful, you can either select a different slot or get an immediate refund.
+            </p>
+          </DialogHeader>
+          <DialogFooter className="flex-col sm:flex-row gap-3 mt-4">
+            <Button variant="outline" className="w-full h-14 font-black rounded-xl border-2" onClick={handleRefund}>
+              Refund Money
+            </Button>
+            <Button className="w-full h-14 bg-primary text-white font-black rounded-xl shadow-lg" onClick={() => setConflictData(null)}>
+              Choose Another Slot
             </Button>
           </DialogFooter>
         </DialogContent>
