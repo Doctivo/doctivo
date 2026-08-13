@@ -2,12 +2,15 @@
 
 import { query } from '@/lib/db';
 import { cookies } from 'next/headers';
+import { requireRoles } from '@/lib/auth/session';
+import { ROLES } from '@/lib/auth/roles';
 
 /**
  * Initializes all database tables and seeds sample data.
  * Updated to include patient vitals in appointments and staff management tables.
  */
 export async function initializeDatabase() {
+  await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
   try {
     // 1. Patients Table
     await query(`
@@ -205,6 +208,16 @@ export async function initializeDatabase() {
         permissions JSONB DEFAULT '{}',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
+    // 9. Audit Logs Table
+    await query(`
+      CREATE TABLE IF NOT EXISTS audit_logs (
+        log_id SERIAL PRIMARY KEY,
+        admin_id VARCHAR(50) REFERENCES admins(admin_id),
+        action_type VARCHAR(100),
+        target_id VARCHAR(50),
+        details JSONB,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
     `);
 
     return { success: true };
@@ -215,6 +228,7 @@ export async function initializeDatabase() {
 }
 
 export async function getEmployeePayroll() {
+  await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
   try {
     const result = await query(`
       SELECT 
@@ -236,6 +250,7 @@ export async function getEmployeePayroll() {
 }
 
 export async function adjustPayroll(data: any) {
+  await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
   try {
     await query(`
       INSERT INTO payroll_adjustments (employee_id, employee_name, type, amount, reason)
@@ -248,6 +263,7 @@ export async function adjustPayroll(data: any) {
 }
 
 export async function settlePayroll(employeeId: string) {
+  await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
   try {
     await query('UPDATE payroll_adjustments SET is_settled = true WHERE employee_id = $1', [employeeId]);
     return { success: true };
@@ -257,6 +273,7 @@ export async function settlePayroll(employeeId: string) {
 }
 
 export async function getPayrollLogs() {
+  await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
   try {
     const result = await query('SELECT * FROM payroll_adjustments ORDER BY created_at DESC LIMIT 50');
     return result.rows;
@@ -266,6 +283,7 @@ export async function getPayrollLogs() {
 }
 
 export async function getDoctorsCatalog() {
+  await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
   try {
     const result = await query('SELECT * FROM doctors ORDER BY created_at DESC');
     return result.rows || [];
@@ -275,6 +293,7 @@ export async function getDoctorsCatalog() {
 }
 
 export async function getDoctorsByStatus(status: 'pending' | 'approved') {
+  await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
   try {
     const isApproved = status === 'approved';
     const result = await query('SELECT * FROM doctors WHERE is_approved = $1 ORDER BY created_at DESC', [isApproved]);
@@ -285,6 +304,7 @@ export async function getDoctorsByStatus(status: 'pending' | 'approved') {
 }
 
 export async function updateDoctorBilling(doctorId: string, data: any) {
+  await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
   try {
     await query(`
       UPDATE doctors SET
@@ -307,6 +327,7 @@ export async function updateDoctorBilling(doctorId: string, data: any) {
 }
 
 export async function getAdminUsers() {
+  await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
   try {
     const result = await query('SELECT * FROM admins ORDER BY created_at DESC');
     return result.rows || [];
@@ -316,6 +337,7 @@ export async function getAdminUsers() {
 }
 
 export async function createAdminUser(data: any) {
+  await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
   const id = `ADM-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
   try {
     await query('INSERT INTO admins (admin_id, full_name, email, role, permissions) VALUES ($1, $2, $3, $4, $5)', [id, data.name, data.email, data.role, JSON.stringify(data.permissions || {})]);
@@ -326,6 +348,7 @@ export async function createAdminUser(data: any) {
 }
 
 export async function deleteAdminUser(adminId: string) {
+  await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
   try {
     await query('DELETE FROM admins WHERE admin_id = $1', [adminId]);
     return { success: true };
@@ -335,6 +358,7 @@ export async function deleteAdminUser(adminId: string) {
 }
 
 export async function getAdminMetrics() {
+  await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
   try {
     const doctorsCount = await query('SELECT COUNT(*) FROM doctors WHERE is_approved = true');
     const patientsCount = await query('SELECT COUNT(*) FROM patients');
@@ -366,6 +390,7 @@ export async function getAdminMetrics() {
 }
 
 export async function getAdminBookings() {
+  await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
   try {
     const result = await query('SELECT * FROM appointments ORDER BY created_at DESC');
     return result.rows || [];
@@ -375,6 +400,7 @@ export async function getAdminBookings() {
 }
 
 export async function cancelAppointment(appointmentId: string) {
+  await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
   try {
     await query("UPDATE appointments SET status = 'Cancelled' WHERE appointment_id = $1", [appointmentId]);
     return { success: true };
@@ -384,6 +410,7 @@ export async function cancelAppointment(appointmentId: string) {
 }
 
 export async function getAllUsers(role: string) {
+  await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
   try {
     const table = role === 'Doctor' ? 'doctors' : role === 'Patient' ? 'patients' : 'attendants';
     const result = await query(`SELECT * FROM ${table} ORDER BY created_at DESC`);
@@ -394,6 +421,7 @@ export async function getAllUsers(role: string) {
 }
 
 export async function addDoctorDirectly(data: any) {
+  await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
   const id = `DOC-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
   try {
     await query(`
@@ -416,6 +444,7 @@ export async function addDoctorDirectly(data: any) {
 }
 
 export async function updateDoctor(doctorId: string, data: any) {
+  await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
   try {
     await query(`
       UPDATE doctors SET
@@ -437,6 +466,7 @@ export async function updateDoctor(doctorId: string, data: any) {
 }
 
 export async function deleteDoctor(doctorId: string) {
+  await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
   try {
     await query('DELETE FROM doctors WHERE doctor_id = $1', [doctorId]);
     return { success: true };
@@ -446,6 +476,7 @@ export async function deleteDoctor(doctorId: string) {
 }
 
 export async function setAppSetting(key: string, value: any) {
+  await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
   try {
     await query(`
       INSERT INTO app_settings (key, value)
@@ -459,6 +490,7 @@ export async function setAppSetting(key: string, value: any) {
 }
 
 export async function getAppSetting(key: string) {
+  await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
   try {
     const res = await query('SELECT value FROM app_settings WHERE key = $1', [key]);
     if (res.rows.length > 0) {
@@ -469,3 +501,18 @@ export async function getAppSetting(key: string) {
     return { success: false, error: error.message };
   }
 }
+
+export async function logAdminAction(adminId: string, actionType: string, targetId: string, details: any) {
+  const session = await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
+  try {
+    await query(
+      'INSERT INTO audit_logs (admin_id, action_type, target_id, details) VALUES ($1, $2, $3, $4)',
+      [adminId, actionType, targetId, JSON.stringify(details)]
+    );
+    return { success: true };
+  } catch (error: any) {
+    console.error('Audit Log Error:', error);
+    return { success: false, error: error.message };
+  }
+}
+

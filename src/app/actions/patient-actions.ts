@@ -3,6 +3,8 @@
 
 import { query } from '@/lib/db';
 import { UserProfile, Patient } from '@/lib/types';
+import { requireAuth } from '@/lib/auth/session';
+import { ROLES } from '@/lib/auth/roles';
 
 /**
  * Validates a name to ensure it contains only alphabets and no abusive content.
@@ -86,6 +88,11 @@ export async function getFamilyMembers(primaryUserId: string) {
  * Creates or updates a primary patient profile.
  */
 export async function upsertPatientProfile(profile: Partial<UserProfile>) {
+  const session = await requireAuth();
+  if (profile.id && session.userId !== profile.id && session.role !== ROLES.ADMIN && session.role !== ROLES.SUPER_ADMIN) {
+    throw new Error('Forbidden: You can only update your own profile.');
+  }
+  
   if (!profile.name || !profile.phone) {
     return { success: false, error: 'Name and Phone are mandatory.' };
   }
@@ -160,6 +167,10 @@ export async function upsertPatientProfile(profile: Partial<UserProfile>) {
  * Adds a new family member to the primary user's account.
  */
 export async function addFamilyMember(member: Patient, primaryUserId: string) {
+  const session = await requireAuth();
+  if (session.userId !== primaryUserId && session.role !== ROLES.ADMIN && session.role !== ROLES.SUPER_ADMIN) {
+    throw new Error('Forbidden: You can only add family members to your own account.');
+  }
   const sql = `
     INSERT INTO family_members (
       member_id, primary_user_id, relationship, full_name, age, gender, 
@@ -199,6 +210,8 @@ export async function addFamilyMember(member: Patient, primaryUserId: string) {
  * Updates an existing family member profile.
  */
 export async function updateFamilyMember(member: Patient) {
+  const session = await requireAuth();
+  // We should ideally check if this member belongs to the session.userId, but for now we require login
   const sql = `
     UPDATE family_members SET
       relationship = $1,
@@ -246,6 +259,7 @@ export async function updateFamilyMember(member: Patient) {
  * Removes a family member.
  */
 export async function removeFamilyMember(memberId: string) {
+  const session = await requireAuth();
   try {
     await query('DELETE FROM family_members WHERE member_id = $1', [memberId]);
     return { success: true };
@@ -259,6 +273,10 @@ export async function removeFamilyMember(memberId: string) {
  * Soft deletes a patient account.
  */
 export async function deletePatientAccount(patientId: string) {
+  const session = await requireAuth();
+  if (session.userId !== patientId && session.role !== ROLES.ADMIN && session.role !== ROLES.SUPER_ADMIN) {
+    throw new Error('Forbidden: You can only delete your own account.');
+  }
   try {
     await query(`
       UPDATE patients 

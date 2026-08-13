@@ -3,6 +3,8 @@
 import { query } from '@/lib/db';
 import { Doctor } from '@/lib/types';
 import { sendTransactionalEmail } from './auth-actions';
+import { requireRoles } from '@/lib/auth/session';
+import { ROLES } from '@/lib/auth/roles';
 
 /**
  * Robust JSON parsing for database values that might be returned as strings or objects.
@@ -133,6 +135,8 @@ export async function getSpecialties() {
  * Fetches all attendants assigned to a doctor
  */
 export async function getDoctorAttendants(doctorId: string) {
+  const session = await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.DOCTOR]);
+  if (session.role === ROLES.DOCTOR && session.userId !== doctorId) throw new Error('Forbidden: Data access boundary violation.');
   try {
     const res = await query('SELECT * FROM attendants WHERE doctor_id = $1 ORDER BY full_name ASC', [doctorId]);
     return res.rows;
@@ -146,6 +150,8 @@ export async function getDoctorAttendants(doctorId: string) {
  * Onboards a new attendant
  */
 export async function addAttendant(attendantData: any, doctorId: string) {
+  const session = await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.DOCTOR]);
+  if (session.role === ROLES.DOCTOR && session.userId !== doctorId) throw new Error('Forbidden: Data access boundary violation.');
   const attendantId = `ATT-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
   try {
     const docRes = await query('SELECT full_name, clinic_address FROM doctors WHERE doctor_id = $1', [doctorId]);
@@ -185,6 +191,8 @@ export async function addAttendant(attendantData: any, doctorId: string) {
  * Updates a doctor's availability
  */
 export async function updateDoctorSchedule(doctorId: string, defaultSchedule: any, customSchedule: any) {
+  const session = await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.DOCTOR]);
+  if (session.role === ROLES.DOCTOR && session.userId !== doctorId) throw new Error('Forbidden: Data access boundary violation.');
   try {
     await query(`
       UPDATE doctors SET
@@ -211,6 +219,8 @@ export async function updateDoctorSchedule(doctorId: string, defaultSchedule: an
  * Updates a doctor's reasons for visit (Services)
  */
 export async function updateDoctorServices(doctorId: string, services: string[]) {
+  const session = await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.DOCTOR]);
+  if (session.role === ROLES.DOCTOR && session.userId !== doctorId) throw new Error('Forbidden: Data access boundary violation.');
   try {
     await query(`UPDATE doctors SET reasons_for_visit = $1 WHERE doctor_id = $2`, [JSON.stringify(services), doctorId]);
     return { success: true };

@@ -63,3 +63,26 @@ export async function destroySession() {
   cookieStore.delete('session_role');
   cookieStore.delete('session_id');
 }
+
+/**
+ * Server Action helper: Requires an active session, throws if unauthorized
+ */
+export async function requireAuth(): Promise<SessionData> {
+  const session = await getSession();
+  if (!session) {
+    throw new Error('Unauthorized: Please log in to continue.');
+  }
+  return session;
+}
+
+/**
+ * Server Action helper: Requires a specific role(s)
+ */
+export async function requireRoles(roles: Role[]): Promise<SessionData> {
+  const session = await requireAuth();
+  if (!roles.includes(session.role)) {
+    throw new Error('Forbidden: You do not have permission to perform this action.');
+  }
+  return session;
+}
+

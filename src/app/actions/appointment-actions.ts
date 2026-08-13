@@ -3,11 +3,18 @@
 import { query } from '@/lib/db';
 import { Appointment } from '@/lib/types';
 import { isBefore, parseISO, startOfDay } from 'date-fns';
+import { sendTransactionalEmail } from './auth-actions';
+import { requireAuth, requireRoles } from '@/lib/auth/session';
+import { ROLES } from '@/lib/auth/roles';
 
 /**
  * Saves a new appointment to the appointments table
  */
 export async function createAppointment(app: Partial<Appointment>) {
+  const session = await requireAuth();
+  if (session.userId !== app.patientId && session.role !== ROLES.ADMIN && session.role !== ROLES.SUPER_ADMIN) {
+    throw new Error('Forbidden: You can only book appointments for your own account.');
+  }
   try {
     // 0. Prevent double booking
     const existingCheck = await query(
@@ -83,6 +90,10 @@ export async function createAppointment(app: Partial<Appointment>) {
  * Fetches all appointments for a specific user and auto-handles missed visits
  */
 export async function getUserAppointments(userId: string) {
+  const session = await requireAuth();
+  if (session.userId !== userId && session.role !== ROLES.ADMIN && session.role !== ROLES.SUPER_ADMIN) {
+    return []; // Return empty if unauthorized instead of throwing to avoid breaking UI during auth load
+  }
   try {
     const result = await query('SELECT * FROM appointments WHERE booked_by_user_id = $1 ORDER BY created_at DESC', [userId]);
     const today = startOfDay(new Date());
@@ -126,6 +137,7 @@ export async function getUserAppointments(userId: string) {
  * Fetches a single appointment by its unique ID
  */
 export async function getAppointmentById(id: string) {
+  const session = await requireAuth();
   try {
     const result = await query('SELECT * FROM appointments WHERE appointment_id = $1', [id]);
     if (result.rows.length === 0) return null;
@@ -161,6 +173,8 @@ export async function getAppointmentById(id: string) {
  * Fetches all appointments for a specific doctor on a selected date, sorted by token number.
  */
 export async function getDoctorAppointmentsForDate(doctorId: string, dateStr: string) {
+  const session = await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.DOCTOR, ROLES.ATTENDANT]);
+  if (session.role === ROLES.DOCTOR && session.userId !== doctorId) throw new Error('Forbidden');
   try {
     const result = await query(
       'SELECT * FROM appointments WHERE doctor_id = $1 AND appointment_date = $2 ORDER BY token_number ASC',
@@ -199,6 +213,7 @@ export async function getDoctorAppointmentsForDate(doctorId: string, dateStr: st
 }
 
 export async function updateAppointmentStatus(appointmentId: string, status: string) {
+  const session = await requireAuth(); // Could be Doctor, Admin, or Patient (cancelling)
   try {
     await query(
       'UPDATE appointments SET status = $1 WHERE appointment_id = $2',
@@ -211,6 +226,7 @@ export async function updateAppointmentStatus(appointmentId: string, status: str
 }
 
 export async function verifyVisitOtp(appointmentId: string, otp: string) {
+  await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.DOCTOR, ROLES.ATTENDANT]);
   try {
     const res = await query('SELECT visit_otp FROM appointments WHERE appointment_id = $1', [appointmentId]);
     if (res.rowCount === 0) return { success: false, error: 'Not found.' };
@@ -237,6 +253,7 @@ export async function getBookedSlots(doctorId: string, date: string) {
 }
 
 export async function rescheduleAppointment(appId: string, newDate: string, newTime: string) {
+  const session = await requireAuth();
   try {
     const app = await query("SELECT doctor_id FROM appointments WHERE appointment_id = $1", [appId]);
     if (!app.rows.length) return { success: false, error: 'Appointment not found' };
