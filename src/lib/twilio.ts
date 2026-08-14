@@ -13,7 +13,7 @@ export const sendOTP = async (to: string, code: string) => {
       to: to,
     });
     return { success: true, sid: message.sid };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Twilio Error:', error);
     return { success: false, error };
   }

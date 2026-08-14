@@ -21,10 +21,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface OPDQueueDashboardProps {
   mode: 'Doctor' | 'Attendant';
-  targetId: string;
 }
 
-export function OPDQueueDashboard({ mode, targetId }: OPDQueueDashboardProps) {
+export function OPDQueueDashboard({ mode }: OPDQueueDashboardProps) {
   const router = useRouter();
   const { toast } = useToast();
   const logout = useStore(state => state.logout);
@@ -207,18 +206,36 @@ export function OPDQueueDashboard({ mode, targetId }: OPDQueueDashboardProps) {
 
   // 2. Initialize Doctor selection
   useEffect(() => {
-    async function init() {
-      if (!admin) return;
-      
-      if (mode === 'Doctor') {
-        setSelectedDoctorId(targetId);
-      } else {
-        // If Attendant, auto-select their doctor
-        setSelectedDoctorId((admin as any).doctor_id);
+    const init = async () => {
+      setLoading(true);
+      try {
+        const targetId = mode === 'Attendant' ? admin?.doctor_id : admin?.admin_id;
+        
+        if (mode === 'Doctor') {
+          if (targetId) setSelectedDoctorId(targetId);
+        } else {
+          // If Attendant, auto-select their doctor
+          if (targetId) {
+            setSelectedDoctorId(targetId);
+          } else {
+            // Fallback fetch all doctors
+            const res = await getDoctorsCatalog();
+            if (Array.isArray(res)) {
+              setDoctors(res);
+            }
+          }
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
       }
+    };
+
+    if (admin) {
+      init();
     }
-    init();
-  }, [admin, mode, targetId]);
+  }, [admin, mode]);
 
   // 3. Load appointments
   async function loadQueue() {
@@ -841,3 +858,4 @@ export function OPDQueueDashboard({ mode, targetId }: OPDQueueDashboardProps) {
     </div>
   );
 }
+

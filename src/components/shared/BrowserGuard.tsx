@@ -9,3 +9,4 @@ import React from 'react';
 export function BrowserGuard({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
+

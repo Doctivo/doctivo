@@ -105,8 +105,8 @@ export default function Banner({ homeBanners, user, isMobile = false }: BannerPr
                     )}
                   </div>
                   {b.imageUrl && (
-                    <div className={cn("shrink-0", isMobile ? "w-[120px] h-[120px] ml-2" : "w-[180px] h-[180px] ml-4")}>
-                      <div className={cn("w-full h-full bg-white dark:bg-slate-800 shadow-2xl overflow-hidden", isMobile ? "rounded-xl" : "rounded-2xl")}>
+                    <div className={cn("shrink-0", isMobile ? "w-[90px] h-[90px] ml-2" : "w-[140px] h-[140px] ml-4")}>
+                      <div className={cn("w-full h-full bg-white dark:bg-slate-800 shadow-xl overflow-hidden", isMobile ? "rounded-xl" : "rounded-2xl")}>
                         <img src={b.imageUrl} alt={`Banner ${idx}`} className="w-full h-full object-cover" />
                       </div>
                     </div>
@@ -135,3 +135,4 @@ export default function Banner({ homeBanners, user, isMobile = false }: BannerPr
     </div>
   );
 }
+

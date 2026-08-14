@@ -23,7 +23,7 @@ export default function AboutFounderPage() {
     const fetchImages = async () => {
       try {
         const res = await getAppSetting('founderImages');
-        if (res.success && res.value) {
+        if (res.success && 'value' in res && res.value) {
           setImages(res.value);
         }
       } catch (e) {
@@ -140,3 +140,4 @@ export default function AboutFounderPage() {
     </div>
   );
 }
+

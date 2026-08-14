@@ -39,7 +39,7 @@ export default function ProfilePage() {
       await logoutSession();
       logout();
       window.location.href = '/login';
-    } catch (error) {
+    } catch (error: any) {
       console.error('Logout failed:', error);
       router.replace('/login');
     }
@@ -223,4 +223,5 @@ export default function ProfilePage() {
     </div>
   );
 }
+
 

@@ -26,7 +26,7 @@ export function middleware(request: NextRequest) {
   }
 
   // Doctor Routes Protection
-  if (pathname.startsWith('/doctor')) {
+  if (pathname.startsWith('/doctor/')) {
     if (!role || (role !== 'DOCTOR' && role !== 'Doctor' && role !== 'SUPER_ADMIN')) {
       const url = new URL('/login', request.url);
       url.searchParams.set('callbackUrl', encodeURI(request.url));

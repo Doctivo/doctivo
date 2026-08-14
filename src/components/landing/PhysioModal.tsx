@@ -50,3 +50,4 @@ export function PhysioModal({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen:
     </Dialog>
   );
 }
+

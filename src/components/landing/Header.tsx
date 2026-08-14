@@ -43,3 +43,4 @@ export function Header({ isAuthenticated }: { isAuthenticated: boolean }) {
     </header>
   );
 }
+

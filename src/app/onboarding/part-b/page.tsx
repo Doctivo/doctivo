@@ -82,7 +82,7 @@ export default function PartBPage() {
       } else {
         toast({ variant: 'destructive', title: 'DB Sync Failed', description: result.error });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error during onboarding recommendation:', error);
       router.push('/choose-category');
     } finally {
@@ -169,3 +169,4 @@ export default function PartBPage() {
     </div>
   );
 }
+

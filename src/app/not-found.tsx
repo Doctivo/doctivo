@@ -18,6 +18,7 @@ export default function NotFound() {
               src="/562c71b5-1be4-415a-94dc-002e1889eb7c-8.jpg" 
               alt="Doctivo Logo" 
               fill 
+              sizes="128px"
               className="object-cover"
             />
           </div>
@@ -65,4 +66,5 @@ export default function NotFound() {
     </div>
   );
 }
+
 

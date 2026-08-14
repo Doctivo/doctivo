@@ -42,3 +42,4 @@ export function SpecialtiesSection({ setIsPhysioOpen }: { setIsPhysioOpen: (open
     </section>
   );
 }
+

@@ -1,1 +1,0 @@
-1. home page per jo image load nahi hota hai to loading scelaton dikhaya jayega 

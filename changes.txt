@@ -1,5 +1,0 @@
-1. console error: 85-aec92556a42c1a02.js:1 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
-(anonymous)	@	85-aec92556a42c1a02.js:1
-2. pahal image mai jaisa dikh raha hai paitent list kuch aisa banaoo
-3. rfund policy page per dark mode ka koi sar hi nahi hai 
-4. jo home page per search button hai vah kam nahi ker raha hai 

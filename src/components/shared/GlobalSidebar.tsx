@@ -85,3 +85,4 @@ export function GlobalSidebar({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
+

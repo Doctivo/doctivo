@@ -78,7 +78,7 @@ export default function BulkExporter() {
       }
 
       toast({ title: 'Export Complete', description: 'Selected data files have been downloaded.' });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Export failed:', error);
       toast({ variant: 'destructive', title: 'Export Failed', description: 'Could not generate CSV files.' });
     }
@@ -159,3 +159,4 @@ export default function BulkExporter() {
     </div>
   );
 }
+

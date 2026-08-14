@@ -55,7 +55,8 @@ export default function DoctorCatalog() {
     imageUrl: '',
     consultation_modes: 'Clinic,Home',
     reasons_for_visit_str: '',
-    stops_booking_at_midnight: false
+    stops_booking_at_midnight: false,
+    workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
   });
   const [isSaving, setIsSaving] = useState(false);
 
@@ -272,9 +273,34 @@ export default function DoctorCatalog() {
                         <Input className="h-12 bg-slate-50 border-none font-bold rounded-xl" placeholder="None" value={newDoc.current_active_campaign} onChange={e => setNewDoc({...newDoc, current_active_campaign: e.target.value})} />
                       </div>
                       <div className="col-span-2 space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-slate-400">Reasons for Visit (Comma separated)</Label>
-                        <Input className="h-12 bg-slate-50 border-none font-bold rounded-xl" placeholder="e.g. Back Pain, Neck Pain, Post Surgery" value={newDoc.reasons_for_visit_str} onChange={e => setNewDoc({...newDoc, reasons_for_visit_str: e.target.value})} />
-                      </div>
+                          <Label className="text-[10px] font-black uppercase text-slate-400">Reasons for Visit (Comma separated)</Label>
+                          <Input className="h-12 bg-slate-50 border-none font-bold rounded-xl" placeholder="e.g. Back Pain, Neck Pain, Post Surgery" value={newDoc.reasons_for_visit_str} onChange={e => setNewDoc({...newDoc, reasons_for_visit_str: e.target.value})} />
+                        </div>
+                        <div className="col-span-2 space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-slate-400">Working Days</Label>
+                          <div className="flex flex-wrap gap-2">
+                            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => {
+                              const currentDays = newDoc.workingDays || [];
+                              const isSelected = currentDays.includes(day);
+                              return (
+                                <button
+                                  key={day}
+                                  type="button"
+                                  onClick={() => {
+                                    if (isSelected) {
+                                      setNewDoc({ ...newDoc, workingDays: currentDays.filter((d: string) => d !== day) });
+                                    } else {
+                                      setNewDoc({ ...newDoc, workingDays: [...currentDays, day] });
+                                    }
+                                  }}
+                                  className={cn("px-4 py-2 rounded-xl text-xs font-bold transition-all", isSelected ? "bg-primary text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200")}
+                                >
+                                  {day}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
                       <div className="col-span-2 flex items-center space-x-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
                         <Checkbox 
                           id="stops_midnight" 
@@ -545,10 +571,35 @@ export default function DoctorCatalog() {
                     <h3 className="font-black text-slate-800 uppercase text-xs tracking-widest">Clinic Details</h3>
                   </div>
                   <div className="grid grid-cols-1 gap-6">
-                    <div className="space-y-1.5">
-                      <Label className="text-[10px] font-black uppercase text-slate-400">Reasons for Visit (Comma separated)</Label>
-                      <Input className="h-14 bg-slate-50 border-none font-bold rounded-xl" value={editingDoc.reasons_for_visit_str || ''} onChange={e => setEditingDoc({...editingDoc, reasons_for_visit_str: e.target.value})} />
-                    </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-[10px] font-black uppercase text-slate-400">Reasons for Visit (Comma separated)</Label>
+                        <Input className="h-14 bg-slate-50 border-none font-bold rounded-xl" value={editingDoc.reasons_for_visit_str || ''} onChange={e => setEditingDoc({...editingDoc, reasons_for_visit_str: e.target.value})} />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-[10px] font-black uppercase text-slate-400">Working Days</Label>
+                        <div className="flex flex-wrap gap-2">
+                          {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => {
+                            const currentDays = Array.isArray(editingDoc.working_days) ? editingDoc.working_days : (typeof editingDoc.working_days === 'string' ? JSON.parse(editingDoc.working_days || '[]') : []);
+                            const isSelected = currentDays.includes(day);
+                            return (
+                              <button
+                                key={day}
+                                type="button"
+                                onClick={() => {
+                                  if (isSelected) {
+                                    setEditingDoc({ ...editingDoc, working_days: currentDays.filter((d: string) => d !== day) });
+                                  } else {
+                                    setEditingDoc({ ...editingDoc, working_days: [...currentDays, day] });
+                                  }
+                                }}
+                                className={cn("px-4 py-2 rounded-xl text-xs font-bold transition-all", isSelected ? "bg-primary text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200")}
+                              >
+                                {day}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
                     <div className="flex items-center space-x-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
                       <Checkbox 
                         id="edit_stops_midnight" 
@@ -620,4 +671,5 @@ export default function DoctorCatalog() {
     </div>
   );
 }
+
 

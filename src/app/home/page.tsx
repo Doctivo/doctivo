@@ -19,9 +19,9 @@ import { getAppSetting } from '@/app/actions/admin-actions';
 import dynamic from 'next/dynamic';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Globe } from 'lucide-react';
-import Banner from '@/components/Banner';
+import Banner from '@/components/shared/Banner';
 
-const PhysioDialog = dynamic(() => import('@/components/PhysioDialog'), { ssr: false });
+const PhysioDialog = dynamic(() => import('@/components/patient/PhysioDialog'), { ssr: false });
 
 function HomeContent() {
   const router = useRouter();
@@ -100,14 +100,15 @@ function HomeContent() {
 
       try {
         const res = await getAppSetting('homeCardImages');
-        if (res.success && res.value) {
+        if (res.success && 'value' in res && res.value) {
           setServerImages(res.value);
           setHomeCardImages(res.value);
         }
+        
         const res2 = await getAppSetting('homeBanners');
-        if (res2.success && res2.value) {
-          setHomeBanners(res2.value);
-          setHomeBannersStore(res2.value);
+        if (res2.success && 'value' in res2 && res2.value) {
+          setHomeBanners(res2.value.map((b: any) => typeof b === 'string' ? { imageUrl: b } : b));
+          setHomeBannersStore(res2.value.map((b: any) => typeof b === 'string' ? { imageUrl: b } : b));
         }
         setHomeDataLastFetched(now);
       } catch (e) {
@@ -169,7 +170,7 @@ const quickActions = [
     icon: UserPlus, 
     bgColor: 'bg-orange-100',
     textColor: 'text-orange-800',
-    href: '/patients' 
+    href: '/patient/dashboard' 
   },
 ];
 
@@ -355,3 +356,4 @@ export default function HomePage() {
     </Suspense>
   ); 
 }
+

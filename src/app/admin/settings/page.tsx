@@ -40,15 +40,15 @@ export default function PlatformSettings() {
     setIsLoading(true);
     try {
       const res = await getAppSetting('homeCardImages');
-      if (res.success && res.value) {
+      if (res.success && 'value' in res && res.value) {
         setImages(res.value);
       }
       const res2 = await getAppSetting('founderImages');
-      if (res2.success && res2.value) {
-        setFounderImages(res2.value || []);
+      if (res2.success && 'value' in res2 && res2.value) {
+        setFounderImages(res2.value);
       }
       const res3 = await getAppSetting('homeBanners');
-      if (res3.success && res3.value) {
+      if (res3.success && 'value' in res3 && res3.value) {
         setHomeBanners((res3.value || []).map((b: any) => typeof b === 'string' ? { imageUrl: b } : b));
       }
     } catch (e) {
@@ -521,4 +521,5 @@ export default function PlatformSettings() {
     </div>
   );
 }
+
 

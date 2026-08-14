@@ -4,6 +4,8 @@ import { query } from '@/lib/db';
 import { cookies } from 'next/headers';
 import { requireRoles } from '@/lib/auth/session';
 import { ROLES } from '@/lib/auth/roles';
+import { AdminService } from '@/server/services/admin.service';
+import { logger } from '@/lib/logger';
 
 /**
  * Initializes all database tables and seeds sample data.
@@ -208,6 +210,8 @@ export async function initializeDatabase() {
         permissions JSONB DEFAULT '{}',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
+    `);
+    
     // 9. Audit Logs Table
     await query(`
       CREATE TABLE IF NOT EXISTS audit_logs (
@@ -222,7 +226,7 @@ export async function initializeDatabase() {
 
     return { success: true };
   } catch (error: any) {
-    console.error('DB Init Error:', error);
+    logger.error('DB Init Error::', { error: error.message || error });
     return { success: false, error: error.message };
   }
 }
@@ -230,21 +234,9 @@ export async function initializeDatabase() {
 export async function getEmployeePayroll() {
   await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
   try {
-    const result = await query(`
-      SELECT 
-        a.*,
-        COALESCE((SELECT SUM(amount) FROM payroll_adjustments WHERE employee_id = a.attendant_id AND type = 'Advance' AND is_settled = false), 0) as total_advances,
-        COALESCE((SELECT SUM(amount) FROM payroll_adjustments WHERE employee_id = a.attendant_id AND type = 'Bonus' AND is_settled = false), 0) as total_bonuses,
-        COALESCE((SELECT SUM(amount) FROM payroll_adjustments WHERE employee_id = a.attendant_id AND type = 'Penalty' AND is_settled = false), 0) as total_penalties
-      FROM attendants a
-    `);
-    
-    return result.rows.map(r => ({
-      ...r,
-      net_balance: parseInt(r.base_salary || '0') + parseInt(r.total_bonuses || '0') - parseInt(r.total_advances || '0') - parseInt(r.total_penalties || '0')
-    }));
-  } catch (error) {
-    console.error('getEmployeePayroll Error:', error);
+    return await AdminService.getEmployeePayroll();
+  } catch (error: any) {
+    logger.error('getEmployeePayroll Error::', { error: error.message || error });
     return [];
   }
 }
@@ -252,10 +244,7 @@ export async function getEmployeePayroll() {
 export async function adjustPayroll(data: any) {
   await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
   try {
-    await query(`
-      INSERT INTO payroll_adjustments (employee_id, employee_name, type, amount, reason)
-      VALUES ($1, $2, $3, $4, $5)
-    `, [data.employeeId, data.employeeName, data.type, data.amount, data.reason]);
+    await AdminService.adjustPayroll(data);
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -265,9 +254,9 @@ export async function adjustPayroll(data: any) {
 export async function settlePayroll(employeeId: string) {
   await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
   try {
-    await query('UPDATE payroll_adjustments SET is_settled = true WHERE employee_id = $1', [employeeId]);
+    await AdminService.settlePayroll(employeeId);
     return { success: true };
-  } catch (error) {
+  } catch (error: any) {
     return { success: false };
   }
 }
@@ -275,9 +264,8 @@ export async function settlePayroll(employeeId: string) {
 export async function getPayrollLogs() {
   await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
   try {
-    const result = await query('SELECT * FROM payroll_adjustments ORDER BY created_at DESC LIMIT 50');
-    return result.rows;
-  } catch (error) {
+    return await AdminService.getPayrollLogs();
+  } catch (error: any) {
     return [];
   }
 }
@@ -285,9 +273,8 @@ export async function getPayrollLogs() {
 export async function getDoctorsCatalog() {
   await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
   try {
-    const result = await query('SELECT * FROM doctors ORDER BY created_at DESC');
-    return result.rows || [];
-  } catch (error) {
+    return await AdminService.getDoctorsCatalog();
+  } catch (error: any) {
     return [];
   }
 }
@@ -295,10 +282,8 @@ export async function getDoctorsCatalog() {
 export async function getDoctorsByStatus(status: 'pending' | 'approved') {
   await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
   try {
-    const isApproved = status === 'approved';
-    const result = await query('SELECT * FROM doctors WHERE is_approved = $1 ORDER BY created_at DESC', [isApproved]);
-    return result.rows || [];
-  } catch (error) {
+    return await AdminService.getDoctorsByStatus(status);
+  } catch (error: any) {
     return [];
   }
 }
@@ -306,20 +291,7 @@ export async function getDoctorsByStatus(status: 'pending' | 'approved') {
 export async function updateDoctorBilling(doctorId: string, data: any) {
   await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
   try {
-    await query(`
-      UPDATE doctors SET
-        allowed_free_attendants = $1,
-        total_purchased_slots = $2,
-        allow_revenue_deduction = $3,
-        current_active_campaign = $4
-      WHERE doctor_id = $5
-    `, [
-      data.allowed_free_attendants,
-      data.total_purchased_slots,
-      data.allow_revenue_deduction,
-      data.current_active_campaign,
-      doctorId
-    ]);
+    await AdminService.updateDoctorBilling(doctorId, data);
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -329,18 +301,16 @@ export async function updateDoctorBilling(doctorId: string, data: any) {
 export async function getAdminUsers() {
   await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
   try {
-    const result = await query('SELECT * FROM admins ORDER BY created_at DESC');
-    return result.rows || [];
-  } catch (error) {
+    return await AdminService.getAdminUsers();
+  } catch (error: any) {
     return [];
   }
 }
 
 export async function createAdminUser(data: any) {
   await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
-  const id = `ADM-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
   try {
-    await query('INSERT INTO admins (admin_id, full_name, email, role, permissions) VALUES ($1, $2, $3, $4, $5)', [id, data.name, data.email, data.role, JSON.stringify(data.permissions || {})]);
+    await AdminService.createAdminUser(data);
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -350,9 +320,9 @@ export async function createAdminUser(data: any) {
 export async function deleteAdminUser(adminId: string) {
   await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
   try {
-    await query('DELETE FROM admins WHERE admin_id = $1', [adminId]);
+    await AdminService.deleteAdminUser(adminId);
     return { success: true };
-  } catch (error) {
+  } catch (error: any) {
     return { success: false };
   }
 }
@@ -360,31 +330,8 @@ export async function deleteAdminUser(adminId: string) {
 export async function getAdminMetrics() {
   await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
   try {
-    const doctorsCount = await query('SELECT COUNT(*) FROM doctors WHERE is_approved = true');
-    const patientsCount = await query('SELECT COUNT(*) FROM patients');
-    const activeBookings = await query("SELECT COUNT(*) FROM appointments WHERE status IN ('Waiting', 'In Consultation', 'Confirmed') AND appointment_date = CURRENT_DATE");
-    const totalRevenue = await query("SELECT SUM(consultation_fee_amount) FROM appointments WHERE payment_status = 'Paid'");
-    
-    const trendResult = await query(`
-      SELECT TO_CHAR(appointment_date, 'Mon DD') as date, COUNT(*) as count
-      FROM appointments WHERE appointment_date >= CURRENT_DATE - INTERVAL '7 days'
-      GROUP BY appointment_date ORDER BY appointment_date ASC
-    `);
-
-    const specialtyResult = await query(`
-      SELECT specialty as name, COUNT(*) as value
-      FROM doctors WHERE is_approved = true GROUP BY specialty
-    `);
-
-    return {
-      activeDoctors: parseInt(doctorsCount.rows[0]?.count || '0'),
-      totalPatients: parseInt(patientsCount.rows[0]?.count || '0'),
-      liveBookings: parseInt(activeBookings.rows[0]?.count || '0'),
-      grossRevenue: parseInt(totalRevenue.rows[0]?.sum || '0'),
-      trendData: trendResult.rows.map((row: any) => ({ ...row, count: parseInt(row.count || '0') })) || [],
-      specialtyData: specialtyResult.rows.map((row: any) => ({ ...row, value: parseInt(row.value || '0') })) || [],
-    };
-  } catch (error) {
+    return await AdminService.getAdminMetrics();
+  } catch (error: any) {
     return { activeDoctors: 0, totalPatients: 0, liveBookings: 0, grossRevenue: 0, trendData: [], specialtyData: [] };
   }
 }
@@ -392,9 +339,8 @@ export async function getAdminMetrics() {
 export async function getAdminBookings() {
   await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
   try {
-    const result = await query('SELECT * FROM appointments ORDER BY created_at DESC');
-    return result.rows || [];
-  } catch (error) {
+    return await AdminService.getAdminBookings();
+  } catch (error: any) {
     return [];
   }
 }
@@ -402,9 +348,9 @@ export async function getAdminBookings() {
 export async function cancelAppointment(appointmentId: string) {
   await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
   try {
-    await query("UPDATE appointments SET status = 'Cancelled' WHERE appointment_id = $1", [appointmentId]);
+    await AdminService.cancelAppointment(appointmentId);
     return { success: true };
-  } catch (error) {
+  } catch (error: any) {
     return { success: false };
   }
 }
@@ -412,31 +358,16 @@ export async function cancelAppointment(appointmentId: string) {
 export async function getAllUsers(role: string) {
   await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
   try {
-    const table = role === 'Doctor' ? 'doctors' : role === 'Patient' ? 'patients' : 'attendants';
-    const result = await query(`SELECT * FROM ${table} ORDER BY created_at DESC`);
-    return result.rows || [];
-  } catch (error) {
+    return await AdminService.getAllUsers(role);
+  } catch (error: any) {
     return [];
   }
 }
 
 export async function addDoctorDirectly(data: any) {
   await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
-  const id = `DOC-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
   try {
-    await query(`
-      INSERT INTO doctors (
-        doctor_id, full_name, phone_number, email, specialty, qualification, 
-        experience_years, clinic_address, consultation_fee, is_approved,
-        start_time, end_time, slot_duration, image_url, consultation_modes, reasons_for_visit, stops_booking_at_midnight
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true, $10, $11, $12, $13, $14, $15, $16)
-    `, [
-      id, data.name, data.phone, data.email || null, data.specialty, data.qualification || '',
-      parseInt(data.experience || '0'), data.address || '', parseInt(data.fees || '500'),
-      data.startTime, data.endTime, parseInt(data.slotDuration || '15'), data.imageUrl || null,
-      data.consultation_modes || 'Clinic,Home', JSON.stringify(data.reasons_for_visit || []),
-      data.stops_booking_at_midnight || false
-    ]);
+    await AdminService.addDoctorDirectly(data);
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -446,19 +377,7 @@ export async function addDoctorDirectly(data: any) {
 export async function updateDoctor(doctorId: string, data: any) {
   await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
   try {
-    await query(`
-      UPDATE doctors SET
-        full_name = $1, phone_number = $2, email = $3, specialty = $4, 
-        qualification = $5, experience_years = $6, clinic_address = $7, 
-        consultation_fee = $8, start_time = $9, end_time = $10, 
-        slot_duration = $11, image_url = $12, consultation_modes = $13, reasons_for_visit = $14, stops_booking_at_midnight = $15
-      WHERE doctor_id = $16
-    `, [
-      data.full_name, data.phone_number, data.email, data.specialty, data.qualification,
-      data.experience_years, data.clinic_address, data.consultation_fee,
-      data.start_time, data.end_time, data.slot_duration, data.image_url,
-      data.consultation_modes, JSON.stringify(data.reasons_for_visit || []), data.stops_booking_at_midnight || false, doctorId
-    ]);
+    await AdminService.updateDoctor(doctorId, data);
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -468,7 +387,7 @@ export async function updateDoctor(doctorId: string, data: any) {
 export async function deleteDoctor(doctorId: string) {
   await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
   try {
-    await query('DELETE FROM doctors WHERE doctor_id = $1', [doctorId]);
+    await AdminService.deleteDoctor(doctorId);
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -478,11 +397,7 @@ export async function deleteDoctor(doctorId: string) {
 export async function setAppSetting(key: string, value: any) {
   await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
   try {
-    await query(`
-      INSERT INTO app_settings (key, value)
-      VALUES ($1, $2)
-      ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value
-    `, [key, JSON.stringify(value)]);
+    await AdminService.setAppSetting(key, value);
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -490,13 +405,8 @@ export async function setAppSetting(key: string, value: any) {
 }
 
 export async function getAppSetting(key: string) {
-  await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
   try {
-    const res = await query('SELECT value FROM app_settings WHERE key = $1', [key]);
-    if (res.rows.length > 0) {
-      return { success: true, value: res.rows[0].value };
-    }
-    return { success: true, value: null };
+    return await AdminService.getAppSetting(key);
   } catch (error: any) {
     return { success: false, error: error.message };
   }
@@ -505,14 +415,12 @@ export async function getAppSetting(key: string) {
 export async function logAdminAction(adminId: string, actionType: string, targetId: string, details: any) {
   const session = await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
   try {
-    await query(
-      'INSERT INTO audit_logs (admin_id, action_type, target_id, details) VALUES ($1, $2, $3, $4)',
-      [adminId, actionType, targetId, JSON.stringify(details)]
-    );
+    await AdminService.logAdminAction(adminId, actionType, targetId, details);
     return { success: true };
   } catch (error: any) {
-    console.error('Audit Log Error:', error);
+    logger.error('Audit Log Error::', { error: error.message || error });
     return { success: false, error: error.message };
   }
 }
+
 

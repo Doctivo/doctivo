@@ -151,10 +151,10 @@ function BookingContent({ id }: { id: string }) {
     if (rescheduleAppId) {
       const res = await rescheduleAppointment(rescheduleAppId, selectedDate, selectedSlot);
       if (res.success) {
-        toast({ title: 'Success', description: 'Appointment rescheduled successfully.', duration: 100000 });
+        toast({ title: 'Success', description: 'Appointment rescheduled successfully.', duration: 9999999 });
         router.push('/appointments');
       } else {
-        toast({ variant: 'destructive', title: 'Failed', description: res.error || 'Failed to reschedule.', duration: 100000 });
+        toast({ variant: 'destructive', title: 'Failed', description: res.error || 'Failed to reschedule.', duration: 9999999 });
       }
       setIsBooking(false);
       return;
@@ -171,7 +171,7 @@ function BookingContent({ id }: { id: string }) {
 
       if (!resOrder.ok) {
         setIsBooking(false);
-        toast({ variant: 'destructive', title: 'Order Failed', description: orderData.error || 'Failed to create payment order.', duration: 100000 });
+        toast({ variant: 'destructive', title: 'Order Failed', description: orderData.error || 'Failed to create payment order.', duration: 9999999 });
         return;
       }
 
@@ -186,7 +186,7 @@ function BookingContent({ id }: { id: string }) {
 
       if (!resScript || !(window as any).Razorpay) {
         setIsBooking(false);
-        toast({ variant: 'destructive', title: 'Script Error', description: 'Failed to load Razorpay checkout script.', duration: 100000 });
+        toast({ variant: 'destructive', title: 'Script Error', description: 'Failed to load Razorpay checkout script.', duration: 9999999 });
         return;
       }
 
@@ -199,7 +199,7 @@ function BookingContent({ id }: { id: string }) {
         order_id: orderData.order_id, // Pass order ID generated from backend
         handler: async function (response: any) {
           setIsBooking(true);
-          toast({ title: 'Processing', description: 'Please wait, verifying your payment...', duration: 100000 });
+          toast({ title: 'Processing', description: 'Please wait, verifying your payment...', duration: 9999999 });
           
           // 3. Verify Signature on backend
           try {
@@ -219,11 +219,11 @@ function BookingContent({ id }: { id: string }) {
               finalizeBooking(response.razorpay_payment_id, patient);
             } else {
               setIsBooking(false);
-              toast({ variant: 'destructive', title: 'Verification Failed', description: verifyData.error || 'Payment verification failed', duration: 100000 });
+              toast({ variant: 'destructive', title: 'Verification Failed', description: verifyData.error || 'Payment verification failed', duration: 9999999 });
             }
           } catch (err) {
             setIsBooking(false);
-            toast({ variant: 'destructive', title: 'Error', description: 'Error verifying payment signature', duration: 100000 });
+            toast({ variant: 'destructive', title: 'Error', description: 'Error verifying payment signature', duration: 9999999 });
           }
         },
         prefill: {
@@ -241,13 +241,13 @@ function BookingContent({ id }: { id: string }) {
       const rzp = new (window as any).Razorpay(options);
       rzp.on('payment.failed', function (response: any){
         setIsBooking(false);
-        toast({ variant: 'destructive', title: 'Payment Failed', description: response.error.description, duration: 100000 });
+        toast({ variant: 'destructive', title: 'Payment Failed', description: response.error.description, duration: 9999999 });
       });
       rzp.open();
 
     } catch (err) {
       setIsBooking(false);
-      toast({ variant: 'destructive', title: 'Error', description: 'An unexpected error occurred during payment initiation.', duration: 100000 });
+      toast({ variant: 'destructive', title: 'Error', description: 'An unexpected error occurred during payment initiation.', duration: 9999999 });
     }
   };
 
@@ -283,7 +283,7 @@ function BookingContent({ id }: { id: string }) {
       if (res.error && res.error.includes('already booked')) {
         setConflictData({ txnId, errorMsg: res.error });
       } else {
-        toast({ variant: 'destructive', title: 'Booking Failed', description: res.error + ' (Your payment was successful. Please select a different slot and try again to book without paying.)', duration: 100000 });
+        toast({ variant: 'destructive', title: 'Booking Failed', description: res.error + ' (Your payment was successful. Please select a different slot and try again to book without paying.)', duration: 9999999 });
       }
     }
   };
@@ -298,20 +298,20 @@ function BookingContent({ id }: { id: string }) {
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        toast({ title: 'Refund Successful', description: 'Your money has been refunded to your source account.', duration: 100000 });
+        toast({ title: 'Refund Successful', description: 'Your money has been refunded to your source account.', duration: 9999999 });
         setConflictData(null);
         setBypassTxnId(null);
       } else {
-        toast({ variant: 'destructive', title: 'Refund Failed', description: data.error || 'Failed to process refund.', duration: 100000 });
+        toast({ variant: 'destructive', title: 'Refund Failed', description: data.error || 'Failed to process refund.', duration: 9999999 });
       }
     } catch (e) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Failed to process refund.', duration: 100000 });
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to process refund.', duration: 9999999 });
     }
   };
 
   const handleUpdateProfile = () => {
     if (!tempAge || !tempGender) {
-      toast({ variant: 'destructive', title: 'Required', description: 'Please provide age and gender.', duration: 100000 });
+      toast({ variant: 'destructive', title: 'Required', description: 'Please provide age and gender.', duration: 9999999 });
       return;
     }
     

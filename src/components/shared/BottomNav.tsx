@@ -16,7 +16,7 @@ export function BottomNav() {
 
   const navItems = [
     { label: 'Home', icon: LayoutGrid, href: '/home' },
-    { label: 'Patients', icon: Users, href: '/patients' },
+    { label: 'Patients', icon: Users, href: '/patient/dashboard' },
     { label: 'Bookings', icon: Calendar, href: '/appointments' },
     { label: 'Settings', icon: Settings, href: '/profile' },
   ];

@@ -127,3 +127,4 @@ function PhysioContent() {
 export default function PhysioPage() { 
   return <Suspense fallback={<div className="flex justify-center items-center min-h-screen"><Loader2 className="animate-spin text-primary" /></div>}><PhysioContent /></Suspense>; 
 }
+

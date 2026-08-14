@@ -1,8 +1,8 @@
 'use server';
 
 import { query } from '@/lib/db';
-import { getPatientByPhone, getFamilyMembers } from './patient-actions';
-import { getUserAppointments } from './appointment-actions';
+import { PatientService } from '@/server/services/patient.service';
+import { AppointmentService } from '@/server/services/appointment.service';
 import { createSession, destroySession } from '@/lib/auth/session';
 
 // Rate Limiting Map: phone/email -> { attempts, lockUntil }
@@ -30,8 +30,7 @@ export async function unifiedLogin(identifier: string) {
         return { success: false, error: otpRes.error || 'Failed to send OTP' };
       }
 
-      // Fallback: Patient check
-      const existingUser = await getPatientByPhone(identifier);
+      const existingUser = await PatientService.getPatientByPhone(identifier);
       
       let patientData;
       let familyMembers: any[] = [];
@@ -41,8 +40,8 @@ export async function unifiedLogin(identifier: string) {
       if (existingUser) {
         patientData = existingUser;
         const [members, apts] = await Promise.all([
-          getFamilyMembers(existingUser.id),
-          getUserAppointments(existingUser.id)
+          PatientService.getFamilyMembers(existingUser.id),
+          AppointmentService.getUserAppointments(existingUser.id)
         ]);
         familyMembers = members;
         appointments = apts;
@@ -137,8 +136,8 @@ export async function unifiedLogin(identifier: string) {
     return { success: false, error: 'Invalid credentials' };
 
   } catch (error: any) {
-    console.error('Unified Login Error:', error.message);
-    return { success: false, error: 'Database connection failed. Please try again.' };
+    console.error('Unified Login Error:', error);
+    return { success: false, error: error.message || 'Database connection failed. Please try again.' };
   }
 }
 

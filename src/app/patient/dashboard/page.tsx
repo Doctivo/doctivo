@@ -122,7 +122,7 @@ export default function PatientsPage() {
           else if (user.name) fullList.push({ ...user, relation: 'Self' } as Patient);
           fullList.push(...family);
           setPatients(fullList);
-        } catch (error) {}
+        } catch (error: any) {}
       }
       setLoading(false);
     }
@@ -541,4 +541,5 @@ export default function PatientsPage() {
     </div>
   );
 }
+
 

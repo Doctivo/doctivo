@@ -364,3 +364,4 @@ function DoctorsContent() {
 }
 
 export default function DoctorsPage() { return <Suspense fallback={<div className="flex justify-center items-center min-h-screen"><Loader2 className="animate-spin text-primary" /></div>}><DoctorsContent /></Suspense>; }
+

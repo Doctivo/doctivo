@@ -47,22 +47,19 @@ export default function LoginPage() {
   // Automatic redirect if session exists
   useEffect(() => {
     if (isAuthenticated) {
+      const callbackUrl = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('callbackUrl') : null;
       if (user?.id) {
         if (user.isProfileComplete) {
-          router.replace('/home');
+          router.replace(callbackUrl || '/home');
         } else {
           router.replace('/onboarding');
         }
       } else if (admin?.role === 'Attendant') {
-        router.replace(`/attendant/${admin.admin_id}`);
+        router.replace(`/attendant/dashboard`);
       } else if (admin?.role === 'Doctor') {
-        router.replace(`/doctor/${admin.admin_id}`);
+        router.replace(`/doctor/dashboard`);
       } else if (admin) {
-        if (admin.admin_id === 'SUPER-1' || admin.admin_id === 'admin') {
-          router.replace('/admin');
-        } else {
-          router.replace(`/admin/${admin.admin_id}`);
-        }
+        router.replace('/admin');
       }
     }
   }, [isAuthenticated, user, admin, router]);
@@ -104,7 +101,8 @@ export default function LoginPage() {
           
           router.refresh();
           setTimeout(() => {
-            if (result.user.isProfileComplete) router.replace('/home');
+            const callbackUrl = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('callbackUrl') : null;
+            if (result.user.isProfileComplete) router.replace(callbackUrl || '/home');
             else router.replace('/onboarding');
           }, 100);
 
@@ -114,7 +112,7 @@ export default function LoginPage() {
           setIsAuthenticated(true);
           router.refresh();
           setTimeout(() => {
-            router.replace(result.user.admin_id === 'SUPER-1' ? '/admin' : `/admin/${result.user.admin_id}`);
+            router.replace('/admin');
           }, 100);
         } else if (result.role === 'Doctor') {
           setUserStore(null);
@@ -128,7 +126,7 @@ export default function LoginPage() {
           setIsAuthenticated(true);
           router.refresh();
           setTimeout(() => {
-            router.replace(`/doctor/${result.user.doctor_id}`);
+            router.replace(`/doctor/dashboard`);
           }, 100);
         } else if (result.role === 'Attendant') {
           setUserStore(null);
@@ -143,7 +141,7 @@ export default function LoginPage() {
           setIsAuthenticated(true);
           router.refresh();
           setTimeout(() => {
-            router.replace(`/attendant/${result.user.attendant_id}`);
+            router.replace(`/attendant/dashboard`);
           }, 100);
         }
       } else {
@@ -183,7 +181,7 @@ export default function LoginPage() {
           setIsAuthenticated(true);
           router.refresh();
           setTimeout(() => {
-            router.replace(`/doctor/${result.user.doctor_id}`);
+            router.replace(`/doctor/dashboard`);
           }, 100);
         } else {
           setAdminStore(result.user as any);
@@ -191,11 +189,7 @@ export default function LoginPage() {
           router.refresh();
           
           setTimeout(() => {
-            if (result.user.admin_id === 'SUPER-1') {
-              router.replace('/admin');
-            } else {
-              router.replace(`/admin/${result.user.admin_id}`);
-            }
+            router.replace('/admin');
           }, 100);
         }
       } else {
@@ -295,3 +289,5 @@ export default function LoginPage() {
      </div>
    );
 }
+
+
