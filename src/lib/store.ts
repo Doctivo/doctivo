@@ -2,7 +2,7 @@
 'use client';
 
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { UserProfile, Patient, Appointment, AdminProfile } from './types';
 
 interface AppState {
@@ -77,12 +77,13 @@ export const useStore = create<AppState>()(
       })),
       login: (phone, id) => set({ isAuthenticated: true, user: { id, phone } as UserProfile }),
       logout: () => {
-        localStorage.removeItem('doctivo-storage');
+        sessionStorage.removeItem('doctivo-storage');
         set({ isAuthenticated: false, user: null, admin: null, patients: [], appointments: [] });
       },
     }),
     {
       name: 'doctivo-storage',
+      storage: createJSONStorage(() => sessionStorage),
       onRehydrateStorage: () => (state) => { state?.setHasHydrated(true); },
       partialize: (state) => ({ 
         isAuthenticated: state.isAuthenticated, 

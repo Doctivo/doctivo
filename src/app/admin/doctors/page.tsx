@@ -115,6 +115,7 @@ export default function DoctorCatalog() {
     try {
       const payload = {
         ...newDoc,
+        specialty: newDoc.specialty === 'Other' ? (newDoc.custom_specialty || 'General') : newDoc.specialty,
         reasons_for_visit: (newDoc.reasons_for_visit_str || '').split(',').map((s: string) => s.trim()).filter(Boolean)
       };
       const res = await addDoctorDirectly(payload);
@@ -138,6 +139,7 @@ export default function DoctorCatalog() {
     try {
       const payload = {
         ...editingDoc,
+        specialty: editingDoc.specialty === 'Other' ? (editingDoc.custom_specialty || 'General') : editingDoc.specialty,
         reasons_for_visit: (editingDoc.reasons_for_visit_str || '').split(',').map((s: string) => s.trim()).filter(Boolean)
       };
       const res = await updateDoctor(editingDoc.doctor_id, payload);
@@ -198,120 +200,144 @@ export default function DoctorCatalog() {
                     </div>
                     <p className="text-[10px] font-black text-slate-400 uppercase mt-2 tracking-widest">Upload Profile Photo</p>
                   </div>
-                   <div className="grid grid-cols-2 gap-6 pt-4">
-                     <div className="space-y-2">
-                       <Label className="text-[10px] font-black uppercase text-slate-400">Full Name *</Label>
-                       <Input className="h-12 bg-slate-50 border-none font-bold rounded-xl" value={newDoc.name} onChange={e => setNewDoc({...newDoc, name: e.target.value})} />
-                     </div>
-                     <div className="space-y-2">
-                       <Label className="text-[10px] font-black uppercase text-slate-400">Specialty *</Label>
-                       <Select value={newDoc.specialty} onValueChange={v => setNewDoc({...newDoc, specialty: v})}>
-                         <SelectTrigger className="h-12 bg-slate-50 border-none font-bold rounded-xl">
-                           <SelectValue placeholder="Select Specialty" />
-                         </SelectTrigger>
-                         <SelectContent className="rounded-xl border-none shadow-2xl">
-                           {DOCTOR_CATEGORIES.filter(c => c.id !== 'all').map(cat => (
-                             <SelectItem key={cat.id} value={cat.name} className="font-bold py-2.5">{cat.name}</SelectItem>
-                           ))}
-                         </SelectContent>
-                       </Select>
-                     </div>
-                     <div className="space-y-2">
-                       <Label className="text-[10px] font-black uppercase text-slate-400">Phone Number *</Label>
-                       <Input className="h-12 bg-slate-50 border-none font-bold rounded-xl" value={newDoc.phone} onChange={e => setNewDoc({...newDoc, phone: e.target.value})} />
-                     </div>
-                     <div className="space-y-2">
-                       <Label className="text-[10px] font-black uppercase text-slate-400">Email Address</Label>
-                       <Input className="h-12 bg-slate-50 border-none font-bold rounded-xl" value={newDoc.email} onChange={e => setNewDoc({...newDoc, email: e.target.value})} />
-                     </div>
-                     <div className="space-y-2">
-                       <Label className="text-[10px] font-black uppercase text-slate-400">Qualification</Label>
-                       <Input className="h-12 bg-slate-50 border-none font-bold rounded-xl" placeholder="MBBS, MD" value={newDoc.qualification} onChange={e => setNewDoc({...newDoc, qualification: e.target.value})} />
-                     </div>
-                     <div className="space-y-2">
-                       <Label className="text-[10px] font-black uppercase text-slate-400">Experience (Years)</Label>
-                       <Input type="number" className="h-12 bg-slate-50 border-none font-bold rounded-xl" value={newDoc.experience} onChange={e => setNewDoc({...newDoc, experience: e.target.value})} />
-                     </div>
-                     <div className="space-y-2">
-                       <Label className="text-[10px] font-black uppercase text-slate-400">Consultation Fee (₹)</Label>
-                       <Input type="number" className="h-12 bg-slate-50 border-none font-bold rounded-xl" value={newDoc.fees} onChange={e => setNewDoc({...newDoc, fees: e.target.value})} />
-                     </div>
-                     <div className="space-y-2">
-                       <Label className="text-[10px] font-black uppercase text-slate-400">Slot Duration (Mins)</Label>
-                       <Input type="number" className="h-12 bg-slate-50 border-none font-bold rounded-xl" value={newDoc.slotDuration} onChange={e => setNewDoc({...newDoc, slotDuration: e.target.value})} />
-                     </div>
-                     <div className="space-y-2">
-                       <Label className="text-[10px] font-black uppercase text-slate-400">Start Time (24h)</Label>
-                       <Input className="h-12 bg-slate-50 border-none font-bold rounded-xl" placeholder="09:00" value={newDoc.startTime} onChange={e => setNewDoc({...newDoc, startTime: e.target.value})} />
-                     </div>
-                     <div className="space-y-2">
-                       <Label className="text-[10px] font-black uppercase text-slate-400">End Time (24h)</Label>
-                       <Input className="h-12 bg-slate-50 border-none font-bold rounded-xl" placeholder="17:00" value={newDoc.endTime} onChange={e => setNewDoc({...newDoc, endTime: e.target.value})} />
-                     </div>
-                     <div className="space-y-2">
-                       <Label className="text-[10px] font-black uppercase text-slate-400">Free Attendant Slots</Label>
-                       <Input type="number" className="h-12 bg-slate-50 border-none font-bold rounded-xl" value={newDoc.allowed_free_attendants} onChange={e => setNewDoc({...newDoc, allowed_free_attendants: e.target.value})} />
-                     </div>
-                     <div className="space-y-2">
-                       <Label className="text-[10px] font-black uppercase text-slate-400">Purchased Slots</Label>
-                       <Input type="number" className="h-12 bg-slate-50 border-none font-bold rounded-xl" value={newDoc.total_purchased_slots} onChange={e => setNewDoc({...newDoc, total_purchased_slots: e.target.value})} />
-                     </div>
-                     <div className="space-y-2">
-                       <Label className="text-[10px] font-black uppercase text-slate-400">Allow Revenue Deduction</Label>
-                       <Select value={String(newDoc.allow_revenue_deduction)} onValueChange={v => setNewDoc({...newDoc, allow_revenue_deduction: v === 'true'})}>
-                         <SelectTrigger className="h-12 bg-slate-50 border-none font-bold rounded-xl">
-                           <SelectValue />
-                         </SelectTrigger>
-                         <SelectContent className="rounded-xl">
-                           <SelectItem value="true" className="font-bold py-2">Yes</SelectItem>
-                           <SelectItem value="false" className="font-bold py-2">No</SelectItem>
-                         </SelectContent>
-                       </Select>
-                     </div>
-                     <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-slate-400">Active Campaign</Label>
-                        <Input className="h-12 bg-slate-50 border-none font-bold rounded-xl" placeholder="None" value={newDoc.current_active_campaign} onChange={e => setNewDoc({...newDoc, current_active_campaign: e.target.value})} />
-                      </div>
-                      <div className="col-span-2 space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-slate-400">Reasons for Visit (Comma separated)</Label>
-                          <Input className="h-12 bg-slate-50 border-none font-bold rounded-xl" placeholder="e.g. Back Pain, Neck Pain, Post Surgery" value={newDoc.reasons_for_visit_str} onChange={e => setNewDoc({...newDoc, reasons_for_visit_str: e.target.value})} />
-                        </div>
-                        <div className="col-span-2 space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-slate-400">Working Days</Label>
-                          <div className="flex flex-wrap gap-2">
-                            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => {
-                              const currentDays = newDoc.workingDays || [];
-                              const isSelected = currentDays.includes(day);
-                              return (
-                                <button
-                                  key={day}
-                                  type="button"
-                                  onClick={() => {
-                                    if (isSelected) {
-                                      setNewDoc({ ...newDoc, workingDays: currentDays.filter((d: string) => d !== day) });
-                                    } else {
-                                      setNewDoc({ ...newDoc, workingDays: [...currentDays, day] });
-                                    }
-                                  }}
-                                  className={cn("px-4 py-2 rounded-xl text-xs font-bold transition-all", isSelected ? "bg-primary text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200")}
-                                >
-                                  {day}
-                                </button>
-                              );
-                            })}
+                    <div className="space-y-8 pt-4">
+                      {/* Section 1: Basic Information */}
+                      <div className="space-y-4">
+                        <h3 className="text-xs font-black uppercase text-slate-800 tracking-wider">1. Basic Information</h3>
+                        <div className="grid grid-cols-2 gap-6 p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-slate-400">Full Name *</Label>
+                            <Input className="h-12 bg-white border-none font-bold rounded-xl" value={newDoc.name} onChange={e => setNewDoc({...newDoc, name: e.target.value})} />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-slate-400">Specialty *</Label>
+                            <Select value={newDoc.specialty} onValueChange={v => setNewDoc({...newDoc, specialty: v})}>
+                              <SelectTrigger className="h-12 bg-white border-none font-bold rounded-xl">
+                                <SelectValue placeholder="Select Specialty" />
+                              </SelectTrigger>
+                              <SelectContent className="rounded-xl border-none shadow-2xl">
+                                {DOCTOR_CATEGORIES.filter(c => c.id !== 'all').map(cat => (
+                                  <SelectItem key={cat.id} value={cat.name} className="font-bold py-2.5">{cat.name}</SelectItem>
+                                ))}
+                                <SelectItem value="Other" className="font-bold py-2.5 text-blue-600">Other (Specify)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          {newDoc.specialty === 'Other' && (
+                            <div className="space-y-2 col-span-2">
+                              <Label className="text-[10px] font-black uppercase text-slate-400">Specify Specialty</Label>
+                              <Input className="h-12 bg-white border-none font-bold rounded-xl" placeholder="e.g. Cardiologist" value={newDoc.custom_specialty || ''} onChange={e => setNewDoc({...newDoc, custom_specialty: e.target.value})} />
+                            </div>
+                          )}
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-slate-400">Phone Number *</Label>
+                            <Input className="h-12 bg-white border-none font-bold rounded-xl" value={newDoc.phone} onChange={e => setNewDoc({...newDoc, phone: e.target.value})} />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-slate-400">Email Address</Label>
+                            <Input className="h-12 bg-white border-none font-bold rounded-xl" value={newDoc.email} onChange={e => setNewDoc({...newDoc, email: e.target.value})} />
                           </div>
                         </div>
-                      <div className="col-span-2 flex items-center space-x-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
-                        <Checkbox 
-                          id="stops_midnight" 
-                          checked={newDoc.stops_booking_at_midnight} 
-                          onCheckedChange={(checked) => setNewDoc({...newDoc, stops_booking_at_midnight: checked === true})}
-                        />
-                        <div className="space-y-1 leading-none">
-                          <Label htmlFor="stops_midnight" className="text-sm font-bold text-slate-700 cursor-pointer">Stop midnight booking for next day?</Label>
-                          <p className="text-[10px] text-slate-500 font-medium">If enabled, same day booking is not allowed. Users can only book for the next day.</p>
+                      </div>
+
+                      {/* Section 2: Professional Details */}
+                      <div className="space-y-4">
+                        <h3 className="text-xs font-black uppercase text-slate-800 tracking-wider">2. Professional Details</h3>
+                        <div className="grid grid-cols-2 gap-6 p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-slate-400">Qualification</Label>
+                            <Input className="h-12 bg-white border-none font-bold rounded-xl" placeholder="MBBS, MD" value={newDoc.qualification} onChange={e => setNewDoc({...newDoc, qualification: e.target.value})} />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-slate-400">Experience (Years)</Label>
+                            <Input type="number" className="h-12 bg-white border-none font-bold rounded-xl" value={newDoc.experience} onChange={e => setNewDoc({...newDoc, experience: e.target.value})} />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-slate-400">Consultation Fee (₹)</Label>
+                            <Input type="number" className="h-12 bg-white border-none font-bold rounded-xl" value={newDoc.fees} onChange={e => setNewDoc({...newDoc, fees: e.target.value})} />
+                          </div>
                         </div>
                       </div>
+
+                      {/* Section 3: Appointments & Scheduling */}
+                      <div className="space-y-4">
+                        <h3 className="text-xs font-black uppercase text-slate-800 tracking-wider">3. Appointments & Scheduling</h3>
+                        <div className="grid grid-cols-2 gap-6 p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-slate-400">Start Time (24h)</Label>
+                            <Input className="h-12 bg-white border-none font-bold rounded-xl" placeholder="09:00" value={newDoc.startTime} onChange={e => setNewDoc({...newDoc, startTime: e.target.value})} />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-slate-400">End Time (24h)</Label>
+                            <Input className="h-12 bg-white border-none font-bold rounded-xl" placeholder="17:00" value={newDoc.endTime} onChange={e => setNewDoc({...newDoc, endTime: e.target.value})} />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-slate-400">Slot Duration (Mins)</Label>
+                            <Input type="number" className="h-12 bg-white border-none font-bold rounded-xl" value={newDoc.slotDuration} onChange={e => setNewDoc({...newDoc, slotDuration: e.target.value})} />
+                          </div>
+                          <div className="col-span-2 space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-slate-400">Working Days</Label>
+                            <div className="flex flex-wrap gap-2">
+                              {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => {
+                                const currentDays = newDoc.workingDays || [];
+                                const isSelected = currentDays.includes(day);
+                                return (
+                                  <button
+                                    key={day}
+                                    type="button"
+                                    onClick={() => {
+                                      if (isSelected) {
+                                        setNewDoc({ ...newDoc, workingDays: currentDays.filter((d: string) => d !== day) });
+                                      } else {
+                                        setNewDoc({ ...newDoc, workingDays: [...currentDays, day] });
+                                      }
+                                    }}
+                                    className={cn("px-4 py-2 rounded-xl text-xs font-bold transition-all", isSelected ? "bg-primary text-white" : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100")}
+                                  >
+                                    {day}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                          <div className="col-span-2 flex items-center space-x-3 p-4 bg-white rounded-xl border border-slate-200">
+                            <Checkbox 
+                              id="stops_midnight" 
+                              checked={newDoc.stops_booking_at_midnight} 
+                              onCheckedChange={(checked) => setNewDoc({...newDoc, stops_booking_at_midnight: checked === true})}
+                            />
+                            <div className="space-y-1 leading-none">
+                              <Label htmlFor="stops_midnight" className="text-sm font-bold text-slate-700 cursor-pointer">Stop midnight booking for next day?</Label>
+                              <p className="text-xs text-slate-500 font-medium">If enabled, same day booking is not allowed. Users can only book for the next day.</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Section 4: Advanced Features & Billing */}
+                      <div className="space-y-4">
+                        <h3 className="text-xs font-black uppercase text-slate-800 tracking-wider">4. Advanced Features & Billing</h3>
+                        <div className="grid grid-cols-2 gap-6 p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                          <div className="col-span-2 space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-slate-400">Reasons for Visit (Comma separated)</Label>
+                            <Input className="h-12 bg-white border-none font-bold rounded-xl" placeholder="e.g. Back Pain, Neck Pain, Post Surgery" value={newDoc.reasons_for_visit_str} onChange={e => setNewDoc({...newDoc, reasons_for_visit_str: e.target.value})} />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-slate-400">Free Attendant Slots</Label>
+                            <Input type="number" className="h-12 bg-white border-none font-bold rounded-xl" value={newDoc.allowed_free_attendants} onChange={e => setNewDoc({...newDoc, allowed_free_attendants: e.target.value})} />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-slate-400">Purchased Slots</Label>
+                            <Input type="number" className="h-12 bg-white border-none font-bold rounded-xl" value={newDoc.total_purchased_slots} onChange={e => setNewDoc({...newDoc, total_purchased_slots: e.target.value})} />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-slate-400">Active Campaign</Label>
+                            <Input className="h-12 bg-white border-none font-bold rounded-xl" placeholder="None" value={newDoc.current_active_campaign} onChange={e => setNewDoc({...newDoc, current_active_campaign: e.target.value})} />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                       {newDoc.specialty === 'Physiotherapist' && (
                         <div className="col-span-2 p-6 rounded-3xl bg-slate-50 border border-slate-100 space-y-4">
                           <Label className="text-[10px] font-black uppercase text-slate-400">Consultation Modes</Label>
@@ -345,12 +371,11 @@ export default function DoctorCatalog() {
                           </div>
                         </div>
                       )}
-                      <div className="col-span-2 space-y-2">
+                      <div className="space-y-2 mt-4">
                         <Label className="text-[10px] font-black uppercase text-slate-400">Clinic Address</Label>
                         <Input className="h-12 bg-slate-50 border-none font-bold rounded-xl" value={newDoc.address} onChange={e => setNewDoc({...newDoc, address: e.target.value})} />
                       </div>
-                    </div>
-                 </div>
+                  </div>
                </ScrollArea>
                <DialogFooter className="p-8 bg-slate-50 border-t">
                  <Button onClick={handleAdd} disabled={isSaving} className="w-full h-16 rounded-2xl bg-blue-600 font-black text-lg shadow-xl shadow-blue-600/20">
@@ -468,149 +493,151 @@ export default function DoctorCatalog() {
                     <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageSelect} />
                   </div>
                   <div className="space-y-4 flex-1">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-1.5">
-                        <Label className="text-[10px] font-black uppercase text-slate-400">Full Name</Label>
-                        <Input className="h-12 bg-slate-50 border-none font-bold rounded-xl" value={editingDoc.full_name} onChange={e => setEditingDoc({...editingDoc, full_name: e.target.value})} />
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-[10px] font-black uppercase text-slate-400">Specialty</Label>
-                        <Select value={editingDoc.specialty} onValueChange={v => setEditingDoc({...editingDoc, specialty: v})}>
-                          <SelectTrigger className="h-12 bg-slate-50 border-none font-bold rounded-xl"><SelectValue /></SelectTrigger>
-                          <SelectContent className="rounded-xl">
-                            {DOCTOR_CATEGORIES.filter(c => c.id !== 'all').map(cat => (
-                              <SelectItem key={cat.id} value={cat.name} className="font-bold py-2">{cat.name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="space-y-1.5">
-                    <Label className="text-[10px] font-black uppercase text-slate-400">Contact Number</Label>
-                    <div className="relative">
-                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                      <Input className="h-12 bg-slate-50 border-none font-bold rounded-xl pl-12" value={editingDoc.phone_number || ''} onChange={e => setEditingDoc({...editingDoc, phone_number: e.target.value})} />
-                    </div>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-[10px] font-black uppercase text-slate-400">Email Address</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                      <Input className="h-12 bg-slate-50 border-none font-bold rounded-xl pl-12" value={editingDoc.email || ''} onChange={e => setEditingDoc({...editingDoc, email: e.target.value})} />
-                    </div>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-[10px] font-black uppercase text-slate-400">Qualification</Label>
-                    <Input className="h-12 bg-slate-50 border-none font-bold rounded-xl" value={editingDoc.qualification || ''} onChange={e => setEditingDoc({...editingDoc, qualification: e.target.value})} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-[10px] font-black uppercase text-slate-400">Experience (Years)</Label>
-                    <Input type="number" className="h-12 bg-slate-50 border-none font-bold rounded-xl" value={editingDoc.experience_years || 0} onChange={e => setEditingDoc({...editingDoc, experience_years: parseInt(e.target.value || '0')})} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-[10px] font-black uppercase text-slate-400">Consultation Fee (₹)</Label>
-                    <div className="relative">
-                      <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                      <Input type="number" className="h-12 bg-slate-50 border-none font-bold rounded-xl pl-12" value={editingDoc.consultation_fee || 500} onChange={e => setEditingDoc({...editingDoc, consultation_fee: parseInt(e.target.value || '500')})} />
-                    </div>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-[10px] font-black uppercase text-slate-400">Slot Duration (Mins)</Label>
-                    <div className="relative">
-                      <Clock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                      <Input type="number" className="h-12 bg-slate-50 border-none font-bold rounded-xl pl-12" value={editingDoc.slot_duration || 15} onChange={e => setEditingDoc({...editingDoc, slot_duration: parseInt(e.target.value || '15')})} />
-                    </div>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-[10px] font-black uppercase text-slate-400">Start Time</Label>
-                    <Input className="h-12 bg-slate-50 border-none font-bold rounded-xl" value={editingDoc.start_time || '09:00'} onChange={e => setEditingDoc({...editingDoc, start_time: e.target.value})} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-[10px] font-black uppercase text-slate-400">End Time</Label>
-                    <Input className="h-12 bg-slate-50 border-none font-bold rounded-xl" value={editingDoc.end_time || '17:00'} onChange={e => setEditingDoc({...editingDoc, end_time: e.target.value})} />
-                  </div>
-                </div>
-
-                <hr className="border-slate-100" />
-
-                <div className="space-y-6">
-                   <div className="flex items-center space-x-2">
-                     <ShieldCheck className="h-5 w-5 text-blue-500" />
-                     <h3 className="font-black text-slate-800 uppercase text-xs tracking-widest">SaaS & Staffing Limits</h3>
-                   </div>
-                   <div className="grid grid-cols-2 gap-6">
-                    <div className="space-y-1.5">
-                      <Label className="text-[10px] font-black uppercase text-slate-400">Free Attendant Slots</Label>
-                      <Input type="number" className="h-12 bg-slate-50 border-none font-bold rounded-xl" value={editingDoc.allowed_free_attendants || 1} onChange={e => setEditingDoc({...editingDoc, allowed_free_attendants: parseInt(e.target.value || '1')})} />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-[10px] font-black uppercase text-slate-400">Purchased Slots</Label>
-                      <Input type="number" className="h-12 bg-slate-50 border-none font-bold rounded-xl" value={editingDoc.total_purchased_slots || 0} onChange={e => setEditingDoc({...editingDoc, total_purchased_slots: parseInt(e.target.value || '0')})} />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-[10px] font-black uppercase text-slate-400">Revenue Deduction</Label>
-                      <Select value={String(!!editingDoc.allow_revenue_deduction)} onValueChange={v => setEditingDoc({...editingDoc, allow_revenue_deduction: v === 'true'})}>
-                        <SelectTrigger className="h-12 bg-slate-50 border-none font-bold rounded-xl"><SelectValue /></SelectTrigger>
-                        <SelectContent className="rounded-xl"><SelectItem value="true">Active</SelectItem><SelectItem value="false">Disabled</SelectItem></SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-[10px] font-black uppercase text-slate-400">Active Campaign</Label>
-                      <Input className="h-12 bg-slate-50 border-none font-bold rounded-xl" value={editingDoc.current_active_campaign || ''} onChange={e => setEditingDoc({...editingDoc, current_active_campaign: e.target.value})} />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-6">
-                  <div className="flex items-center space-x-2">
-                    <MapPin className="h-5 w-5 text-red-400" />
-                    <h3 className="font-black text-slate-800 uppercase text-xs tracking-widest">Clinic Details</h3>
-                  </div>
-                  <div className="grid grid-cols-1 gap-6">
-                      <div className="space-y-1.5">
-                        <Label className="text-[10px] font-black uppercase text-slate-400">Reasons for Visit (Comma separated)</Label>
-                        <Input className="h-14 bg-slate-50 border-none font-bold rounded-xl" value={editingDoc.reasons_for_visit_str || ''} onChange={e => setEditingDoc({...editingDoc, reasons_for_visit_str: e.target.value})} />
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-[10px] font-black uppercase text-slate-400">Working Days</Label>
-                        <div className="flex flex-wrap gap-2">
-                          {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => {
-                            const currentDays = Array.isArray(editingDoc.working_days) ? editingDoc.working_days : (typeof editingDoc.working_days === 'string' ? JSON.parse(editingDoc.working_days || '[]') : []);
-                            const isSelected = currentDays.includes(day);
-                            return (
-                              <button
-                                key={day}
-                                type="button"
-                                onClick={() => {
-                                  if (isSelected) {
-                                    setEditingDoc({ ...editingDoc, working_days: currentDays.filter((d: string) => d !== day) });
-                                  } else {
-                                    setEditingDoc({ ...editingDoc, working_days: [...currentDays, day] });
-                                  }
-                                }}
-                                className={cn("px-4 py-2 rounded-xl text-xs font-bold transition-all", isSelected ? "bg-primary text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200")}
-                              >
-                                {day}
-                              </button>
-                            );
-                          })}
+                    <div className="space-y-8 pt-4">
+                      {/* Section 1: Basic Information */}
+                      <div className="space-y-4">
+                        <h3 className="text-xs font-black uppercase text-slate-800 tracking-wider">1. Basic Information</h3>
+                        <div className="grid grid-cols-2 gap-6 p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-slate-400">Full Name</Label>
+                            <Input className="h-12 bg-white border-none font-bold rounded-xl" value={editingDoc.full_name} onChange={e => setEditingDoc({...editingDoc, full_name: e.target.value})} />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-slate-400">Specialty</Label>
+                            <Select value={editingDoc.specialty} onValueChange={v => setEditingDoc({...editingDoc, specialty: v})}>
+                              <SelectTrigger className="h-12 bg-white border-none font-bold rounded-xl"><SelectValue /></SelectTrigger>
+                              <SelectContent className="rounded-xl">
+                                {DOCTOR_CATEGORIES.filter(c => c.id !== 'all').map(cat => (
+                                  <SelectItem key={cat.id} value={cat.name} className="font-bold py-2">{cat.name}</SelectItem>
+                                ))}
+                                <SelectItem value="Other" className="font-bold py-2 text-blue-600">Other (Specify)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          {editingDoc.specialty === 'Other' && (
+                            <div className="space-y-2 col-span-2">
+                              <Label className="text-[10px] font-black uppercase text-slate-400">Specify Specialty</Label>
+                              <Input className="h-12 bg-white border-none font-bold rounded-xl" placeholder="e.g. Cardiologist" value={editingDoc.custom_specialty || ''} onChange={e => setEditingDoc({...editingDoc, custom_specialty: e.target.value})} />
+                            </div>
+                          )}
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-slate-400">Contact Number</Label>
+                            <Input className="h-12 bg-white border-none font-bold rounded-xl" value={editingDoc.phone_number || ''} onChange={e => setEditingDoc({...editingDoc, phone_number: e.target.value})} />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-slate-400">Email Address</Label>
+                            <Input className="h-12 bg-white border-none font-bold rounded-xl" value={editingDoc.email || ''} onChange={e => setEditingDoc({...editingDoc, email: e.target.value})} />
+                          </div>
                         </div>
                       </div>
-                    <div className="flex items-center space-x-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
-                      <Checkbox 
-                        id="edit_stops_midnight" 
-                        checked={editingDoc.stops_booking_at_midnight} 
-                        onCheckedChange={(checked) => setEditingDoc({...editingDoc, stops_booking_at_midnight: checked === true})}
-                      />
-                      <div className="space-y-1 leading-none">
-                        <Label htmlFor="edit_stops_midnight" className="text-sm font-bold text-slate-700 cursor-pointer">Stop midnight booking for next day?</Label>
-                        <p className="text-[10px] text-slate-500 font-medium">If enabled, users cannot book appointments for this doctor between 12:00 AM and 6:00 AM for the current day.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-8 pt-4">
+                      {/* Section 2: Professional Details */}
+                      <div className="space-y-4">
+                        <h3 className="text-xs font-black uppercase text-slate-800 tracking-wider">2. Professional Details</h3>
+                        <div className="grid grid-cols-2 gap-6 p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-slate-400">Qualification</Label>
+                            <Input className="h-12 bg-white border-none font-bold rounded-xl" value={editingDoc.qualification || ''} onChange={e => setEditingDoc({...editingDoc, qualification: e.target.value})} />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-slate-400">Experience (Years)</Label>
+                            <Input type="number" className="h-12 bg-white border-none font-bold rounded-xl" value={editingDoc.experience_years || 0} onChange={e => setEditingDoc({...editingDoc, experience_years: parseInt(e.target.value || '0')})} />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-slate-400">Consultation Fee (₹)</Label>
+                            <Input type="number" className="h-12 bg-white border-none font-bold rounded-xl" value={editingDoc.consultation_fee || 500} onChange={e => setEditingDoc({...editingDoc, consultation_fee: parseInt(e.target.value || '500')})} />
+                          </div>
+                          <div className="col-span-2 space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-slate-400">Detailed Clinic Address</Label>
+                            <Input className="h-12 bg-white border-none font-bold rounded-xl" value={editingDoc.clinic_address || ''} onChange={e => setEditingDoc({...editingDoc, clinic_address: e.target.value})} />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Section 3: Appointments & Scheduling */}
+                      <div className="space-y-4">
+                        <h3 className="text-xs font-black uppercase text-slate-800 tracking-wider">3. Appointments & Scheduling</h3>
+                        <div className="grid grid-cols-2 gap-6 p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-slate-400">Start Time</Label>
+                            <Input className="h-12 bg-white border-none font-bold rounded-xl" value={editingDoc.start_time || '09:00'} onChange={e => setEditingDoc({...editingDoc, start_time: e.target.value})} />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-slate-400">End Time</Label>
+                            <Input className="h-12 bg-white border-none font-bold rounded-xl" value={editingDoc.end_time || '17:00'} onChange={e => setEditingDoc({...editingDoc, end_time: e.target.value})} />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-slate-400">Slot Duration (Mins)</Label>
+                            <Input type="number" className="h-12 bg-white border-none font-bold rounded-xl" value={editingDoc.slot_duration || 15} onChange={e => setEditingDoc({...editingDoc, slot_duration: parseInt(e.target.value || '15')})} />
+                          </div>
+                          <div className="col-span-2 space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-slate-400">Working Days</Label>
+                            <div className="flex flex-wrap gap-2">
+                              {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => {
+                                const currentDays = Array.isArray(editingDoc.working_days) ? editingDoc.working_days : (typeof editingDoc.working_days === 'string' ? JSON.parse(editingDoc.working_days || '[]') : []);
+                                const isSelected = currentDays.includes(day);
+                                return (
+                                  <button
+                                    key={day}
+                                    type="button"
+                                    onClick={() => {
+                                      if (isSelected) {
+                                        setEditingDoc({ ...editingDoc, working_days: currentDays.filter((d: string) => d !== day) });
+                                      } else {
+                                        setEditingDoc({ ...editingDoc, working_days: [...currentDays, day] });
+                                      }
+                                    }}
+                                    className={cn("px-4 py-2 rounded-xl text-xs font-bold transition-all", isSelected ? "bg-primary text-white" : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100")}
+                                  >
+                                    {day}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                          <div className="col-span-2 flex items-center space-x-3 p-4 bg-white rounded-xl border border-slate-200">
+                            <Checkbox 
+                              id="edit_stops_midnight" 
+                              checked={editingDoc.stops_booking_at_midnight} 
+                              onCheckedChange={(checked) => setEditingDoc({...editingDoc, stops_booking_at_midnight: checked === true})}
+                            />
+                            <div className="space-y-1 leading-none">
+                              <Label htmlFor="edit_stops_midnight" className="text-sm font-bold text-slate-700 cursor-pointer">Stop midnight booking for next day?</Label>
+                              <p className="text-[10px] text-slate-500 font-medium">If enabled, same day booking is not allowed. Users can only book for the next day.</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Section 4: Advanced Features & Billing */}
+                      <div className="space-y-4">
+                        <h3 className="text-xs font-black uppercase text-slate-800 tracking-wider">4. Advanced Features & Billing</h3>
+                        <div className="grid grid-cols-2 gap-6 p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                          <div className="col-span-2 space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-slate-400">Reasons for Visit (Comma separated)</Label>
+                            <Input className="h-12 bg-white border-none font-bold rounded-xl" value={editingDoc.reasons_for_visit_str || ''} onChange={e => setEditingDoc({...editingDoc, reasons_for_visit_str: e.target.value})} />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-slate-400">Free Attendant Slots</Label>
+                            <Input type="number" className="h-12 bg-white border-none font-bold rounded-xl" value={editingDoc.allowed_free_attendants || 1} onChange={e => setEditingDoc({...editingDoc, allowed_free_attendants: parseInt(e.target.value || '1')})} />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-slate-400">Purchased Slots</Label>
+                            <Input type="number" className="h-12 bg-white border-none font-bold rounded-xl" value={editingDoc.total_purchased_slots || 0} onChange={e => setEditingDoc({...editingDoc, total_purchased_slots: parseInt(e.target.value || '0')})} />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-slate-400">Active Campaign</Label>
+                            <Input className="h-12 bg-white border-none font-bold rounded-xl" value={editingDoc.current_active_campaign || ''} onChange={e => setEditingDoc({...editingDoc, current_active_campaign: e.target.value})} />
+                          </div>
+                        </div>
                       </div>
                     </div>
+
                     {editingDoc.specialty === 'Physiotherapist' && (
                     <div className="p-6 rounded-3xl bg-slate-50 border border-slate-100 space-y-4">
                       <Label className="text-[10px] font-black uppercase text-slate-400">Consultation Availability Modes</Label>
@@ -644,12 +671,6 @@ export default function DoctorCatalog() {
                       </div>
                     </div>
                     )}
-                    <div className="space-y-1.5">
-                      <Label className="text-[10px] font-black uppercase text-slate-400">Detailed Clinic Address</Label>
-                      <Input className="h-14 bg-slate-50 border-none font-bold rounded-xl" value={editingDoc.clinic_address || ''} onChange={e => setEditingDoc({...editingDoc, clinic_address: e.target.value})} />
-                    </div>
-                  </div>
-                </div>
               </div>
             )}
           </ScrollArea>

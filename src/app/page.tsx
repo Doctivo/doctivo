@@ -18,14 +18,30 @@ export default function LandingPage() {
   const [isMounted, setIsMounted] = useState(false);
   
   const isAuthenticated = useStore(state => state.isAuthenticated);
+  const user = useStore(state => state.user);
+  const admin = useStore(state => state.admin);
   const hasHydrated = useStore(state => state._hasHydrated);
 
   useEffect(() => {
     setIsMounted(true);
     if (isAuthenticated && hasHydrated) {
-      router.replace('/home');
+      if (user?.id) {
+        if (user.isProfileComplete) {
+          router.replace('/home');
+        } else {
+          router.replace('/onboarding');
+        }
+      } else if (admin?.role === 'Attendant') {
+        router.replace('/attendant/dashboard');
+      } else if (admin?.role === 'Doctor') {
+        router.replace('/doctor/dashboard');
+      } else if (admin) {
+        router.replace('/admin');
+      } else {
+        router.replace('/home');
+      }
     }
-  }, [isAuthenticated, hasHydrated, router]);
+  }, [isAuthenticated, hasHydrated, router, user, admin]);
 
   // Prevent hydration mismatch or flash of landing page if authenticated
   if (!isMounted || !hasHydrated || isAuthenticated) {

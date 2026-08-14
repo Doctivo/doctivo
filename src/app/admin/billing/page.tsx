@@ -74,13 +74,12 @@ export default function BillingConfig() {
                 <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Doctor</th>
                 <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400 text-center">Free Attendants</th>
                 <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400 text-center">Paid Slots</th>
-                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400 text-center">Auto-Deduct</th>
                 <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
               {loading ? (
-                <tr><td colSpan={5} className="text-center py-20 font-bold text-slate-300">Loading configurations...</td></tr>
+                <tr><td colSpan={4} className="text-center py-20 font-bold text-slate-300">Loading configurations...</td></tr>
               ) : doctors.map((doc) => (
                 <tr key={doc.doctor_id} className="hover:bg-slate-50/50 transition-colors">
                   <td className="px-8 py-6">
@@ -98,11 +97,6 @@ export default function BillingConfig() {
                     <span className="inline-block h-8 w-8 rounded-lg bg-purple-50 text-purple-600 font-bold text-xs flex items-center justify-center mx-auto">
                       {doc.total_purchased_slots || 0}
                     </span>
-                  </td>
-                  <td className="px-8 py-6 text-center">
-                    <div className="flex justify-center">
-                      <Switch checked={doc.allow_revenue_deduction} disabled className="scale-75" />
-                    </div>
                   </td>
                   <td className="px-8 py-6 text-right">
                     <Button 
@@ -156,16 +150,6 @@ export default function BillingConfig() {
                   value={editingDoc.current_active_campaign || ''}
                   onChange={e => setEditingDoc({...editingDoc, current_active_campaign: e.target.value})}
                   className="h-12 rounded-xl bg-slate-50 border-none"
-                />
-              </div>
-              <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50">
-                <div>
-                  <p className="text-xs font-bold text-slate-800">Auto Revenue Deduction</p>
-                  <p className="text-[10px] text-slate-400">Deduct monthly fee from revenue</p>
-                </div>
-                <Switch 
-                  checked={editingDoc.allow_revenue_deduction} 
-                  onCheckedChange={val => setEditingDoc({...editingDoc, allow_revenue_deduction: val})}
                 />
               </div>
             </div>
