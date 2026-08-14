@@ -241,9 +241,9 @@ export default function PatientsPage() {
             
             {/* Left Side: Info */}
             <div className="flex items-center gap-6">
-              <div className="h-16 w-16 md:h-20 md:w-20 rounded-full bg-blue-50 dark:bg-slate-800 flex items-center justify-center overflow-hidden border-4 border-white dark:border-slate-800 shadow-sm shrink-0">
+              <div className="relative h-16 w-16 md:h-20 md:w-20 rounded-full bg-blue-50 dark:bg-slate-800 flex items-center justify-center overflow-hidden border-4 border-white dark:border-slate-800 shadow-sm shrink-0">
                 {patient.imageUrl ? (
-                  <Image priority src={patient.imageUrl} alt={patient.name} fill className="object-cover" />
+                  <Image priority src={patient.imageUrl} alt={patient.name} fill sizes="80px" className="object-cover" />
                 ) : (
                   <span className="text-2xl font-black text-slate-400">{patient.name.charAt(0)}</span>
                 )}
