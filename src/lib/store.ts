@@ -85,23 +85,21 @@ export const useStore = create<AppState>()(
       })),
       login: (phone, id) => set({ isAuthenticated: true, user: { id, phone } as UserProfile }),
       logout: () => {
-        sessionStorage.removeItem('doctivo-storage');
+        localStorage.removeItem('doctivo-storage');
         set({ isAuthenticated: false, user: null, admin: null, patients: [], appointments: [] });
       },
     }),
     {
       name: 'doctivo-storage',
-      storage: createJSONStorage(() => sessionStorage),
+      storage: createJSONStorage(() => localStorage),
       onRehydrateStorage: () => (state) => { state?.setHasHydrated(true); },
       partialize: (state) => ({ 
         isAuthenticated: state.isAuthenticated, 
         user: state.user,
         admin: state.admin,
         patients: state.patients,
-        homeCardImages: state.homeCardImages,
-        homeBanners: state.homeBanners,
-        homeDataLastFetched: state.homeDataLastFetched,
         downloadedTickets: state.downloadedTickets || [],
+        searchHistory: state.searchHistory || [],
         language: state.language
       }),
     }
