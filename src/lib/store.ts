@@ -14,6 +14,7 @@ interface AppState {
   homeBanners: string[];
   homeDataLastFetched: number | null;
   downloadedTickets: string[];
+  searchHistory: string[];
   language: 'en' | null;
   isAuthenticated: boolean;
   _hasHydrated: boolean;
@@ -27,6 +28,7 @@ interface AppState {
   setHomeBanners: (banners: string[]) => void;
   setHomeDataLastFetched: (timestamp: number) => void;
   setDownloadedTickets: (tickets: string[]) => void;
+  addSearchTerm: (term: string) => void;
   setLanguage: (lang: 'en') => void;
   setHasHydrated: (val: boolean) => void;
   addPatient: (patient: Patient) => void;
@@ -48,6 +50,7 @@ export const useStore = create<AppState>()(
       homeBanners: [],
       homeDataLastFetched: null,
       downloadedTickets: [],
+      searchHistory: [],
       language: null,
       isAuthenticated: false,
       _hasHydrated: false,
@@ -61,6 +64,11 @@ export const useStore = create<AppState>()(
       setHomeBanners: (homeBanners) => set({ homeBanners }),
       setHomeDataLastFetched: (timestamp) => set({ homeDataLastFetched: timestamp }),
       setDownloadedTickets: (downloadedTickets) => set({ downloadedTickets }),
+      addSearchTerm: (term) => set((state) => {
+        if (!term.trim()) return state;
+        const newHistory = [term, ...state.searchHistory.filter(t => t !== term)].slice(0, 10);
+        return { searchHistory: newHistory };
+      }),
       setLanguage: (lang) => set({ language: lang }),
       setHasHydrated: (val) => set({ _hasHydrated: val }),
       addPatient: (patient) => set((state) => ({ 

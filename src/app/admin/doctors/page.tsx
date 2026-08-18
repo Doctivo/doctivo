@@ -369,6 +369,13 @@ export default function DoctorCatalog() {
                               <Label htmlFor="mode-home" className="text-sm font-bold text-slate-700 cursor-pointer">Therapy at Home</Label>
                             </div>
                           </div>
+                          {(newDoc.consultation_modes || '').includes('Home') && (
+                            <div className="space-y-2 pt-4 border-t border-slate-200 mt-4">
+                              <Label className="text-[10px] font-black uppercase text-slate-400">Service Pincodes / Areas (Comma Separated)</Label>
+                              <Input className="h-12 bg-white border-none font-bold rounded-xl" placeholder="e.g. 273001, 273004, Rustampur" value={newDoc.service_pincodes_str || ''} onChange={e => setNewDoc({...newDoc, service_pincodes_str: e.target.value})} />
+                              <p className="text-[10px] text-slate-500 font-medium">Patients searching these areas will see this therapist for home visits.</p>
+                            </div>
+                          )}
                         </div>
                       )}
                       <div className="space-y-2 mt-4">

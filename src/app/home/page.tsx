@@ -83,40 +83,65 @@ function HomeContent() {
     return () => clearTimeout(timeout);
   }, []);
 
-  useEffect(() => {
-    async function loadImages() {
-      const now = Date.now();
-      const THIRTY_MINUTES = 30 * 60 * 1000;
-      
-      if (
-        homeDataLastFetched && 
-        (now - homeDataLastFetched < THIRTY_MINUTES) &&
-        Object.keys(homeCardImagesStore).length > 0
-      ) {
-        setServerImages(homeCardImagesStore);
-        setHomeBanners(homeBannersStore);
-        return;
-      }
+  const [pullStartY, setPullStartY] = useState<number | null>(null);
+  const [pullDeltaY, setPullDeltaY] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-      try {
-        const res = await getAppSetting('homeCardImages');
-        if (res.success && 'value' in res && res.value) {
-          setServerImages(res.value);
-          setHomeCardImages(res.value);
-        }
-        
-        const res2 = await getAppSetting('homeBanners');
-        if (res2.success && 'value' in res2 && res2.value) {
-          setHomeBanners(res2.value.map((b: any) => typeof b === 'string' ? { imageUrl: b } : b));
-          setHomeBannersStore(res2.value.map((b: any) => typeof b === 'string' ? { imageUrl: b } : b));
-        }
-        setHomeDataLastFetched(now);
-      } catch (e) {
-        console.error('Failed to load settings', e);
-      }
+  const fetchData = async (force = false) => {
+    const now = Date.now();
+    const THIRTY_MINUTES = 30 * 60 * 1000;
+    
+    if (
+      !force &&
+      homeDataLastFetched && 
+      (now - homeDataLastFetched < THIRTY_MINUTES) &&
+      Object.keys(homeCardImagesStore).length > 0
+    ) {
+      setServerImages(homeCardImagesStore);
+      setHomeBanners(homeBannersStore);
+      return;
     }
-    loadImages();
-  }, [homeDataLastFetched, homeCardImagesStore, homeBannersStore, setHomeCardImages, setHomeBannersStore, setHomeDataLastFetched]);
+
+    try {
+      const res = await getAppSetting('homeCardImages');
+      if (res.success && 'value' in res && res.value) {
+        setServerImages(res.value);
+        setHomeCardImages(res.value);
+      }
+      
+      const res2 = await getAppSetting('homeBanners');
+      if (res2.success && 'value' in res2 && res2.value) {
+        setHomeBanners(res2.value.map((b: any) => typeof b === 'string' ? { imageUrl: b } : b));
+        setHomeBannersStore(res2.value.map((b: any) => typeof b === 'string' ? { imageUrl: b } : b));
+      }
+      setHomeDataLastFetched(now);
+    } catch (e) {
+      console.error('Failed to load settings', e);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (window.scrollY === 0) setPullStartY(e.touches[0].clientY);
+  };
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (pullStartY !== null) {
+      const delta = e.touches[0].clientY - pullStartY;
+      if (delta > 0 && delta < 150) setPullDeltaY(delta);
+    }
+  };
+  const handleTouchEnd = async () => {
+    if (pullDeltaY > 80 && !isRefreshing) {
+      setIsRefreshing(true);
+      await fetchData(true);
+      setIsRefreshing(false);
+    }
+    setPullStartY(null);
+    setPullDeltaY(0);
+  };
 
   useEffect(() => {
     if (!hasHydrated) return;
@@ -175,10 +200,25 @@ const quickActions = [
 ];
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 md:pb-12">
+    <div 
+      className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 md:pb-12"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       
       {/* ---------------- MOBILE VIEW ---------------- */}
-      <div className="md:hidden">
+      <div className="md:hidden relative">
+        {/* Pull to refresh indicator */}
+        <div 
+          className="absolute left-1/2 -translate-x-1/2 z-50 flex justify-center transition-all duration-200 ease-out"
+          style={{ top: pullDeltaY > 0 ? `${Math.min(pullDeltaY, 80)}px` : '-50px', opacity: pullDeltaY > 0 ? pullDeltaY / 80 : 0 }}
+        >
+          <div className="h-10 w-10 bg-white dark:bg-slate-800 rounded-full shadow-lg flex items-center justify-center border border-slate-100 dark:border-slate-700">
+            <Loader2 className={cn("h-5 w-5 text-primary", isRefreshing ? "animate-spin" : "")} style={{ transform: `rotate(${pullDeltaY * 2}deg)` }} />
+          </div>
+        </div>
+
         <div className="bg-white dark:bg-slate-900 sticky top-0 z-20 border-b border-slate-100 dark:border-slate-800 px-6 py-4">
           <div className="flex items-center gap-4">
             <div 
@@ -214,7 +254,7 @@ const quickActions = [
               const Content = (
                 <div className={cn(
                   "flex flex-col items-center justify-center p-5 rounded-[2rem] shadow-sm active:scale-95 transition-all border border-slate-100/50 dark:border-slate-800/50 h-full min-h-[150px]",
-                  action.bgColor, "dark:bg-opacity-20"
+                  "bg-blue-100", "dark:bg-opacity-20"
                 )}>
                   <div className="mb-3">
                     {serverImages && serverImages[`card${idx}`] ? (
@@ -222,10 +262,10 @@ const quickActions = [
                         <Image priority src={serverImages[`card${idx}`]} alt={action.label} fill className="object-cover" />
                       </div>
                     ) : (
-                      <action.icon className={cn("h-10 w-10", action.textColor)} strokeWidth={2.5} />
+                      <action.icon className={cn("h-10 w-10", "text-blue-700")} strokeWidth={2.5} />
                     )}
                   </div>
-                  <span className={cn("text-[10px] font-black uppercase tracking-widest text-center leading-tight px-1", action.textColor)}>
+                  <span className={cn("text-[10px] font-black uppercase tracking-widest text-center leading-tight px-1", "text-blue-700")}>
                     {action.label}
                   </span>
                 </div>
@@ -349,9 +389,46 @@ const quickActions = [
   );
 }
 
-export default function HomePage() { 
+function HomeSkeleton() {
   return (
-    <Suspense fallback={<div className="flex justify-center items-center min-h-screen"><Loader2 className="animate-spin text-primary" /></div>}>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 md:pb-12 animate-pulse">
+      {/* Mobile Header Skeleton */}
+      <div className="md:hidden bg-white dark:bg-slate-900 sticky top-0 z-20 border-b border-slate-100 dark:border-slate-800 px-6 py-4 flex items-center gap-4">
+        <div className="h-10 w-10 rounded-xl bg-slate-200 dark:bg-slate-800" />
+        <div className="flex-1 h-11 bg-slate-200 dark:bg-slate-800 rounded-xl" />
+        <div className="h-10 w-10 rounded-xl bg-slate-200 dark:bg-slate-800" />
+      </div>
+      
+      {/* Mobile Content Skeleton */}
+      <div className="md:hidden p-6 space-y-6">
+        <div className="w-full h-40 rounded-[2.5rem] bg-slate-200 dark:bg-slate-800" />
+        <div className="grid grid-cols-4 gap-4">
+          {[1,2,3,4].map(i => <div key={i} className="h-20 bg-slate-200 dark:bg-slate-800 rounded-[1.5rem]" />)}
+        </div>
+        <div className="space-y-4">
+          <div className="h-6 w-32 bg-slate-200 dark:bg-slate-800 rounded-md" />
+          <div className="grid grid-cols-2 gap-4">
+            {[1,2,3,4].map(i => <div key={i} className="h-32 bg-slate-200 dark:bg-slate-800 rounded-3xl" />)}
+          </div>
+        </div>
+      </div>
+
+      {/* Desktop Skeleton */}
+      <div className="hidden md:flex flex-col max-w-6xl mx-auto p-10 space-y-8">
+        <div className="w-full h-64 rounded-[2.5rem] bg-slate-200 dark:bg-slate-800" />
+        <div className="grid grid-cols-4 gap-6">
+          {[1,2,3,4].map(i => <div key={i} className="h-48 bg-slate-200 dark:bg-slate-800 rounded-[2rem]" />)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function HomePage() { 
+  const hasHydrated = useStore(state => state._hasHydrated);
+  if (!hasHydrated) return <HomeSkeleton />;
+  return (
+    <Suspense fallback={<HomeSkeleton />}>
       <HomeContent />
     </Suspense>
   ); 

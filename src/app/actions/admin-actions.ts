@@ -83,6 +83,7 @@ export async function initializeDatabase() {
         custom_schedule JSONB DEFAULT '{}',
         reasons_for_visit JSONB DEFAULT '[]',
         consultation_modes VARCHAR(100) DEFAULT 'Clinic,Home',
+        service_pincodes_str TEXT,
         latitude DECIMAL DEFAULT 26.7606,
         longitude DECIMAL DEFAULT 83.3731,
         image_url TEXT,

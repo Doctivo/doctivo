@@ -120,14 +120,15 @@ export const AdminRepository = {
       INSERT INTO doctors (
         doctor_id, full_name, phone_number, email, specialty, qualification, 
         experience_years, clinic_address, consultation_fee, is_approved,
-        start_time, end_time, slot_duration, image_url, consultation_modes, reasons_for_visit, stops_booking_at_midnight, working_days
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true, $10, $11, $12, $13, $14, $15, $16, $17)
+        start_time, end_time, slot_duration, image_url, consultation_modes, reasons_for_visit, stops_booking_at_midnight, working_days, service_pincodes_str
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true, $10, $11, $12, $13, $14, $15, $16, $17, $18)
     `, [
       id, data.name, data.phone, data.email || null, data.specialty, data.qualification || '',
       parseInt(data.experience || '0'), data.address || '', parseInt(data.fees || '500'),
       data.startTime, data.endTime, parseInt(data.slotDuration || '15'), data.imageUrl || null,
       data.consultation_modes || 'Clinic,Home', JSON.stringify(data.reasons_for_visit || []),
-      data.stops_booking_at_midnight || false, JSON.stringify(data.workingDays || ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'])
+      data.stops_booking_at_midnight || false, JSON.stringify(data.workingDays || ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']),
+      data.service_pincodes_str || null
     ]);
   },
 
@@ -137,13 +138,14 @@ export const AdminRepository = {
         full_name = $1, phone_number = $2, email = $3, specialty = $4, 
         qualification = $5, experience_years = $6, clinic_address = $7, 
         consultation_fee = $8, start_time = $9, end_time = $10, 
-        slot_duration = $11, image_url = $12, consultation_modes = $13, reasons_for_visit = $14, stops_booking_at_midnight = $15, working_days = $16
-      WHERE doctor_id = $17
+        slot_duration = $11, image_url = $12, consultation_modes = $13, reasons_for_visit = $14, stops_booking_at_midnight = $15, working_days = $16, service_pincodes_str = $17
+      WHERE doctor_id = $18
     `, [
       data.full_name, data.phone_number, data.email, data.specialty, data.qualification,
       data.experience_years, data.clinic_address, data.consultation_fee,
       data.start_time, data.end_time, data.slot_duration, data.image_url,
-      data.consultation_modes, JSON.stringify(data.reasons_for_visit || []), data.stops_booking_at_midnight || false, JSON.stringify(data.working_days || ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']), doctorId
+      data.consultation_modes, JSON.stringify(data.reasons_for_visit || []), data.stops_booking_at_midnight || false, JSON.stringify(data.working_days || ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']), 
+      data.service_pincodes_str || null, doctorId
     ]);
   },
 

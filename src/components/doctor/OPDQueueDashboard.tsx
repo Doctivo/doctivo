@@ -209,7 +209,7 @@ export function OPDQueueDashboard({ mode }: OPDQueueDashboardProps) {
     const init = async () => {
       setLoading(true);
       try {
-        const targetId = mode === 'Attendant' ? admin?.doctor_id : admin?.admin_id;
+        const targetId = mode === 'Attendant' ? admin?.doctor_id : (admin?.doctor_id || admin?.admin_id);
         
         if (mode === 'Doctor') {
           if (targetId) setSelectedDoctorId(targetId);

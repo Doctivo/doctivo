@@ -33,30 +33,7 @@ export default function Banner({ homeBanners, user, isMobile = false }: BannerPr
     };
   }, [api]);
 
-  // Fallback if no banners are returned from the backend (only for desktop view based on original code)
   if (!homeBanners || homeBanners.length === 0) {
-    if (!isMobile) {
-      return (
-        <div className="w-full h-64 rounded-[2.5rem] overflow-hidden shadow-lg border border-slate-100 dark:border-slate-800 relative flex items-center px-16 justify-between bg-blue-600 mb-8">
-          <div className="absolute right-0 bottom-0 w-[35%] max-w-[200px] aspect-square translate-y-[15%] translate-x-[10%]">
-            <div className="w-full h-full bg-white dark:bg-slate-800 rounded-full border-4 border-white/50 dark:border-slate-700 shadow-2xl overflow-hidden p-3">
-              <img src="/modern_clinic.jpg" alt="Clinic" className="w-full h-full object-contain" />
-            </div>
-          </div>
-          <div className="relative z-20 space-y-4">
-            <h2 className="text-3xl lg:text-4xl font-black text-white tracking-tight leading-tight">
-              {t("Welcome back")}, {user?.name?.split(' ')[0]}! 👋
-            </h2>
-            <p className="text-sm font-medium opacity-90 text-white max-w-md leading-relaxed">
-              {t("Find the best doctors and book your appointments easily.")}
-            </p>
-            <Link href="/doctors" className="bg-white text-blue-600 px-8 py-3 rounded-2xl font-black w-fit hover:bg-slate-50 transition-colors mt-2 shadow-xl shadow-black/10 inline-block">
-              {t("Book Appointment")}
-            </Link>
-          </div>
-        </div>
-      );
-    }
     return null;
   }
 

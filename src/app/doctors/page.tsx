@@ -260,7 +260,7 @@ function DoctorsContent() {
         )}
 
         {/* TOP PICKS CAROUSEL (AI Match) */}
-        {!isLoading && processedDoctors.items.length > 0 && (
+        {!isLoading && processedDoctors.items.length > 0 && recentSearches.length > 0 && (
           <div className="mb-10">
             <h3 className="text-sm font-black text-slate-800 tracking-tight mb-4 flex items-center">
               <span className="bg-gradient-to-r from-purple-600 to-blue-600 text-transparent bg-clip-text mr-2">Top Picks For You</span>
