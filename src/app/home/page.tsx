@@ -86,8 +86,10 @@ function HomeContent() {
   const [pullStartY, setPullStartY] = useState<number | null>(null);
   const [pullDeltaY, setPullDeltaY] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isLoadingData, setIsLoadingData] = useState(true);
 
   const fetchData = async (force = false) => {
+    setIsLoadingData(true);
     const now = Date.now();
     const THIRTY_MINUTES = 30 * 60 * 1000;
     
@@ -117,6 +119,8 @@ function HomeContent() {
       setHomeDataLastFetched(now);
     } catch (e) {
       console.error('Failed to load settings', e);
+    } finally {
+      setIsLoadingData(false);
     }
   };
 
@@ -250,8 +254,16 @@ const quickActions = [
           <Banner homeBanners={homeBanners} user={user} isMobile={true} />
 
           <div className="grid grid-cols-2 gap-4">
-            {quickActions.map((action, idx) => {
-              const Content = (
+            {isLoadingData ? (
+              [0, 1, 2, 3].map((i) => (
+                <div key={`sk-${i}`} className="flex flex-col items-center justify-center p-5 rounded-[2rem] shadow-sm animate-pulse border border-slate-100/50 dark:border-slate-800/50 bg-slate-100 dark:bg-slate-800 h-full min-h-[150px]">
+                  <div className="mb-3 h-14 w-14 rounded-2xl bg-slate-200 dark:bg-slate-700"></div>
+                  <div className="h-3 w-16 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                </div>
+              ))
+            ) : (
+              quickActions.map((action, idx) => {
+                const Content = (
                 <div className={cn(
                   "flex flex-col items-center justify-center p-5 rounded-[2rem] shadow-sm active:scale-95 transition-all border border-slate-100/50 dark:border-slate-800/50 h-full min-h-[150px]",
                   "bg-blue-100", "dark:bg-opacity-20"
@@ -275,7 +287,8 @@ const quickActions = [
               ) : (
                 <div key={idx} onClick={action.onClick}>{Content}</div>
               );
-            })}
+            })
+            )}
           </div>
         </div>
       </div>
@@ -288,8 +301,18 @@ const quickActions = [
 
         {/* Quick Actions Grid */}
         <div className="grid grid-cols-4 gap-6 mb-8">
-          {quickActions.map((action, idx) => {
-            const Content = (
+          {isLoadingData ? (
+            [0, 1, 2, 3].map((i) => (
+              <div key={`sk-dt-${i}`} className="rounded-[2rem] p-6 h-full flex flex-col items-center justify-center text-center animate-pulse border border-slate-100/50 bg-slate-100 dark:bg-slate-800">
+                <div className="h-16 w-16 rounded-2xl mb-4 bg-slate-200 dark:bg-slate-700"></div>
+                <div className="h-4 w-20 bg-slate-200 dark:bg-slate-700 rounded mb-2"></div>
+                <div className="h-3 w-24 bg-slate-200 dark:bg-slate-700 rounded mb-6"></div>
+                <div className="h-10 w-10 mt-auto rounded-full bg-slate-200 dark:bg-slate-700"></div>
+              </div>
+            ))
+          ) : (
+            quickActions.map((action, idx) => {
+              const Content = (
               <div className={cn("rounded-[2rem] p-6 h-full flex flex-col items-center justify-center text-center cursor-pointer border border-transparent hover:shadow-lg transition-all group relative overflow-hidden", action.bgColor, "dark:bg-opacity-20")}>
                 <div className={cn("h-16 w-16 rounded-2xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110 bg-white shadow-sm dark:bg-slate-800")}>
                   <action.icon className={cn("h-7 w-7", action.textColor)} strokeWidth={2.5} />
@@ -307,7 +330,8 @@ const quickActions = [
             ) : (
               <div key={idx} onClick={action.onClick} className="h-full">{Content}</div>
             );
-          })}
+          })
+          )}
         </div>
 
         {/* Lower Panels */}

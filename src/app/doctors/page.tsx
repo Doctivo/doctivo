@@ -260,7 +260,7 @@ function DoctorsContent() {
         )}
 
         {/* TOP PICKS CAROUSEL (AI Match) */}
-        {!isLoading && processedDoctors.items.length > 0 && recentSearches.length > 0 && (
+        {!isLoading && processedDoctors.items.length > 0 && (
           <div className="mb-10">
             <h3 className="text-sm font-black text-slate-800 tracking-tight mb-4 flex items-center">
               <span className="bg-gradient-to-r from-purple-600 to-blue-600 text-transparent bg-clip-text mr-2">Top Picks For You</span>
@@ -271,25 +271,25 @@ function DoctorsContent() {
                 <div 
                   key={`top-${doc.id}`}
                   onClick={() => router.push(`/book/${doc.id}?mode=${isHomeVisit ? 'Home' : 'Clinic'}${patientId ? `&patientId=${patientId}` : ''}`)}
-                  className="min-w-[280px] max-w-[280px] rounded-[2rem] bg-gradient-to-br from-slate-900 to-slate-800 p-1 cursor-pointer active:scale-95 transition-transform shrink-0 shadow-xl shadow-slate-900/20 relative"
+                  className="min-w-[280px] max-w-[280px] rounded-[2rem] bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-900 dark:to-slate-800 p-1 cursor-pointer active:scale-95 transition-transform shrink-0 shadow-xl shadow-blue-900/10 dark:shadow-slate-900/20 relative"
                 >
-                  <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 z-10 flex items-center">
-                    <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse mr-2"></div>
-                    <span className="text-[9px] font-black text-white uppercase tracking-wider">{i === 0 ? 'Next Available' : '2 in Queue'}</span>
+                  <div className="absolute top-4 right-4 bg-white/60 dark:bg-white/20 backdrop-blur-md px-3 py-1 rounded-full border border-slate-200/50 dark:border-white/10 z-10 flex items-center">
+                    <div className="w-2 h-2 rounded-full bg-green-500 dark:bg-green-400 animate-pulse mr-2"></div>
+                    <span className="text-[9px] font-black text-slate-800 dark:text-white uppercase tracking-wider">{i === 0 ? 'Next Available' : '2 in Queue'}</span>
                   </div>
-                  <div className="bg-slate-900/80 backdrop-blur-3xl rounded-[1.8rem] h-full p-5 flex flex-col justify-between relative overflow-hidden">
-                    <div className="absolute -right-10 -top-10 w-32 h-32 bg-primary/20 blur-3xl rounded-full"></div>
+                  <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-3xl rounded-[1.8rem] h-full p-5 flex flex-col justify-between relative overflow-hidden">
+                    <div className="absolute -right-10 -top-10 w-32 h-32 bg-primary/10 dark:bg-primary/20 blur-3xl rounded-full"></div>
                     <div>
-                      <div className="h-16 w-16 rounded-2xl bg-slate-800 flex items-center justify-center overflow-hidden relative mb-4 border border-white/10">
+                      <div className="h-16 w-16 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden relative mb-4 border border-slate-200 dark:border-white/10">
                         {doc.imageUrl ? <Image priority src={doc.imageUrl} alt={doc.name} fill className="object-cover" /> : <span className="text-2xl">👨‍⚕️</span>}
                       </div>
-                      <h3 className="font-black text-white text-[16px] uppercase tracking-tight">{doc.name}</h3>
+                      <h3 className="font-black text-slate-900 dark:text-white text-[16px] uppercase tracking-tight">{doc.name}</h3>
                       <p className="text-[11px] font-bold text-primary leading-tight uppercase mt-1">{doc.specialty}</p>
                     </div>
-                    <div className="mt-5 pt-4 border-t border-white/10">
-                      <div className="bg-white/10 rounded-xl p-2.5 flex items-start space-x-2">
-                        <TrendingUp className="h-4 w-4 text-blue-400 shrink-0 mt-0.5" />
-                        <p className="text-[10px] font-bold text-slate-300 leading-tight">
+                    <div className="mt-5 pt-4 border-t border-slate-100 dark:border-white/10">
+                      <div className="bg-slate-100/80 dark:bg-white/10 rounded-xl p-2.5 flex items-start space-x-2">
+                        <TrendingUp className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+                        <p className="text-[10px] font-bold text-slate-700 dark:text-slate-300 leading-tight">
                           {debouncedSearch ? `Expert in treating ${debouncedSearch}` : (i === 0 ? 'Treated 50+ patients recently' : 'Highly rated in your area')}
                         </p>
                       </div>

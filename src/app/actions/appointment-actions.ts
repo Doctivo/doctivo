@@ -6,14 +6,30 @@ import { requireAuth, requireRoles } from '@/lib/auth/session';
 import { ROLES } from '@/lib/auth/roles';
 import { logger } from '@/lib/logger';
 
+import crypto from 'crypto';
+
 /**
- * Saves a new appointment to the appointments table
+ * Saves a new appointment to the appointments table and verifies payment signature if provided
  */
-export async function createAppointment(app: Partial<Appointment>) {
+export async function createAppointment(app: Partial<Appointment>, razorpayData?: { order_id: string, payment_id: string, signature: string }) {
   const session = await requireAuth();
   if (session.userId !== app.patientId && session.role !== ROLES.ADMIN && session.role !== ROLES.SUPER_ADMIN) {
     throw new Error('Forbidden: You can only book appointments for your own account.');
   }
+
+  // Verify payment if razorpayData is provided
+  if (razorpayData && app.payment_mode === 'Online_UPI') {
+    const key_secret = process.env.RAZORPAY_KEY_SECRET;
+    if (!key_secret) throw new Error('Payment gateway configuration error');
+    
+    const text = razorpayData.order_id + "|" + razorpayData.payment_id;
+    const generated_signature = crypto.createHmac('sha256', key_secret).update(text).digest('hex');
+    
+    if (generated_signature !== razorpayData.signature) {
+      throw new Error('Payment verification failed: Invalid signature');
+    }
+  }
+
   try {
     const data = await AppointmentService.createAppointment(app);
     return { success: true, data };

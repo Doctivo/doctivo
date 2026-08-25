@@ -199,31 +199,19 @@ function BookingContent({ id }: { id: string }) {
         order_id: orderData.order_id, // Pass order ID generated from backend
         handler: async function (response: any) {
           setIsBooking(true);
-          toast({ title: 'Processing', description: 'Please wait, verifying your payment...', duration: 9999999 });
+          toast({ title: 'Processing', description: 'Please wait, verifying and confirming appointment...', duration: 9999999 });
           
-          // 3. Verify Signature on backend
+          // Combine Verify Signature + Create Appointment in single backend call to save time!
           try {
-            const verifyRes = await fetch('/api/verify-payment', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-              }),
-            });
-            const verifyData = await verifyRes.json();
-            
-            if (verifyRes.ok && verifyData.success) {
-              // Signature matches, finalize booking
-              finalizeBooking(response.razorpay_payment_id, patient);
-            } else {
-              setIsBooking(false);
-              toast({ variant: 'destructive', title: 'Verification Failed', description: verifyData.error || 'Payment verification failed', duration: 9999999 });
-            }
+            const razorpayData = {
+              order_id: response.razorpay_order_id,
+              payment_id: response.razorpay_payment_id,
+              signature: response.razorpay_signature,
+            };
+            finalizeBooking(response.razorpay_payment_id, patient, razorpayData);
           } catch (err) {
             setIsBooking(false);
-            toast({ variant: 'destructive', title: 'Error', description: 'Error verifying payment signature', duration: 9999999 });
+            toast({ variant: 'destructive', title: 'Error', description: 'Error processing payment.', duration: 9999999 });
           }
         },
         prefill: {
@@ -251,7 +239,7 @@ function BookingContent({ id }: { id: string }) {
     }
   };
 
-  const finalizeBooking = async (txnId: string, patient: any) => {
+  const finalizeBooking = async (txnId: string, patient: any, razorpayData?: any) => {
     if (!doc || !user) return;
     const appData = {
       id: `${Math.floor(100000 + Math.random() * 900000)}`,
@@ -272,7 +260,7 @@ function BookingContent({ id }: { id: string }) {
       transaction_id: txnId,
       status: 'Confirmed' as const
     };
-    const res = await createAppointment(appData);
+    const res = await createAppointment(appData, razorpayData);
     if (res.success) {
       addAppointmentStore({...appData, tokenNumber: res.data.token_number, visit_otp: res.data.visit_otp} as any);
       router.push(`/success?id=${appData.id}`);
