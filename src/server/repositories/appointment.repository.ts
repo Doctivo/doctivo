@@ -1,5 +1,5 @@
 import { query } from '@/lib/db';
-import { Appointment } from '@/lib/types';
+import { Appointment } from '@/types';
 import { isBefore, parseISO, startOfDay } from 'date-fns';
 
 export const AppointmentRepository = {

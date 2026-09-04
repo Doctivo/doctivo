@@ -3,7 +3,7 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { UserProfile, Patient, Appointment, AdminProfile } from './types';
+import { UserProfile, Patient, Appointment, AdminProfile } from '@/types';
 
 interface AppState {
   user: UserProfile | null;

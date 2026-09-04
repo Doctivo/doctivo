@@ -1,5 +1,5 @@
 import { MetadataRoute } from 'next'
-import { getDoctors } from '@/app/actions/doctor-actions'
+import { getDoctors } from '@/actions/doctors'
  
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://doctivo.in'

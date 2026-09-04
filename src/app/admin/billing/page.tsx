@@ -12,7 +12,7 @@ import { Switch } from '@/components/ui/switch';
 import { 
   getDoctorsByStatus, 
   updateDoctorBilling 
-} from '@/app/actions/admin-actions';
+} from '@/actions/admin';
 import { useToast } from '@/hooks/use-toast';
 import { 
   Dialog, 

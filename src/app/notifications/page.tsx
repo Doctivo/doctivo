@@ -6,8 +6,8 @@ import { ArrowLeft, Bell, BellOff, Calendar, AlertCircle, Info, CheckCircle2, Cl
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useStore } from '@/lib/store';
-import { getUserAppointments } from '@/app/actions/appointment-actions';
-import { Appointment } from '@/lib/types';
+import { getUserAppointments } from '@/actions/appointments';
+import { Appointment } from '@/types';
 
 interface AppNotification {
   id: string;

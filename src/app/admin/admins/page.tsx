@@ -17,7 +17,7 @@ import {
   createAdminUser, 
   deleteAdminUser,
   initializeDatabase
-} from '@/app/actions/admin-actions';
+} from '@/actions/admin';
 import { 
   Dialog, 
   DialogContent, 

@@ -1,5 +1,5 @@
 import { query } from '@/lib/db';
-import { UserProfile, Patient } from '@/lib/types';
+import { UserProfile, Patient } from '@/types';
 
 export const PatientRepository = {
   async findByPhone(phone: string): Promise<UserProfile | null> {

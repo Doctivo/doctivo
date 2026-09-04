@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useStore } from '@/lib/store';
 import { doctorSpecializationRecommendation } from '@/ai/flows/doctor-specialization-recommendation';
-import { upsertPatientProfile } from '@/app/actions/patient-actions';
+import { upsertPatientProfile } from '@/actions/patients';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 

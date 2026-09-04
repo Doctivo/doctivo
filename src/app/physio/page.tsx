@@ -10,8 +10,8 @@ import { useStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { getDoctors } from '@/app/actions/doctor-actions';
-import { Doctor } from '@/lib/types';
+import { getDoctors } from '@/actions/doctors';
+import { Doctor } from '@/types';
 import { Card, CardContent } from '@/components/ui/card';
 import Image from 'next/image';
 

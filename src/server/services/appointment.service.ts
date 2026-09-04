@@ -1,6 +1,6 @@
 import { AppointmentRepository } from '../repositories/appointment.repository';
-import { Appointment } from '@/lib/types';
-import { sendTransactionalEmail } from '@/app/actions/auth-actions'; // Should be moved to EmailService
+import { Appointment } from '@/types';
+import { sendTransactionalEmail } from '@/actions/auth'; // Should be moved to EmailService
 
 export const AppointmentService = {
   async createAppointment(app: Partial<Appointment>) {

@@ -1,5 +1,5 @@
 import { query } from '@/lib/db';
-import { Doctor } from '@/lib/types';
+import { Doctor } from '@/types';
 
 /**
  * Robust JSON parsing for database values that might be returned as strings or objects.

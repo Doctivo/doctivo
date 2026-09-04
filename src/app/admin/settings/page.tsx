@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState, useEffect } from 'react';
-import { getAppSetting, setAppSetting } from '@/app/actions/admin-actions';
+import { getAppSetting, setAppSetting } from '@/actions/admin';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 

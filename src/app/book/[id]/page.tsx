@@ -8,11 +8,11 @@ import {
 } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
-import { createAppointment, getBookedSlots, rescheduleAppointment } from '@/app/actions/appointment-actions';
-import { getDoctorById } from '@/app/actions/doctor-actions';
-import { getFamilyMembers } from '@/app/actions/patient-actions';
+import { createAppointment, getBookedSlots, rescheduleAppointment } from '@/actions/appointments';
+import { getDoctorById } from '@/actions/doctors';
+import { getFamilyMembers } from '@/actions/patients';
 import { useToast } from '@/hooks/use-toast';
-import { Doctor } from '@/lib/types';
+import { Doctor } from '@/types';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';

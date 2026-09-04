@@ -9,8 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Gender, Patient } from '@/lib/types';
-import { addFamilyMember, updateFamilyMember, removeFamilyMember, getFamilyMembers, getPatientByPhone } from '@/app/actions/patient-actions';
+import { Gender, Patient } from '@/types';
+import { addFamilyMember, updateFamilyMember, removeFamilyMember, getFamilyMembers, getPatientByPhone } from '@/actions/patients';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
@@ -100,7 +100,7 @@ export default function PatientsPage() {
       list.unshift({ ...user, relation: 'Self' } as Patient);
     }
     const unique = Array.from(new Map(list.map(p => [p.id, p])).values());
-    const filtered = unique.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
+    const filtered = unique.filter(p => (p.name || '').toLowerCase().includes((search || '').toLowerCase()));
     return filtered.sort((a, b) => (a.relation === 'Self' ? -1 : 0));
   }, [patients, user, search]);
 

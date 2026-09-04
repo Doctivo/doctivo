@@ -9,7 +9,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useStore } from '@/lib/store';
 import { useEffect } from 'react';
-import { logoutSession } from '@/app/actions/auth-actions';
+import { logoutSession } from '@/actions/auth';
 
 const ALL_MENU_ITEMS = [
   { id: 'dashboard', label: 'Overview', icon: LayoutDashboard, href: '/admin' },

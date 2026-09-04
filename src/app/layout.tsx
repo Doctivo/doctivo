@@ -45,8 +45,8 @@ export const metadata: Metadata = {
     title: 'DOCTIVO',
   },
   icons: {
-    icon: '/562c71b5-1be4-415a-94dc-002e1889eb7c-8.jpg',
-    apple: '/562c71b5-1be4-415a-94dc-002e1889eb7c-8.jpg',
+    icon: '/logo.png',
+    apple: '/logo.png',
   },
 };
 
@@ -67,7 +67,7 @@ export default function RootLayout({
     name: 'Doctivo',
     alternateName: 'Doctivo Healthcare',
     url: 'https://doctivo.in',
-    logo: 'https://doctivo.in/562c71b5-1be4-415a-94dc-002e1889eb7c-8.jpg',
+    logo: 'https://doctivo.in/logo.png',
     founder: {
       '@type': 'Person',
       name: 'Gaurav Singh Shrinet'

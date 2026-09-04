@@ -43,7 +43,7 @@ export default function Error({
         <div className="space-y-6">
           <div className="h-16 w-16 mx-auto rounded-2xl overflow-hidden shadow-md">
             <Image priority 
-              src="/562c71b5-1be4-415a-94dc-002e1889eb7c-8.jpg" 
+              src="/logo.png" 
               alt="Logo" 
               width={64}
               height={64}

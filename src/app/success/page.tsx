@@ -7,8 +7,8 @@ import { useStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { getAppointmentById } from '@/app/actions/appointment-actions';
-import { Appointment } from '@/lib/types';
+import { getAppointmentById } from '@/actions/appointments';
+import { Appointment } from '@/types';
 import { generateProfessionalPDF, getPDFBase64, getPDFBlob } from '@/lib/pdf-generator';
 
 function SuccessContent() {

@@ -30,41 +30,13 @@ export async function unifiedLogin(identifier: string) {
         return { success: false, error: otpRes.error || 'Failed to send OTP' };
       }
 
-      const existingUser = await PatientService.getPatientByPhone(identifier);
-      
-      let patientData;
-      let familyMembers: any[] = [];
-      let appointments: any[] = [];
-      let isNew = false;
-
-      if (existingUser) {
-        patientData = existingUser;
-        const [members, apts] = await Promise.all([
-          PatientService.getFamilyMembers(existingUser.id),
-          AppointmentService.getUserAppointments(existingUser.id)
-        ]);
-        familyMembers = members;
-        appointments = apts;
+      // For normal Patient login, we now require Phone OTP
+      const phoneOtpRes = await sendPhoneOtp(identifier);
+      if (phoneOtpRes.success) {
+        return { success: true, requirePhoneOtp: true, phone: identifier };
       } else {
-        isNew = true;
-        patientData = { 
-          id: `DOC-USR-${Date.now()}`, 
-          phone: identifier, 
-          isProfileComplete: false 
-        };
+        return { success: false, error: phoneOtpRes.error || 'Failed to send SMS OTP' };
       }
-
-      // Set cookies for Patient using new architecture
-      await createSession(patientData.id, 'Patient');
-
-      return {
-        success: true,
-        role: 'Patient',
-        newUser: isNew,
-        user: patientData,
-        familyMembers,
-        appointments
-      };
     }
 
     // 2. Check if Email (Admin or Doctor)
@@ -352,3 +324,122 @@ export async function sendTransactionalEmail(toEmail: string, toName: string, su
     return { success: false, error: err.message };
   }
 }
+
+export async function sendPhoneOtp(phone: string) {
+  const identifier = phone.trim();
+  const now = Date.now();
+  const limitRecord = otpLimitMap.get(identifier);
+  
+  if (limitRecord && limitRecord.lockUntil > now) {
+    const waitMinutes = Math.ceil((limitRecord.lockUntil - now) / 60000);
+    return { success: false, error: `Account temporarily locked. Try again in ${waitMinutes} minutes.` };
+  }
+
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  try {
+    await query("DELETE FROM otp_verifications WHERE expires_at < NOW();", []);
+    await query(`
+      INSERT INTO otp_verifications (email, otp, expires_at)
+      VALUES ($1, $2, NOW() + INTERVAL '10 minutes')
+      ON CONFLICT (email)
+      DO UPDATE SET otp = EXCLUDED.otp, expires_at = EXCLUDED.expires_at, created_at = CURRENT_TIMESTAMP;
+    `, [identifier, otp]);
+
+    const fast2smsUrl = "https://www.fast2sms.com/dev/bulkV2";
+    const payload = {
+        route: "dlt",
+        sender_id: "DOCTVO",               
+        message: "224658",    
+        variables_values: otp,      
+        flash: 0,
+        numbers: identifier
+    };
+    
+    const response = await fetch(fast2smsUrl, {
+      method: 'POST',
+      headers: {
+        "authorization": process.env.FAST2SMS_API_KEY || "",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+    
+    const data = await response.json();
+    if (data.return === false) {
+      console.error('Fast2SMS failed:', data);
+      return { success: false, error: data.message };
+    }
+    
+    return { success: true };
+  } catch (error: any) {
+    console.error('sendPhoneOtp Error:', error.message);
+    return { success: false, error: 'Failed to send OTP to mobile.' };
+  }
+}
+
+export async function verifyPatientOtp(phone: string, otp: string) {
+  const identifier = phone.trim();
+  const now = Date.now();
+  const limitRecord = otpLimitMap.get(identifier);
+  
+  if (limitRecord && limitRecord.lockUntil > now) {
+    const waitMinutes = Math.ceil((limitRecord.lockUntil - now) / 60000);
+    return { success: false, error: `Too many failed attempts. Try again in ${waitMinutes} minutes.` };
+  }
+
+  try {
+    await query("DELETE FROM otp_verifications WHERE expires_at < NOW();", []);
+    const res = await query("SELECT * FROM otp_verifications WHERE email = $1 AND otp = $2 AND expires_at >= NOW();", [identifier, otp]);
+    if (res.rows.length === 0) {
+      const record = otpLimitMap.get(identifier) || { attempts: 0, lockUntil: 0 };
+      if (record.lockUntil < now) record.attempts += 1;
+      if (record.attempts >= 5) {
+        record.lockUntil = now + 15 * 60 * 1000;
+        record.attempts = 0;
+      }
+      otpLimitMap.set(identifier, record);
+      return { success: false, error: 'Invalid or expired OTP code' };
+    }
+
+    otpLimitMap.delete(identifier);
+    await query("DELETE FROM otp_verifications WHERE email = $1;", [identifier]);
+
+    // Proceed to log the patient in
+    const existingUser = await PatientService.getPatientByPhone(identifier);
+    let patientData;
+    let familyMembers: any[] = [];
+    let appointments: any[] = [];
+    let isNew = false;
+
+    if (existingUser) {
+      patientData = existingUser;
+      const [members, apts] = await Promise.all([
+        PatientService.getFamilyMembers(existingUser.id),
+        AppointmentService.getUserAppointments(existingUser.id)
+      ]);
+      familyMembers = members;
+      appointments = apts;
+    } else {
+      isNew = true;
+      patientData = { 
+        id: `DOC-USR-${Date.now()}`, 
+        phone: identifier, 
+        isProfileComplete: false 
+      };
+    }
+
+    await createSession(patientData.id, 'Patient');
+
+    return {
+      success: true,
+      role: 'Patient',
+      newUser: isNew,
+      user: patientData,
+      familyMembers,
+      appointments
+    };
+  } catch (error: any) {
+    return { success: false, error: 'Verification failed.' };
+  }
+}
+

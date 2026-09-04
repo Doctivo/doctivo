@@ -1,6 +1,6 @@
 'use server';
 
-import { UserProfile, Patient } from '@/lib/types';
+import { UserProfile, Patient } from '@/types';
 import { requireAuth } from '@/lib/auth/session';
 import { ROLES } from '@/lib/auth/roles';
 import { logger } from '@/lib/logger';

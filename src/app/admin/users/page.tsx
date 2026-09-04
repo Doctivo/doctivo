@@ -9,7 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { getAllUsers } from '@/app/actions/admin-actions';
+import { getAllUsers } from '@/actions/admin';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 

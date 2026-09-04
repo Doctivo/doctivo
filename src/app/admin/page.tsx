@@ -6,7 +6,7 @@ import {
   TrendingUp, PieChart as RePieChartIcon
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { getAdminMetrics } from '@/app/actions/admin-actions';
+import { getAdminMetrics } from '@/actions/admin';
 import { 
   ResponsiveContainer, 
   LineChart, 

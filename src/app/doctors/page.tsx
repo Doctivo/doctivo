@@ -9,9 +9,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { getDoctors } from '@/app/actions/doctor-actions';
+import { getDoctors } from '@/actions/doctors';
 import { useTranslation } from '@/hooks/useTranslation';
-import { Doctor } from '@/lib/types';
+import { Doctor } from '@/types';
 import Image from 'next/image';
 
 function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
@@ -146,11 +146,11 @@ function DoctorsContent() {
     }
     if (debouncedSearch) {
       // Fuzzy matching logic approximation: check if all characters exist in order, or simple includes
-      const terms = debouncedSearch.toLowerCase().trim().split(/\s+/);
+      const terms = (debouncedSearch || '').toLowerCase().trim().split(/\s+/);
       list = list.filter(doc => {
         const searchableText = [
-          doc.name, 
-          doc.specialty, 
+          doc.name || '', 
+          doc.specialty || '', 
           ...(doc.reasonsForVisit || [])
         ].join(' ').toLowerCase();
         // Check if ALL search terms are found anywhere in the searchable text

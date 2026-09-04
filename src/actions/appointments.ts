@@ -1,7 +1,7 @@
 'use server';
 
 import { AppointmentService } from '@/server/services/appointment.service';
-import { Appointment } from '@/lib/types';
+import { Appointment } from '@/types';
 import { requireAuth, requireRoles } from '@/lib/auth/session';
 import { ROLES } from '@/lib/auth/roles';
 import { logger } from '@/lib/logger';

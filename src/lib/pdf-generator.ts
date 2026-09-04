@@ -1,4 +1,4 @@
-import { Appointment } from './types';
+import { Appointment } from '@/types';
 import type { jsPDF } from 'jspdf';
 
 /**
@@ -38,7 +38,7 @@ export const generateProfessionalPDF = async (appointment: Appointment): Promise
 
   // --- LOGO (TOP LEFT) - Enhanced Size ---
   try {
-    const logoUrl = '/562c71b5-1be4-415a-94dc-002e1889eb7c-8.jpg';
+    const logoUrl = '/logo.png';
     pdf.addImage(logoUrl, 'JPEG', 15, 6, 25, 25);
   } catch (e) {
     console.warn('Could not add logo to PDF:', e);

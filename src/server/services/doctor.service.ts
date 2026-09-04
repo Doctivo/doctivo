@@ -1,5 +1,5 @@
 import { DoctorRepository } from '../repositories/doctor.repository';
-import { sendTransactionalEmail } from '@/app/actions/auth-actions'; // This should ideally be moved to an EmailService later
+import { sendTransactionalEmail } from '@/actions/auth'; // This should ideally be moved to an EmailService later
 
 export const DoctorService = {
   async getDoctors(specialty?: string, searchQuery?: string) {

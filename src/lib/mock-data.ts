@@ -1,5 +1,5 @@
 
-import { Doctor } from './types';
+import { Doctor } from '@/types';
 
 export const DOCTOR_CATEGORIES = [
   { id: 'all', name: 'All', icon: '🏥' },

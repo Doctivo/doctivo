@@ -10,8 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Button } from '@/components/ui/button';
 import { Download, Info, CheckCircle2, Share2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { getUserAppointments, updateAppointmentStatus } from '@/app/actions/appointment-actions';
-import { Appointment } from '@/lib/types';
+import { getUserAppointments, updateAppointmentStatus } from '@/actions/appointments';
+import { Appointment } from '@/types';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -228,7 +228,7 @@ export default function AppointmentsPage() {
         <div className="flex justify-between items-center mb-6 px-6 pt-8 pb-4">
           <div className="flex items-center space-x-3">
             <div className="h-9 w-9 rounded-xl overflow-hidden relative shadow-sm border border-slate-100 dark:border-slate-800 shrink-0 bg-white dark:bg-slate-800">
-              <Image priority src="/562c71b5-1be4-415a-94dc-002e1889eb7c-8.jpg" alt="Logo" fill sizes="36px" className="object-contain p-1" />
+              <Image priority src="/logo.png" alt="Logo" fill sizes="36px" className="object-contain p-1" />
             </div>
             <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Bookings</h1>
           </div>

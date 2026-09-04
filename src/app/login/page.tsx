@@ -6,10 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowRight, Loader2 } from 'lucide-react';
-import { unifiedLogin, verifyAdminOtp } from '@/app/actions/auth-actions';
+import { unifiedLogin, verifyAdminOtp, verifyPatientOtp } from '@/actions/auth';
 import { useToast } from '@/hooks/use-toast';
 import { useStore } from '@/lib/store';
-import { Patient } from '@/lib/types';
+import { Patient } from '@/types';
 import Image from 'next/image';
 
 export default function LoginPage() {
@@ -80,46 +80,39 @@ export default function LoginPage() {
       const result = await unifiedLogin(inputStr);
       
       if (result.success) {
-        if (result.requireOtp) {
+        // DOCTOR / ADMIN EMAIL OTP
+        if ((result as any).requireOtp) {
           setOtpSent(true);
-          setOtpEmail(result.email || '');
+          setOtpEmail((result as any).email || '');
           toast({ title: 'Verification Email Sent', description: 'Enter the 6-digit OTP code sent to your email.' });
           setIsLoading(false);
           return;
         }
 
-        if (result.role === 'Patient') {
-          setAdminStore(null);
-          setUserStore(result.user as any);
-          const fullPatientList: Patient[] = [
-            { ...result.user, relation: 'Self' } as Patient,
-            ...(result.familyMembers || [])
-          ];
-          setPatientsStore(fullPatientList);
-          setAppointmentsStore(result.appointments || []);
-          setIsAuthenticated(true);
-          
-          router.refresh();
-          setTimeout(() => {
-            const callbackUrl = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('callbackUrl') : null;
-            if (result.user.isProfileComplete) router.replace(callbackUrl || '/home');
-            else router.replace('/onboarding');
-          }, 100);
+        // PATIENT SMS OTP (New logic)
+        if ((result as any).requirePhoneOtp) {
+          setOtpSent(true);
+          setOtpEmail((result as any).phone || ''); 
+          toast({ title: 'Verification SMS Sent', description: `Enter the 6-digit OTP code sent to ${(result as any).phone}` });
+          setIsLoading(false);
+          return;
+        }
 
-        } else if (result.role === 'Admin') {
+        // OTHER ROLES (No OTP Required)
+        if ((result as any).role === 'Admin') {
           setUserStore(null);
-          setAdminStore(result.user as any);
+          setAdminStore((result as any).user as any);
           setIsAuthenticated(true);
           router.refresh();
           setTimeout(() => {
             router.replace('/admin');
           }, 100);
-        } else if (result.role === 'Doctor') {
+        } else if ((result as any).role === 'Doctor') {
           setUserStore(null);
           setAdminStore({
-            admin_id: result.user.doctor_id,
-            full_name: result.user.full_name,
-            email: result.user.email || "",
+            admin_id: (result as any).user.doctor_id,
+            full_name: (result as any).user.full_name,
+            email: (result as any).user.email || "",
             role: 'Doctor',
             permissions: {} as any
           });
@@ -128,15 +121,15 @@ export default function LoginPage() {
           setTimeout(() => {
             router.replace(`/doctor/dashboard`);
           }, 100);
-        } else if (result.role === 'Attendant') {
+        } else if ((result as any).role === 'Attendant') {
           setUserStore(null);
           setAdminStore({
-            admin_id: result.user.attendant_id,
-            full_name: result.user.full_name,
+            admin_id: (result as any).user.attendant_id,
+            full_name: (result as any).user.full_name,
             email: "",
             role: 'Attendant',
             permissions: {} as any,
-            doctor_id: result.user.doctor_id
+            doctor_id: (result as any).user.doctor_id
           });
           setIsAuthenticated(true);
           router.refresh();
@@ -165,12 +158,38 @@ export default function LoginPage() {
     }
     setIsVerifying(true);
     try {
-      const result = await verifyAdminOtp(otpEmail, otpInput);
+      const isPhoneOtp = /^\d{10}$/.test(otpEmail);
+      
+      // Verification call based on Phone vs Email
+      const result = isPhoneOtp 
+        ? await verifyPatientOtp(otpEmail, otpInput)
+        : await verifyAdminOtp(otpEmail, otpInput);
+
       if (result.success) {
         setUserStore(null);
         setPatientsStore([]);
         setAppointmentsStore([]);
-        if (result.role === 'Doctor') {
+        
+        // Handle successful patient verification
+        if (result.role === 'Patient') {
+          setUserStore(result.user as any);
+          const fullPatientList: Patient[] = [
+            { ...result.user, relation: 'Self' } as Patient,
+            ...((result as any).familyMembers || [])
+          ];
+          setPatientsStore(fullPatientList);
+          setAppointmentsStore((result as any).appointments || []);
+          setIsAuthenticated(true);
+          
+          router.refresh();
+          setTimeout(() => {
+            const callbackUrl = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('callbackUrl') : null;
+            if (result.user.isProfileComplete) router.replace(callbackUrl || '/home');
+            else router.replace('/onboarding');
+          }, 100);
+        } 
+        // Handle successful doctor verification
+        else if (result.role === 'Doctor') {
           setAdminStore({
             admin_id: result.user.doctor_id,
             full_name: result.user.full_name,
@@ -183,7 +202,9 @@ export default function LoginPage() {
           setTimeout(() => {
             router.replace(`/doctor/dashboard`);
           }, 100);
-        } else {
+        } 
+        // Handle successful admin verification
+        else {
           setAdminStore(result.user as any);
           setIsAuthenticated(true);
           router.refresh();
@@ -229,8 +250,8 @@ export default function LoginPage() {
       <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-6 bg-[#F8FAFF]">
         <div className="w-full max-w-[440px] flex flex-col min-h-[85vh] lg:min-h-0 justify-between lg:justify-center lg:space-y-10 py-8">
           <div className="flex flex-col items-center space-y-3 lg:hidden">
-            <div className="h-16 w-16 rounded-2xl flex items-center justify-center shadow-lg relative overflow-hidden">
-              <Image priority src="/562c71b5-1be4-415a-94dc-002e1889eb7c-8.jpg" alt="Logo" fill sizes="(max-width: 768px) 100vw, 33vw" className="object-contain p-2" />
+            <div className="h-16 w-16 rounded-2xl flex items-center justify-center shadow-lg relative overflow-hidden bg-white">
+              <Image priority src="/logo.png" alt="Logo" fill sizes="(max-width: 768px) 100vw, 33vw" className="object-contain p-2" />
              </div>
              <div className="text-center">
                <h1 className="text-xl font-black tracking-tight text-slate-800">DOCTIVO</h1>
@@ -259,7 +280,7 @@ export default function LoginPage() {
                      </Button>
                      <div className="flex justify-between items-center px-1 pt-2 text-xs font-bold">
                        <button onClick={handleLogin} className="text-primary hover:underline">Resend Code</button>
-                       <button onClick={() => { setOtpSent(false); setOtpInput(''); }} className="text-slate-400 hover:text-slate-600">Change Email</button>
+                       <button onClick={() => { setOtpSent(false); setOtpInput(''); }} className="text-slate-400 hover:text-slate-600">Change Identifier</button>
                      </div>
                    </div>
                  ) : (
@@ -289,5 +310,3 @@ export default function LoginPage() {
      </div>
    );
 }
-
-

@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, Info, Heart, Award, Briefcase, Rocket, Image as ImageIcon } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { getAppSetting } from '@/app/actions/admin-actions';
+import { getAppSetting } from '@/actions/admin';
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 
 export default function AboutFounderPage() {

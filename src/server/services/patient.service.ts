@@ -1,5 +1,5 @@
 import { PatientRepository } from '../repositories/patient.repository';
-import { UserProfile, Patient } from '@/lib/types';
+import { UserProfile, Patient } from '@/types';
 
 /**
  * Validates a name to ensure it contains only alphabets and no abusive content.

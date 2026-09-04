@@ -6,8 +6,8 @@ import { ArrowLeft, Download, FileText, Calendar, Clock, User } from 'lucide-rea
 import { useStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { getUserAppointments } from '@/app/actions/appointment-actions';
-import { Appointment } from '@/lib/types';
+import { getUserAppointments } from '@/actions/appointments';
+import { Appointment } from '@/types';
 import { Loader2 } from 'lucide-react';
 
 export default function DownloadsPage() {

@@ -6,7 +6,7 @@ import { Plus, Loader2, Edit3, Camera, Search, User, Mail, Phone, MapPin, Indian
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { addDoctorDirectly, updateDoctor, getDoctorsCatalog, deleteDoctor } from '@/app/actions/admin-actions';
+import { addDoctorDirectly, updateDoctor, getDoctorsCatalog, deleteDoctor } from '@/actions/admin';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
@@ -74,9 +74,9 @@ export default function DoctorCatalog() {
   useEffect(() => { load(); }, []);
 
   const filteredDoctors = doctors.filter(d => 
-    d.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    d.specialty.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (d.doctor_id && d.doctor_id.toLowerCase().includes(searchQuery.toLowerCase()))
+    (d.full_name || '').toLowerCase().includes((searchQuery || '').toLowerCase()) ||
+    (d.specialty || '').toLowerCase().includes((searchQuery || '').toLowerCase()) ||
+    (d.doctor_id && d.doctor_id.toLowerCase().includes((searchQuery || '').toLowerCase()))
   );
 
   const handleImageSelect = (e: any) => {

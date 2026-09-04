@@ -31,7 +31,7 @@ export default function AboutDoctivoPage() {
           <div className="relative z-10 flex flex-col items-center text-center space-y-4">
             <div className="h-24 w-24 bg-white dark:bg-slate-800 rounded-[2rem] flex items-center justify-center shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-700 p-3">
               <div className="relative w-full h-full">
-                <Image priority src="/562c71b5-1be4-415a-94dc-002e1889eb7c-8.jpg" alt="Doctivo Logo" fill sizes="96px" className="object-contain" />
+                <Image priority src="/logo.png" alt="Doctivo Logo" fill sizes="96px" className="object-contain" />
               </div>
             </div>
             

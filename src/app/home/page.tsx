@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
-import { getAppSetting } from '@/app/actions/admin-actions';
+import { getAppSetting } from '@/actions/admin';
 import dynamic from 'next/dynamic';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Globe } from 'lucide-react';
@@ -101,6 +101,7 @@ function HomeContent() {
     ) {
       setServerImages(homeCardImagesStore);
       setHomeBanners(homeBannersStore);
+      setIsLoadingData(false);
       return;
     }
 

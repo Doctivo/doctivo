@@ -15,7 +15,7 @@ export default function NotFound() {
         <div className="space-y-6">
           <div className="relative h-32 w-32 mx-auto rounded-[2.5rem] overflow-hidden shadow-2xl ring-8 ring-white">
             <Image priority 
-              src="/562c71b5-1be4-415a-94dc-002e1889eb7c-8.jpg" 
+              src="/logo.png" 
               alt="Doctivo Logo" 
               fill 
               sizes="128px"

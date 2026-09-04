@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { getDoctorById } from '@/app/actions/doctor-actions';
+import { getDoctorById } from '@/actions/doctors';
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;

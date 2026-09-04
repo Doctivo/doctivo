@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { getAdminBookings, cancelAppointment } from '@/app/actions/admin-actions';
+import { getAdminBookings, cancelAppointment } from '@/actions/admin';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
