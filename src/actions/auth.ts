@@ -358,7 +358,7 @@ export async function sendPhoneOtp(phone: string) {
     const response = await fetch(fast2smsUrl, {
       method: 'POST',
       headers: {
-        "authorization": process.env.FAST2SMS_API_KEY || "",
+        "authorization": process.env.Fast2SMS_API_KEY || process.env.FAST2SMS_API_KEY || "",
         "Content-Type": "application/json"
       },
       body: JSON.stringify(payload)
