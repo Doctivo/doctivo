@@ -32,6 +32,17 @@ export default function LoginPage() {
   const [otpEmail, setOtpEmail] = useState('');
   const [otpInput, setOtpInput] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
+
+  useEffect(() => {
+    let interval: any;
+    if (resendTimer > 0) {
+      interval = setInterval(() => {
+        setResendTimer(prev => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [resendTimer]);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -86,6 +97,7 @@ export default function LoginPage() {
           setOtpEmail((result as any).email || '');
           toast({ title: 'Verification Email Sent', description: 'Enter the 6-digit OTP code sent to your email.' });
           setIsLoading(false);
+          setResendTimer(30);
           return;
         }
 
@@ -95,6 +107,7 @@ export default function LoginPage() {
           setOtpEmail((result as any).phone || ''); 
           toast({ title: 'Verification SMS Sent', description: `Enter the 6-digit OTP code sent to ${(result as any).phone}` });
           setIsLoading(false);
+          setResendTimer(30);
           return;
         }
 
@@ -279,7 +292,13 @@ export default function LoginPage() {
                        {isVerifying ? <Loader2 className="h-6 w-6 animate-spin" /> : <>Verify Code <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" /></>}
                      </Button>
                      <div className="flex justify-between items-center px-1 pt-2 text-xs font-bold">
-                       <button onClick={handleLogin} className="text-primary hover:underline">Resend Code</button>
+                       <button 
+                         onClick={handleLogin} 
+                         disabled={resendTimer > 0 || isLoading}
+                         className={`hover:underline transition-colors ${resendTimer > 0 ? 'text-slate-400 cursor-not-allowed' : 'text-primary'}`}
+                       >
+                         {resendTimer > 0 ? `Resend Code in ${resendTimer}s` : 'Resend Code'}
+                       </button>
                        <button onClick={() => { setOtpSent(false); setOtpInput(''); }} className="text-slate-400 hover:text-slate-600">Change Identifier</button>
                      </div>
                    </div>
