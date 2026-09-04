@@ -77,7 +77,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const doctors = await getDoctors();
   
   const doctorRoutes: MetadataRoute.Sitemap = doctors.map((doctor) => ({
-    url: `${baseUrl}/book/${doctor.id}`,
+    url: `${baseUrl}/doctor/${doctor.id}`,
     lastModified: new Date(),
     changeFrequency: 'weekly',
     priority: 0.9,
