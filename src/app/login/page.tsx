@@ -116,10 +116,7 @@ export default function LoginPage() {
           setUserStore(null);
           setAdminStore((result as any).user as any);
           setIsAuthenticated(true);
-          router.refresh();
-          setTimeout(() => {
-            router.replace('/admin');
-          }, 100);
+          router.replace('/admin');
         } else if ((result as any).role === 'Doctor') {
           setUserStore(null);
           setAdminStore({
@@ -130,10 +127,7 @@ export default function LoginPage() {
             permissions: {} as any
           });
           setIsAuthenticated(true);
-          router.refresh();
-          setTimeout(() => {
-            router.replace(`/doctor/dashboard`);
-          }, 100);
+          router.replace(`/doctor/dashboard`);
         } else if ((result as any).role === 'Attendant') {
           setUserStore(null);
           setAdminStore({
@@ -145,10 +139,7 @@ export default function LoginPage() {
             doctor_id: (result as any).user.doctor_id
           });
           setIsAuthenticated(true);
-          router.refresh();
-          setTimeout(() => {
-            router.replace(`/attendant/dashboard`);
-          }, 100);
+          router.replace(`/attendant/dashboard`);
         }
       } else {
         toast({ variant: "destructive", title: "Login Failed", description: result.error });
@@ -193,13 +184,12 @@ export default function LoginPage() {
           setPatientsStore(fullPatientList);
           setAppointmentsStore((result as any).appointments || []);
           setIsAuthenticated(true);
-          
-          router.refresh();
-          setTimeout(() => {
-            const callbackUrl = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('callbackUrl') : null;
-            if (result.user.isProfileComplete) router.replace(callbackUrl || '/home');
-            else router.replace('/onboarding');
-          }, 100);
+          const callbackUrl = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('callbackUrl') : null;
+          if (result.user.isProfileComplete) {
+            router.replace(callbackUrl || '/home');
+          } else {
+            router.replace('/onboarding');
+          }
         } 
         // Handle successful doctor verification
         else if (result.role === 'Doctor') {
@@ -211,20 +201,13 @@ export default function LoginPage() {
             permissions: {} as any
           });
           setIsAuthenticated(true);
-          router.refresh();
-          setTimeout(() => {
-            router.replace(`/doctor/dashboard`);
-          }, 100);
+          router.replace(`/doctor/dashboard`);
         } 
         // Handle successful admin verification
         else {
           setAdminStore(result.user as any);
           setIsAuthenticated(true);
-          router.refresh();
-          
-          setTimeout(() => {
-            router.replace('/admin');
-          }, 100);
+          router.replace('/admin');
         }
       } else {
         toast({ variant: "destructive", title: "Verification Failed", description: result.error });

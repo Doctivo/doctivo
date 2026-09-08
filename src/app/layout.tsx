@@ -20,6 +20,9 @@ export const metadata: Metadata = {
   authors: [{ name: 'Gaurav Singh Shrinet' }, { name: 'Doctivo' }],
   creator: 'Doctivo',
   publisher: 'Doctivo',
+  verification: {
+    google: '9cMDxhVKFrZ7nzIG34D4y5nrYycAwNTXhG_LMrgHjhI',
+  },
   robots: {
     index: true,
     follow: true,

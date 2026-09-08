@@ -8,12 +8,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
 interface Props {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 // 1. DYNAMIC META TAGS & AUTO-GENERATED TAGS (SEO)
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const doctor = await getDoctorById(params.id);
+  const { id } = await params;
+  const doctor = await getDoctorById(id);
   
   if (!doctor) {
     return {
@@ -48,7 +49,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function DoctorProfilePage({ params }: Props) {
-  const doctor = await getDoctorById(params.id);
+  const { id } = await params;
+  const doctor = await getDoctorById(id);
 
   if (!doctor) {
     notFound();

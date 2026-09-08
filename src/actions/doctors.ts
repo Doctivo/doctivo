@@ -5,12 +5,32 @@ import { requireAuth, requireRoles } from '@/lib/auth/session';
 import { ROLES } from '@/lib/auth/roles';
 import { logger } from '@/lib/logger';
 
+import { unstable_cache } from 'next/cache';
+
+const getCachedDoctors = unstable_cache(
+  async (specialty?: string, searchQuery?: string) => DoctorService.getDoctors(specialty, searchQuery),
+  ['doctors-list-cache'],
+  { revalidate: 60, tags: ['doctors'] }
+);
+
+const getCachedDoctorById = unstable_cache(
+  async (id: string) => DoctorService.getDoctorById(id),
+  ['doctor-by-id-cache'],
+  { revalidate: 60, tags: ['doctors'] }
+);
+
+const getCachedSpecialties = unstable_cache(
+  async () => DoctorService.getSpecialties(),
+  ['specialties-cache'],
+  { revalidate: 3600, tags: ['doctors'] }
+);
+
 /**
  * Fetches all approved doctors from the database with robust specialty filtering.
  */
 export async function getDoctors(specialty?: string, searchQuery?: string) {
   try {
-    return await DoctorService.getDoctors(specialty, searchQuery);
+    return await getCachedDoctors(specialty, searchQuery);
   } catch (error: any) {
     logger.error('Error fetching doctors::', { error: error.message || error });
     return [];
@@ -22,7 +42,7 @@ export async function getDoctors(specialty?: string, searchQuery?: string) {
  */
 export async function getDoctorById(id: string) {
   try {
-    return await DoctorService.getDoctorById(id);
+    return await getCachedDoctorById(id);
   } catch (error: any) {
     logger.error('Error fetching doctor by id::', { error: error.message || error });
     return null;
@@ -34,7 +54,7 @@ export async function getDoctorById(id: string) {
  */
 export async function getSpecialties() {
   try {
-    return await DoctorService.getSpecialties();
+    return await getCachedSpecialties();
   } catch (error: any) {
     logger.error('Error fetching specialties::', { error: error.message || error });
     return ['All'];
