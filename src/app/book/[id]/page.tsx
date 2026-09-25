@@ -161,11 +161,15 @@ function BookingContent({ id }: { id: string }) {
     }
     
     try {
-      // 1. Create order on backend
-      const resOrder = await fetch('/api/create-order', {
+      // 1. Create Cashfree order on backend
+      const resOrder = await fetch('/api/cashfree-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: (doc?.fees || 0) * 100 }), // amount in paise
+        body: JSON.stringify({ 
+          amount: doc?.fees || 0, // amount in rupees for Cashfree
+          customer_phone: patient?.phone || user?.phone || '9999999999',
+          customer_name: patient?.name || user?.name || 'Doctivo User'
+        }), 
       });
       const orderData = await resOrder.json();
 
@@ -175,63 +179,68 @@ function BookingContent({ id }: { id: string }) {
         return;
       }
 
-      // Load Razorpay Script
+      // Load Cashfree SDK Script
       const resScript = await new Promise((resolve) => {
+        if ((window as any).Cashfree) {
+          resolve(true);
+          return;
+        }
         const script = document.createElement('script');
-        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.src = 'https://sdk.cashfree.com/js/v3/cashfree.js';
         script.onload = () => resolve(true);
         script.onerror = () => resolve(false);
         document.body.appendChild(script);
       });
 
-      if (!resScript || !(window as any).Razorpay) {
+      if (!resScript || !(window as any).Cashfree) {
         setIsBooking(false);
-        toast({ variant: 'destructive', title: 'Script Error', description: 'Failed to load Razorpay checkout script.', duration: 9999999 });
+        toast({ variant: 'destructive', title: 'Script Error', description: 'Failed to load Cashfree checkout script.', duration: 9999999 });
         return;
       }
 
-      const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || '', 
-        amount: orderData.amount, 
-        currency: orderData.currency,
-        name: "Doctivo Medical",
-        description: "Consultation Fee",
-        order_id: orderData.order_id, // Pass order ID generated from backend
-        handler: async function (response: any) {
+      const cashfree = await (window as any).Cashfree({
+        mode: orderData.environment || 'sandbox'
+      });
+
+      let checkoutOptions = {
+        paymentSessionId: orderData.payment_session_id,
+        redirectTarget: "_modal",
+      };
+
+      cashfree.checkout(checkoutOptions).then(async (result: any) => {
+        if(result.error){
+          setIsBooking(false);
+          toast({ variant: 'destructive', title: 'Payment Failed', description: result.error.message || 'Payment was cancelled or failed.', duration: 9999999 });
+          return;
+        }
+        
+        if(result.paymentDetails){
           setIsBooking(true);
           toast({ title: 'Processing', description: 'Please wait, verifying and confirming appointment...', duration: 9999999 });
           
-          // Combine Verify Signature + Create Appointment in single backend call to save time!
+          // Verify with backend
           try {
-            const razorpayData = {
-              order_id: response.razorpay_order_id,
-              payment_id: response.razorpay_payment_id,
-              signature: response.razorpay_signature,
-            };
-            finalizeBooking(response.razorpay_payment_id, patient, razorpayData);
+            const verifyRes = await fetch('/api/cashfree-verify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ order_id: orderData.order_id })
+            });
+            const verifyData = await verifyRes.json();
+
+            if (verifyData.success) {
+               // Cashfree verification doesn't need razorpay signature checks, so we just finalize it.
+               // Pass order_id as the transaction ID so we can use it for refunds
+               finalizeBooking(orderData.order_id, patient, null); 
+            } else {
+               setIsBooking(false);
+               toast({ variant: 'destructive', title: 'Payment Failed', description: 'Your payment could not be verified.', duration: 9999999 });
+            }
           } catch (err) {
             setIsBooking(false);
-            toast({ variant: 'destructive', title: 'Error', description: 'Error processing payment.', duration: 9999999 });
-          }
-        },
-        prefill: {
-          name: patient?.name || user?.name || '',
-          contact: patient?.phone || user?.phone || '',
-        },
-        theme: { color: "#2563eb" },
-        modal: {
-          ondismiss: function() {
-            setIsBooking(false);
+            toast({ variant: 'destructive', title: 'Error', description: 'Error verifying payment.', duration: 9999999 });
           }
         }
-      };
-      
-      const rzp = new (window as any).Razorpay(options);
-      rzp.on('payment.failed', function (response: any){
-        setIsBooking(false);
-        toast({ variant: 'destructive', title: 'Payment Failed', description: response.error.description, duration: 9999999 });
       });
-      rzp.open();
 
     } catch (err) {
       setIsBooking(false);
