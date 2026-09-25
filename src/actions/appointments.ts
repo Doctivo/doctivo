@@ -88,6 +88,43 @@ export async function getDoctorAppointmentsForDate(doctorId: string, dateStr: st
 export async function updateAppointmentStatus(appointmentId: string, status: string) {
   const session = await requireAuth(); 
   try {
+    const existing = await AppointmentService.getAppointmentById(appointmentId);
+    
+    // Automatically trigger Cashfree Refund if cancelled by patient
+    if (status === 'Cancelled' && existing?.payment_status === 'Paid' && existing?.transaction_id) {
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://doctivo.in';
+      // Internal call to our own refund API using fetch (assuming full URL is available, or we can use local logic).
+      // Actually since we are in Server Actions, we can just fetch our absolute URL or extract the refund logic.
+      // To avoid absolute URL issues in server actions, we'll duplicate the Cashfree API call here for safety:
+      
+      const appId = process.env.NEXT_PUBLIC_CASHFREE_APP_ID;
+      const secretKey = process.env.CASHFREE_SECRET_KEY;
+      const env = process.env.CASHFREE_ENVIRONMENT || 'SANDBOX';
+      const cfBaseUrl = env === 'PRODUCTION' ? 'https://api.cashfree.com/pg' : 'https://sandbox.cashfree.com/pg';
+      
+      if (appId && secretKey) {
+        // Fetch order amount first
+        const orderRes = await fetch(`${cfBaseUrl}/orders/${existing.transaction_id}`, {
+          method: 'GET',
+          headers: { 'x-client-id': appId, 'x-client-secret': secretKey, 'x-api-version': '2023-08-01', 'Accept': 'application/json' }
+        });
+        
+        if (orderRes.ok) {
+          const orderData = await orderRes.json();
+          // Issue refund
+          await fetch(`${cfBaseUrl}/orders/${existing.transaction_id}/refunds`, {
+            method: 'POST',
+            headers: { 'x-client-id': appId, 'x-client-secret': secretKey, 'x-api-version': '2023-08-01', 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({
+              refund_amount: orderData.order_amount,
+              refund_id: `refund_${Date.now()}_${appointmentId}`,
+              refund_note: "Patient cancelled the appointment"
+            })
+          });
+        }
+      }
+    }
+
     await AppointmentService.updateAppointmentStatus(appointmentId, status);
     return { success: true };
   } catch (error: any) {

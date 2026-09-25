@@ -5,6 +5,7 @@ import { cookies } from 'next/headers';
 import { requireRoles } from '@/lib/auth/session';
 import { ROLES } from '@/lib/auth/roles';
 import { AdminService } from '@/server/services/admin.service';
+import { AppointmentService } from '@/server/services/appointment.service';
 import { logger } from '@/lib/logger';
 
 /**
@@ -349,6 +350,38 @@ export async function getAdminBookings() {
 export async function cancelAppointment(appointmentId: string) {
   await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
   try {
+    const existing = await AppointmentService.getAppointmentById(appointmentId);
+    
+    // Auto-refund if the appointment was paid and hasn't been refunded yet
+    if (existing?.payment_status === 'Paid' && existing?.transaction_id) {
+      const appId = process.env.NEXT_PUBLIC_CASHFREE_APP_ID;
+      const secretKey = process.env.CASHFREE_SECRET_KEY;
+      const env = process.env.CASHFREE_ENVIRONMENT || 'SANDBOX';
+      const cfBaseUrl = env === 'PRODUCTION' ? 'https://api.cashfree.com/pg' : 'https://sandbox.cashfree.com/pg';
+      
+      if (appId && secretKey) {
+        // Fetch order amount first
+        const orderRes = await fetch(`${cfBaseUrl}/orders/${existing.transaction_id}`, {
+          method: 'GET',
+          headers: { 'x-client-id': appId, 'x-client-secret': secretKey, 'x-api-version': '2023-08-01', 'Accept': 'application/json' }
+        });
+        
+        if (orderRes.ok) {
+          const orderData = await orderRes.json();
+          // Issue refund
+          await fetch(`${cfBaseUrl}/orders/${existing.transaction_id}/refunds`, {
+            method: 'POST',
+            headers: { 'x-client-id': appId, 'x-client-secret': secretKey, 'x-api-version': '2023-08-01', 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({
+              refund_amount: orderData.order_amount,
+              refund_id: `refund_${Date.now()}_${appointmentId}`,
+              refund_note: "Admin cancelled the appointment"
+            })
+          });
+        }
+      }
+    }
+
     await AdminService.cancelAppointment(appointmentId);
     return { success: true };
   } catch (error: any) {
