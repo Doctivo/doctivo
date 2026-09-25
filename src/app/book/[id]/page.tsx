@@ -202,45 +202,27 @@ function BookingContent({ id }: { id: string }) {
         mode: orderData.environment || 'sandbox'
       });
 
+      // For Mobile Webviews (Android/iOS apps), _modal often renders poorly.
+      // We use _self to redirect the whole page, which requires saving the booking state.
+      localStorage.setItem('pending_cashfree_booking', JSON.stringify({
+        doc,
+        user,
+        patient,
+        selectedDate,
+        selectedSlot,
+        selectedReasons,
+        symptoms,
+        orderId: orderData.order_id
+      }));
+
       let checkoutOptions = {
         paymentSessionId: orderData.payment_session_id,
-        redirectTarget: "_modal",
+        redirectTarget: "_self", // Switch to _self to ensure perfect mobile view
       };
 
-      cashfree.checkout(checkoutOptions).then(async (result: any) => {
-        if(result.error){
-          setIsBooking(false);
-          toast({ variant: 'destructive', title: 'Payment Failed', description: result.error.message || 'Payment was cancelled or failed.', duration: 9999999 });
-          return;
-        }
-        
-        if(result.paymentDetails){
-          setIsBooking(true);
-          toast({ title: 'Processing', description: 'Please wait, verifying and confirming appointment...', duration: 9999999 });
-          
-          // Verify with backend
-          try {
-            const verifyRes = await fetch('/api/cashfree-verify', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ order_id: orderData.order_id })
-            });
-            const verifyData = await verifyRes.json();
-
-            if (verifyData.success) {
-               // Cashfree verification doesn't need razorpay signature checks, so we just finalize it.
-               // Pass order_id as the transaction ID so we can use it for refunds
-               finalizeBooking(orderData.order_id, patient, null); 
-            } else {
-               setIsBooking(false);
-               toast({ variant: 'destructive', title: 'Payment Failed', description: 'Your payment could not be verified.', duration: 9999999 });
-            }
-          } catch (err) {
-            setIsBooking(false);
-            toast({ variant: 'destructive', title: 'Error', description: 'Error verifying payment.', duration: 9999999 });
-          }
-        }
-      });
+      cashfree.checkout(checkoutOptions);
+      // We don't await .then() because the page will redirect to Cashfree.
+      // When done, Cashfree redirects to the return_url (/verify?order_id=...)
 
     } catch (err) {
       setIsBooking(false);
