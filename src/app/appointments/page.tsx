@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Download, Info, CheckCircle2, Share2 } from 'lucide-react';
+import { Download, Info, CheckCircle2, Share2, RefreshCcw, XCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getUserAppointments, updateAppointmentStatus } from '@/actions/appointments';
 import { Appointment } from '@/types';
