@@ -48,15 +48,16 @@ export function BottomNav() {
       </div>
 
       {/* Desktop Left Sidebar */}
-      <div className="hidden md:flex flex-col fixed left-0 top-0 h-screen w-64 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 z-50 p-6">
-        <Link href="/home" className="flex items-center gap-3 mb-10 pl-2">
-          <div className="h-8 w-8 bg-primary text-white rounded-lg flex items-center justify-center font-black text-lg shadow-md shadow-primary/30">
-            D
+      <div className="hidden md:flex flex-col fixed left-0 top-0 h-screen w-64 bg-slate-50 border-r border-slate-200/50 z-50 p-6">
+        <Link href="/home" className="flex items-center gap-3 mb-8 pl-2">
+          <div className="h-8 w-8 bg-blue-600 text-white rounded-lg flex items-center justify-center font-black text-lg shadow-md shadow-blue-600/30">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>
           </div>
-          <span className="font-black text-xl tracking-tight text-slate-800 dark:text-slate-100">DOCTIVO</span>
+          <span className="font-black text-2xl tracking-tight text-slate-800">doctivo.</span>
         </Link>
         
-        <div className="flex flex-col gap-2 flex-1">
+        <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 pl-4">Menu</div>
+        <div className="flex flex-col gap-1.5 flex-1">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
             return (
@@ -64,10 +65,10 @@ export function BottomNav() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-4 px-4 py-3 rounded-xl transition-all font-bold text-sm",
+                  "flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all font-bold text-[13px]",
                   isActive 
-                    ? "bg-primary text-white dark:bg-primary dark:text-white shadow-md shadow-primary/20" 
-                    : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-900"
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20" 
+                    : "text-slate-500 hover:text-slate-900 hover:bg-slate-200/50"
                 )}
               >
                 <item.icon className={cn("h-5 w-5", isActive && "stroke-[2.5px]")} />
@@ -77,26 +78,17 @@ export function BottomNav() {
           })}
         </div>
 
-        {/* Promotional Card */}
-        <div className="mt-auto bg-blue-50 dark:bg-slate-900 rounded-2xl p-5 border border-blue-100 dark:border-slate-800 relative overflow-hidden">
-          <div className="flex items-start gap-3 mb-3">
-            <div className="h-8 w-8 bg-blue-100 dark:bg-blue-900/40 rounded-lg flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
-              <Users className="h-4 w-4" />
-            </div>
-            <h4 className="font-black text-sm text-slate-900 dark:text-slate-100 leading-tight">
-              Better care,<br/>better life
-            </h4>
+        {/* User Profile Card */}
+        <Link href="/profile" className="mt-auto bg-white rounded-2xl p-3 border border-slate-200 flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors">
+          <div className="h-10 w-10 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 shrink-0 border border-blue-100">
+            <Users className="h-5 w-5" />
           </div>
-          <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-4 leading-relaxed">
-            Manage your appointments and health in one place.
-          </p>
-          <Link href="/about">
-            <button className="w-full bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-blue-600 dark:text-blue-400 font-bold text-xs py-2.5 rounded-xl transition-colors flex justify-center items-center gap-1 shadow-sm border border-slate-100 dark:border-slate-700">
-              Learn More
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-            </button>
-          </Link>
-        </div>
+          <div className="flex-1 overflow-hidden">
+            <h4 className="font-black text-sm text-slate-800 truncate">Rohan Sharma</h4>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider truncate">User Account</p>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400"><path d="m9 18 6-6-6-6"/></svg>
+        </Link>
       </div>
     </>
   );

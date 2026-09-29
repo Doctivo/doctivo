@@ -295,108 +295,176 @@ const quickActions = [
       </div>
 
       {/* ---------------- DESKTOP VIEW ---------------- */}
-      <div className="hidden md:flex flex-col max-w-6xl mx-auto p-10">
+      <div className="hidden md:block max-w-7xl mx-auto p-10 pt-6 space-y-8">
         
-        {/* Desktop Carousel Banner replacing static Welcome banner */}
-        <Banner homeBanners={homeBanners} user={user} isMobile={false} />
-
-        {/* Quick Actions Grid */}
-        <div className="grid grid-cols-4 gap-6 mb-8">
-          {isLoadingData ? (
-            [0, 1, 2, 3].map((i) => (
-              <div key={`sk-dt-${i}`} className="rounded-[2rem] p-6 h-full flex flex-col items-center justify-center text-center animate-pulse border border-slate-100/50 bg-slate-100 dark:bg-slate-800">
-                <div className="h-16 w-16 rounded-2xl mb-4 bg-slate-200 dark:bg-slate-700"></div>
-                <div className="h-4 w-20 bg-slate-200 dark:bg-slate-700 rounded mb-2"></div>
-                <div className="h-3 w-24 bg-slate-200 dark:bg-slate-700 rounded mb-6"></div>
-                <div className="h-10 w-10 mt-auto rounded-full bg-slate-200 dark:bg-slate-700"></div>
+        {/* Desktop Hero Banner */}
+        <div className="w-full bg-[#1A56DB] rounded-[2.5rem] p-12 px-16 flex items-center justify-between shadow-xl shadow-blue-600/20 relative overflow-hidden">
+          <div className="w-2/3 space-y-5 relative z-10">
+            <h1 className="text-4xl font-black text-white tracking-tight">Book Appointment</h1>
+            <p className="text-blue-100 font-medium max-w-lg leading-relaxed text-[15px]">
+              Thankyou For Visiting Our Appointment Booking App. Book verified specialist doctors and physiotherapists instantly.
+            </p>
+            <Link href="/doctors" className="inline-block mt-4 bg-white text-slate-900 px-8 py-3.5 rounded-full font-black text-sm hover:bg-slate-50 transition-all shadow-lg shadow-black/10 hover:scale-105">
+              Book Now
+            </Link>
+          </div>
+          <div className="relative z-10 shrink-0">
+            <div className="w-[140px] h-[140px] bg-white rounded-3xl shadow-2xl flex items-center justify-center p-6 transform rotate-3 hover:rotate-0 transition-transform relative">
+              <Calendar className="w-full h-full text-[#1A56DB]" strokeWidth={1.5} />
+              <div className="absolute top-0 right-0 bg-[#10B981] w-8 h-8 rounded-full border-4 border-white flex items-center justify-center translate-x-2 -translate-y-2">
+                <span className="text-white text-xl font-black mb-[2px] leading-none">+</span>
               </div>
-            ))
-          ) : (
-            quickActions.map((action, idx) => {
-              const Content = (
-              <div className={cn("rounded-[2rem] p-6 h-full flex flex-col items-center justify-center text-center cursor-pointer border border-transparent hover:shadow-lg transition-all group relative overflow-hidden", action.bgColor, "dark:bg-opacity-20")}>
-                <div className={cn("h-16 w-16 rounded-2xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110 bg-white shadow-sm dark:bg-slate-800")}>
-                  <action.icon className={cn("h-7 w-7", action.textColor)} strokeWidth={2.5} />
-                </div>
-                <h3 className={cn("font-bold text-sm mb-2", action.textColor)}>{action.label}</h3>
-                <p className={cn("text-xs mb-6 leading-relaxed px-2 opacity-80", action.textColor)}>{action.desc}</p>
-                
-                <div className={cn("h-10 w-10 mt-auto rounded-full flex items-center justify-center transition-transform group-hover:scale-110 bg-white shadow-sm dark:bg-slate-800", action.textColor)}>
-                  <ArrowRight className="h-5 w-5" strokeWidth={2.5} />
-                </div>
+              <div className="absolute bottom-0 right-0 bg-[#1A56DB] w-12 h-12 rounded-full border-4 border-white flex items-center justify-center translate-x-2 translate-y-2">
+                <Clock className="w-6 h-6 text-white" strokeWidth={2.5} />
               </div>
-            );
-            return action.href ? (
-              <Link key={idx} href={action.href} className="h-full">{Content}</Link>
-            ) : (
-              <div key={idx} onClick={action.onClick} className="h-full">{Content}</div>
-            );
-          })
-          )}
+            </div>
+          </div>
+          {/* Pagination dots below banner (decorative) */}
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
+            <div className="w-6 h-1.5 bg-white rounded-full"></div>
+            <div className="w-1.5 h-1.5 bg-white/40 rounded-full"></div>
+            <div className="w-1.5 h-1.5 bg-white/40 rounded-full"></div>
+          </div>
         </div>
 
-        {/* Lower Panels */}
-        <div className="grid grid-cols-3 gap-6">
-          {/* Upcoming Appointments */}
-          <div className="col-span-2 bg-white dark:bg-slate-900 rounded-[2rem] p-8 border border-slate-100 dark:border-slate-800 shadow-sm">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="font-bold text-lg text-slate-900 dark:text-slate-100">{t("Upcoming Appointments")}</h3>
-              <Link href="/appointments" className="text-blue-600 dark:text-blue-400 text-sm font-bold hover:underline">{t("View all")}</Link>
-            </div>
-            
-            {/* Sample Appointment Card (In real app, map over actual upcoming appointments) */}
-            <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/50 group hover:border-blue-100 transition-colors cursor-pointer">
-              <div className="flex items-center gap-5">
-                <div className="text-center bg-white dark:bg-slate-800 p-2 rounded-xl border border-slate-100 dark:border-slate-700 w-14 shadow-sm">
-                  <p className="text-[9px] font-black text-blue-600 dark:text-blue-400 uppercase">MAY</p>
-                  <p className="text-lg font-black text-slate-900 dark:text-slate-100 leading-tight">20</p>
-                  <p className="text-[9px] font-bold text-slate-400 uppercase">TUE</p>
-                </div>
-                <div className="h-12 w-12 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden flex items-center justify-center">
-                  <UserCircle className="h-8 w-8 text-slate-400" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100 mb-0.5">Physiotherapy Session</h4>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Dr. Neha Verma</p>
-                  <p className="text-[10px] text-slate-400 dark:text-slate-500 flex items-center mt-1 font-medium">
-                    <MapPin className="h-3 w-3 mr-1" /> Care Wellness Clinic
-                  </p>
+        {/* Quick Actions Grid */}
+        <div className="grid grid-cols-4 gap-6">
+          <Link href="/doctors" className="bg-white rounded-[2rem] p-8 h-[200px] flex flex-col items-center justify-center text-center border border-slate-200 hover:shadow-xl hover:-translate-y-1 transition-all group">
+            <div className="h-16 w-16 bg-[#EFF6FF] text-[#1A56DB] rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+              <div className="relative">
+                <Calendar className="h-7 w-7" strokeWidth={2.5} />
+                <div className="absolute -top-1 -right-1 bg-[#1A56DB] rounded-full p-0.5 border-2 border-[#EFF6FF]">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                 </div>
               </div>
-              <div className="flex items-center gap-6 pr-2">
-                <p className="font-bold text-slate-600 dark:text-slate-300 text-xs flex items-center bg-white dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-100 dark:border-slate-700 shadow-sm">
-                  <Clock className="h-3.5 w-3.5 mr-1.5 text-slate-400"/> 10:30 AM
-                </p>
-                <span className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-[10px] font-black px-2.5 py-1 rounded-md uppercase tracking-wide">
-                  Confirmed
-                </span>
-                <ChevronRight className="h-5 w-5 text-slate-300 group-hover:text-blue-500 transition-colors" />
+            </div>
+            <h3 className="font-black text-[13px] uppercase tracking-wider text-[#1E293B] mb-2">Book Appointment</h3>
+            <p className="text-xs font-medium text-slate-500">Schedule visit with top doctors</p>
+          </Link>
+
+          <Link href="/appointments" className="bg-white rounded-[2rem] p-8 h-[200px] flex flex-col items-center justify-center text-center border border-slate-200 hover:shadow-xl hover:-translate-y-1 transition-all group">
+            <div className="h-16 w-16 bg-[#EFF6FF] text-[#1A56DB] rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+              <div className="relative">
+                <Calendar className="h-7 w-7" strokeWidth={2.5} />
+                <div className="absolute -top-1 -right-1 bg-[#10B981] rounded-full p-0.5 border-2 border-[#EFF6FF]">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
               </div>
             </div>
-            
-            {/* If no appointments: 
-            <div className="flex flex-col items-center justify-center py-10 text-slate-400">
-              <Calendar className="h-10 w-10 mb-3 opacity-20" />
-              <p className="text-sm font-medium">No upcoming appointments</p>
-            </div> */}
+            <h3 className="font-black text-[13px] uppercase tracking-wider text-[#1E293B] mb-2">My Appointment</h3>
+            <p className="text-xs font-medium text-slate-500">Check upcoming & past visits</p>
+          </Link>
+
+          <div onClick={() => setIsPhysioOpen(true)} className="bg-white rounded-[2rem] p-8 h-[200px] flex flex-col items-center justify-center text-center border border-slate-200 hover:shadow-xl hover:-translate-y-1 transition-all group cursor-pointer">
+            <div className="h-16 w-16 bg-[#EFF6FF] text-[#1A56DB] rounded-full flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+            </div>
+            <h3 className="font-black text-[13px] uppercase tracking-wider text-[#1E293B] mb-2">Physiotherapist</h3>
+            <p className="text-xs font-medium text-slate-500">Specialized muscle & rehab care</p>
           </div>
 
-          {/* Support Panel */}
-          <div className="col-span-1 bg-white dark:bg-slate-900 rounded-[2rem] p-8 border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col">
-            <h3 className="font-bold text-lg text-slate-900 dark:text-slate-100 mb-6">{t("Need Help?")}</h3>
-            <div className="flex gap-4">
-              <div className="h-12 w-12 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center shrink-0 border border-blue-100/50 dark:border-blue-800/30">
-                <Headset className="h-6 w-6" strokeWidth={2} />
+          <Link href="/patient/dashboard" className="bg-white rounded-[2rem] p-8 h-[200px] flex flex-col items-center justify-center text-center border border-slate-200 hover:shadow-xl hover:-translate-y-1 transition-all group">
+            <div className="h-16 w-16 bg-[#EFF6FF] text-[#1A56DB] rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+              <div className="relative">
+                <Users className="h-7 w-7" strokeWidth={2.5} />
+                <div className="absolute -top-1 -right-1 bg-[#1A56DB] rounded-full p-0.5 border-2 border-[#EFF6FF]">
+                  <span className="text-white text-[10px] font-black leading-none block">+</span>
+                </div>
               </div>
-              <div className="flex-1 flex flex-col">
-                <p className="text-sm font-medium text-slate-600 dark:text-slate-400 leading-relaxed mb-6">
-                  {t("Our support team is available 24/7 to help you.")}
-                </p>
-                <Link href="/support" className="mt-auto">
-                  <Button variant="outline" className="w-full justify-between h-12 rounded-xl font-bold border-slate-200 dark:border-slate-700 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors">
-                    {t("Contact Support")} <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </Link>
+            </div>
+            <h3 className="font-black text-[13px] uppercase tracking-wider text-[#1E293B] mb-2">Add Patient</h3>
+            <p className="text-xs font-medium text-slate-500">Add family members or records</p>
+          </Link>
+        </div>
+
+        {/* Lower Grid: Recent Appointments & Overview */}
+        <div className="grid grid-cols-3 gap-6 pt-2">
+          {/* Left: Recent Appointments */}
+          <div className="col-span-2 bg-white rounded-[2rem] p-8 border border-slate-200 shadow-sm flex flex-col">
+            <div className="flex justify-between items-start mb-8">
+              <div>
+                <h3 className="font-black text-[17px] text-slate-800 tracking-tight">My Recent Appointments</h3>
+                <p className="text-xs font-medium text-slate-400 mt-1">Overview of your scheduled consultations</p>
+              </div>
+              <Link href="/appointments" className="text-blue-600 font-bold text-[13px] hover:underline flex items-center">
+                View All <ArrowRight className="h-3.5 w-3.5 ml-1" />
+              </Link>
+            </div>
+            
+            <div className="overflow-x-auto flex-1">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="border-b border-slate-100">
+                    <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Doctor / Specialist</th>
+                    <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Category</th>
+                    <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Date & Time</th>
+                    <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right pr-4">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100/50">
+                  <tr>
+                    <td className="py-5 font-black text-sm text-slate-800">Dr. Alex Smith</td>
+                    <td className="py-5 font-medium text-[13px] text-slate-500">Physiotherapy Rehabilitation</td>
+                    <td className="py-5 font-medium text-[13px] text-slate-500">Today, 10:30 AM</td>
+                    <td className="py-5 text-right">
+                      <span className="bg-[#DCFCE7] text-[#166534] px-4 py-1.5 rounded-full text-[11px] font-bold">Confirmed</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="py-5 font-black text-sm text-slate-800">Dr. Neha Verma</td>
+                    <td className="py-5 font-medium text-[13px] text-slate-500">Spine Specialist</td>
+                    <td className="py-5 font-medium text-[13px] text-slate-500">Tomorrow, 02:15 PM</td>
+                    <td className="py-5 text-right">
+                      <span className="bg-[#FEF9C3] text-[#A16207] px-4 py-1.5 rounded-full text-[11px] font-bold">Pending</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="py-5 font-black text-sm text-slate-800">Dr. R. K. Kapoor</td>
+                    <td className="py-5 font-medium text-[13px] text-slate-500">General Health Checkup</td>
+                    <td className="py-5 font-medium text-[13px] text-slate-500">04 Oct 2026, 11:00 AM</td>
+                    <td className="py-5 text-right">
+                      <span className="bg-[#EFF6FF] text-[#1D4ED8] px-4 py-1.5 rounded-full text-[11px] font-bold">Upcoming</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Right: Overview */}
+          <div className="col-span-1 bg-white rounded-[2rem] p-8 border border-slate-200 shadow-sm flex flex-col">
+            <h3 className="font-black text-[17px] text-slate-800 tracking-tight">Overview</h3>
+            <p className="text-xs font-medium text-slate-400 mt-1 mb-8">Your healthcare activity</p>
+
+            <div className="space-y-4 flex-1">
+              <div className="bg-slate-50 border border-slate-100 rounded-[1.25rem] p-5 flex items-center gap-5">
+                <div className="h-12 w-12 bg-[#EFF6FF] text-[#3B82F6] rounded-xl flex items-center justify-center shrink-0">
+                  <Calendar className="h-5 w-5" strokeWidth={2.5} />
+                </div>
+                <div>
+                  <h4 className="font-black text-[17px] text-slate-800 leading-tight">03</h4>
+                  <p className="text-[11px] font-medium text-slate-500 mt-0.5">Active Bookings</p>
+                </div>
+              </div>
+
+              <div className="bg-slate-50 border border-slate-100 rounded-[1.25rem] p-5 flex items-center gap-5">
+                <div className="h-12 w-12 bg-[#DCFCE7] text-[#22C55E] rounded-xl flex items-center justify-center shrink-0">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                </div>
+                <div>
+                  <h4 className="font-black text-[17px] text-slate-800 leading-tight">12</h4>
+                  <p className="text-[11px] font-medium text-slate-500 mt-0.5">Completed Sessions</p>
+                </div>
+              </div>
+
+              <div className="bg-slate-50 border border-slate-100 rounded-[1.25rem] p-5 flex items-center gap-5">
+                <div className="h-12 w-12 bg-[#F3E8FF] text-[#A855F7] rounded-xl flex items-center justify-center shrink-0">
+                  <UserPlus className="h-5 w-5" strokeWidth={2.5} />
+                </div>
+                <div>
+                  <h4 className="font-black text-[17px] text-slate-800 leading-tight">02</h4>
+                  <p className="text-[11px] font-medium text-slate-500 mt-0.5">Saved Family Profiles</p>
+                </div>
               </div>
             </div>
           </div>
