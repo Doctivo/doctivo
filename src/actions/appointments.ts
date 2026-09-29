@@ -297,3 +297,73 @@ export async function rescheduleAppointment(appId: string, newDate: string, newT
     return { success: false, error: error.message || 'Failed to reschedule.' };
   }
 }
+
+/**
+ * Fetches the real-time queue status for a specific appointment ID.
+ * Calculates currently serving token, ahead count, and estimated time.
+ */
+export async function getLiveQueueStatus(appointmentId: string) {
+  try {
+    const { query } = await import('@/lib/db');
+    
+    // 1. Get the patient's appointment details
+    const appRes = await query('SELECT * FROM appointments WHERE appointment_id = $1', [appointmentId]);
+    if (appRes.rowCount === 0) return { success: false, error: 'Appointment not found' };
+    
+    const myApp = appRes.rows[0];
+    
+    // If it's cancelled or missed or pending payment, no queue tracking makes sense
+    if (['Cancelled', 'Missed', 'Pending_Payment'].includes(myApp.status)) {
+      return { success: false, error: `Queue tracking unavailable. Status: ${myApp.status}` };
+    }
+
+    // 2. Fetch all appointments for the SAME doctor on the SAME date to compute queue logic
+    const queueRes = await query(
+      "SELECT * FROM appointments WHERE doctor_id = $1 AND appointment_date = $2 AND status NOT IN ('Cancelled', 'Missed', 'Pending_Payment') ORDER BY token_number ASC",
+      [myApp.doctor_id, myApp.appointment_date]
+    );
+    
+    const allQueue = queueRes.rows;
+    
+    // 3. Find who is currently 'With Doctor'
+    const withDoctor = allQueue.find(a => a.status === 'With Doctor');
+    
+    // Find the latest 'Completed' if no one is 'With Doctor'
+    const completedList = allQueue.filter(a => a.status === 'Completed');
+    const lastCompleted = completedList.length > 0 ? completedList[completedList.length - 1] : null;
+
+    let currentServingToken = 0;
+    if (withDoctor) {
+      currentServingToken = withDoctor.token_number;
+    } else if (lastCompleted) {
+      currentServingToken = lastCompleted.token_number;
+    }
+    
+    // 4. Calculate people ahead
+    // People ahead are those who are 'Waiting' or 'Confirmed' and have a smaller token number than me
+    const peopleAhead = allQueue.filter(a => 
+      (a.status === 'Waiting' || a.status === 'Confirmed') && 
+      a.token_number < myApp.token_number
+    ).length;
+
+    // Wait time: 10 mins per person ahead
+    const avgConsultationMinutes = 10;
+    const estWaitMinutes = peopleAhead * avgConsultationMinutes;
+
+    return {
+      success: true,
+      data: {
+        myToken: myApp.token_number,
+        myStatus: myApp.status,
+        currentServingToken,
+        peopleAhead,
+        estWaitMinutes,
+        doctorName: myApp.doctor_name
+      }
+    };
+
+  } catch (err: any) {
+    logger.error('Queue Status Error:', err);
+    return { success: false, error: 'Failed to load queue status.' };
+  }
+}

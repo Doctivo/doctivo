@@ -402,11 +402,17 @@ export default function AppointmentsPage() {
                   <Button onClick={() => handleShare(selectedApp)} variant="outline" className="h-14 w-14 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-2xl shrink-0">
                     <Share2 className="h-5 w-5 text-slate-600 dark:text-slate-300" />
                   </Button>
-                  <Button onClick={() => handleDownloadPDF(selectedApp)} disabled={isDownloading} className="flex-1 h-14 bg-blue-600 font-black rounded-2xl gap-2">
+                  <Button onClick={() => handleDownloadPDF(selectedApp)} disabled={isDownloading} className="flex-1 h-14 bg-blue-600 hover:bg-blue-700 font-black rounded-2xl gap-2">
                     {isDownloading ? <Loader2 className="animate-spin h-5 w-5" /> : <Download className="h-5 w-5" />}
-                    Download Ticket
+                    Download
                   </Button>
                 </div>
+                {activeTab === 'Upcoming' && !['Cancelled', 'Completed', 'Pending_Payment'].includes(selectedApp.status) && (
+                  <Button onClick={() => router.push(`/queue/${selectedApp.id}`)} className="w-full h-14 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl gap-2 shadow-lg shadow-indigo-600/20">
+                    <Clock className="h-5 w-5" />
+                    Track Live Queue
+                  </Button>
+                )}
                 {activeTab === 'Upcoming' && selectedApp.status !== 'Cancelled' && selectedApp.status !== 'Completed' && selectedApp.status !== 'Pending_Payment' && (
                   <div className="flex gap-3">
                     <Button variant="outline" onClick={() => handleCancel(selectedApp.id)} disabled={isCancelling} className="flex-1 h-14 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/50 font-black rounded-2xl gap-2">

@@ -269,6 +269,34 @@ export function OPDQueueDashboard({ mode }: OPDQueueDashboardProps) {
     }
   };
 
+  const handleCallNextPatient = async () => {
+    try {
+      // 1. Mark current 'With Doctor' as 'Completed'
+      const currentApp = appointments.find(a => a.status === 'With Doctor');
+      if (currentApp) {
+        await updateAppointmentStatus(currentApp.id, 'Completed');
+      }
+
+      // 2. Find next 'Waiting' patient
+      const nextApp = appointments.find(a => a.status === 'Waiting'); 
+      
+      if (nextApp) {
+        await updateAppointmentStatus(nextApp.id, 'With Doctor');
+        toast({ title: 'Next Patient Called', description: `${nextApp.patientName} (Token ${nextApp.tokenNumber}) is now with doctor.` });
+      } else {
+        if (currentApp) {
+          toast({ title: 'Cabin Cleared', description: 'No waiting patients found in the queue.' });
+        } else {
+          toast({ title: 'Queue Empty', description: 'No waiting patients found in the queue.' });
+        }
+      }
+      
+      loadQueue();
+    } catch (e: any) {
+      toast({ variant: 'destructive', title: 'Error', description: e.message });
+    }
+  };
+
   const handleOpenOtpVerification = (appId: string) => {
     setOtpVerifyAppId(appId);
     setEnteredOtp('');
@@ -408,9 +436,15 @@ export function OPDQueueDashboard({ mode }: OPDQueueDashboardProps) {
 
       {/* OPD Queue List */}
       <section className="bg-white border border-slate-100 rounded-[2rem] shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/20">
-          <h2 className="text-lg font-black text-slate-800 tracking-tight">OPD Patient Queue Table</h2>
-          <Badge className="bg-blue-50 text-blue-600 border-none font-bold uppercase py-1 px-3">Today's List</Badge>
+        <div className="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-50/20">
+          <div>
+            <h2 className="text-lg font-black text-slate-800 tracking-tight">OPD Patient Queue Table</h2>
+            <Badge className="bg-blue-50 text-blue-600 border-none font-bold uppercase py-1 px-3 mt-2">Today's List</Badge>
+          </div>
+          <Button onClick={handleCallNextPatient} className="h-12 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl px-6 gap-2 shadow-lg shadow-indigo-600/20 w-full md:w-auto">
+            <UserCheck className="h-5 w-5" />
+            Call Next Patient
+          </Button>
         </div>
 
         <div className="overflow-x-auto">
