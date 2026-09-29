@@ -10,13 +10,13 @@ import { unstable_cache } from 'next/cache';
 const getCachedDoctors = unstable_cache(
   async (specialty?: string, searchQuery?: string) => DoctorService.getDoctors(specialty, searchQuery),
   ['doctors-list-cache'],
-  { revalidate: 60, tags: ['doctors'] }
+  { revalidate: 3600, tags: ['doctors'] } // Increased revalidate to 1 hour
 );
 
 const getCachedDoctorById = unstable_cache(
   async (id: string) => DoctorService.getDoctorById(id),
   ['doctor-by-id-cache'],
-  { revalidate: 60, tags: ['doctors'] }
+  { revalidate: 3600, tags: ['doctors'] }
 );
 
 const getCachedSpecialties = unstable_cache(

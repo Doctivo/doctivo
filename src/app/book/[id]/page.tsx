@@ -161,21 +161,32 @@ function BookingContent({ id }: { id: string }) {
     }
     
     try {
-      // 1. Create Cashfree order on backend
-      const resOrder = await fetch('/api/cashfree-order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          amount: doc?.fees || 0, // amount in rupees for Cashfree
-          customer_phone: patient?.phone || user?.phone || '9999999999',
-          customer_name: patient?.name || user?.name || 'Doctivo User'
-        }), 
-      });
-      const orderData = await resOrder.json();
+      const appData = {
+        id: `${Math.floor(100000 + Math.random() * 900000)}`,
+        doctorId: doc.id,
+        doctorName: doc.name,
+        patientId: user.id,
+        patientName: patient.name,
+        patientAge: patient.age,
+        patientGender: patient.gender,
+        patientBloodGroup: patient.blood_group,
+        patientType: patient.id === user.id ? 'Self' as const : 'Family_Member' as const,
+        date: selectedDate,
+        time: selectedSlot,
+        current_symptoms: [...selectedReasons, symptoms].filter(Boolean).join(', '),
+        consultation_fee_amount: doc.fees,
+        payment_status: 'Pending' as const,
+        payment_mode: 'Online_UPI' as const,
+        status: 'Pending_Payment' as const
+      };
 
-      if (!resOrder.ok) {
+      // 1. Create Pending Order securely in Database + Cashfree
+      const { createPendingBooking } = await import('@/actions/appointments');
+      const resOrder = await createPendingBooking(appData as any);
+
+      if (!resOrder.success) {
         setIsBooking(false);
-        toast({ variant: 'destructive', title: 'Order Failed', description: orderData.error || 'Failed to create payment order.', duration: 9999999 });
+        toast({ variant: 'destructive', title: 'Booking Failed', description: resOrder.error || 'Failed to create payment order.', duration: 9999999 });
         return;
       }
 
@@ -199,30 +210,16 @@ function BookingContent({ id }: { id: string }) {
       }
 
       const cashfree = await (window as any).Cashfree({
-        mode: orderData.environment || 'sandbox'
+        mode: resOrder.environment || 'sandbox'
       });
 
-      // For Mobile Webviews (Android/iOS apps), _modal often renders poorly.
-      // We use _self to redirect the whole page, which requires saving the booking state.
-      localStorage.setItem('pending_cashfree_booking', JSON.stringify({
-        doc,
-        user,
-        patient,
-        selectedDate,
-        selectedSlot,
-        selectedReasons,
-        symptoms,
-        orderId: orderData.order_id
-      }));
-
       let checkoutOptions = {
-        paymentSessionId: orderData.payment_session_id,
-        redirectTarget: "_self", // Switch to _self to ensure perfect mobile view
+        paymentSessionId: resOrder.payment_session_id,
+        redirectTarget: "_self", // Redirects entirely for mobile safety
       };
 
       cashfree.checkout(checkoutOptions);
-      // We don't await .then() because the page will redirect to Cashfree.
-      // When done, Cashfree redirects to the return_url (/verify?order_id=...)
+      // Wait for Cashfree redirect to /verify page
 
     } catch (err) {
       setIsBooking(false);

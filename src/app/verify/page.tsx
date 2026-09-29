@@ -24,90 +24,26 @@ export default function VerifyPage() {
 
     const verifyPayment = async () => {
       try {
-        const pendingBookingStr = localStorage.getItem('pending_cashfree_booking');
-        if (!pendingBookingStr) {
-          setStatus('error');
-          setMessage('Booking data lost. If money was deducted, please contact support.');
-          return;
-        }
+        // 1. Verify with Backend which now handles EVERYTHING
+        const { verifyAndConfirmBooking } = await import('@/actions/appointments');
+        const res = await verifyAndConfirmBooking(orderId);
 
-        const pendingBooking = JSON.parse(pendingBookingStr);
-
-        // Make sure order IDs match to prevent cross-contamination
-        if (pendingBooking.orderId !== orderId) {
-          setStatus('error');
-          setMessage('Invalid order session.');
-          return;
-        }
-
-        // 1. Verify with Cashfree API
-        const verifyRes = await fetch('/api/cashfree-verify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ order_id: orderId })
-        });
-        const verifyData = await verifyRes.json();
-
-        if (!verifyData.success) {
-          setStatus('error');
-          setMessage('Payment could not be verified or failed.');
-          setTimeout(() => {
-            router.replace(`/book/${pendingBooking.doc.id}`);
-          }, 3000);
-          return;
-        }
-
-        // 2. Create the appointment
-        const { doc, user, patient, selectedDate, selectedSlot, selectedReasons, symptoms } = pendingBooking;
-        
-        const appData = {
-          id: `${Math.floor(100000 + Math.random() * 900000)}`,
-          doctorId: doc.id,
-          doctorName: doc.name,
-          patientId: user.id,
-          patientName: patient.name,
-          patientAge: patient.age,
-          patientGender: patient.gender,
-          patientBloodGroup: patient.blood_group,
-          patientType: patient.id === user.id ? 'Self' as const : 'Family_Member' as const,
-          date: selectedDate,
-          time: selectedSlot,
-          current_symptoms: [...selectedReasons, symptoms].filter(Boolean).join(', '),
-          consultation_fee_amount: doc.fees,
-          payment_status: 'Paid' as const,
-          payment_mode: 'Online_UPI' as const,
-          transaction_id: orderId, // using orderId so refunds work
-          status: 'Confirmed' as const
-        };
-
-        const res = await createAppointment(appData as any);
-        
         if (res.success) {
-          addAppointmentStore({...appData, tokenNumber: res.data.token_number, visit_otp: res.data.visit_otp} as any);
-          localStorage.removeItem('pending_cashfree_booking');
+          // Add to local store if needed for instant UI update
+          if (res.data) {
+            addAppointmentStore(res.data as any);
+          }
           setStatus('success');
           setMessage('Booking Confirmed! Redirecting...');
           
           setTimeout(() => {
-            router.replace(`/success?id=${appData.id}`);
+            router.replace(`/success?id=${res.appointmentId}`);
           }, 1500);
         } else {
           setStatus('error');
-          setMessage(res.error || 'Failed to secure the booking. Your money will be refunded automatically.');
-          // Automated refund API logic is already active in backend if there is a slot conflict, 
-          // or we can explicitly call /api/refund-payment here, but the backend doesn't save the appointment anyway.
-          // Let's call refund explicitly if it failed due to slot conflict
-          if (res.error && res.error.includes('already booked')) {
-            await fetch('/api/refund-payment', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ transactionId: orderId })
-            });
-            setMessage('Slot was already booked. Your payment has been refunded.');
-          }
-
+          setMessage(res.error || 'Payment verification failed.');
           setTimeout(() => {
-            router.replace(`/book/${pendingBooking.doc.id}`);
+            router.replace('/appointments'); // Redirect to appointments list where they can retry or see the failure
           }, 4000);
         }
       } catch (err) {

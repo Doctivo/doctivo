@@ -2,6 +2,7 @@
 
 import { query } from '@/lib/db';
 import { cookies } from 'next/headers';
+import { revalidateTag } from 'next/cache';
 import { requireRoles } from '@/lib/auth/session';
 import { ROLES } from '@/lib/auth/roles';
 import { AdminService } from '@/server/services/admin.service';
@@ -402,6 +403,7 @@ export async function addDoctorDirectly(data: any) {
   await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
   try {
     await AdminService.addDoctorDirectly(data);
+    revalidateTag('doctors');
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -412,6 +414,7 @@ export async function updateDoctor(doctorId: string, data: any) {
   await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
   try {
     await AdminService.updateDoctor(doctorId, data);
+    revalidateTag('doctors');
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -422,6 +425,7 @@ export async function deleteDoctor(doctorId: string) {
   await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN]);
   try {
     await AdminService.deleteDoctor(doctorId);
+    revalidateTag('doctors');
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };

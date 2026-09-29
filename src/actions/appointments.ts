@@ -43,6 +43,140 @@ export async function createAppointment(app: Partial<Appointment>, razorpayData?
 }
 
 /**
+ * Creates a Pending Appointment in DB and generates Cashfree Payment Session
+ */
+export async function createPendingBooking(app: Partial<Appointment>) {
+  const session = await requireAuth();
+  
+  if (session.userId !== app.patientId && session.role !== ROLES.ADMIN && session.role !== ROLES.SUPER_ADMIN) {
+    throw new Error('Forbidden: You can only book appointments for your own account.');
+  }
+
+  try {
+    const appId = process.env.NEXT_PUBLIC_CASHFREE_APP_ID;
+    const secretKey = process.env.CASHFREE_SECRET_KEY;
+    const env = process.env.CASHFREE_ENVIRONMENT || 'SANDBOX';
+    const baseUrl = env === 'PRODUCTION' ? 'https://api.cashfree.com/pg' : 'https://sandbox.cashfree.com/pg';
+    
+    // Generate order ID
+    const orderId = `order_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+    
+    // 1. Force the appointment to Pending_Payment status so it reserves the slot in the DB immediately
+    app.transaction_id = orderId;
+    app.status = 'Pending_Payment' as any;
+    app.payment_status = 'Pending';
+    
+    // 2. Save to DB first
+    const dbResult = await AppointmentService.createAppointment(app);
+    
+    // 3. Create Cashfree Order
+    const response = await fetch(`${baseUrl}/orders`, {
+      method: 'POST',
+      headers: {
+        'x-client-id': appId || '',
+        'x-client-secret': secretKey || '',
+        'x-api-version': '2023-08-01',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        order_amount: app.consultation_fee_amount,
+        order_currency: 'INR',
+        order_id: orderId,
+        customer_details: {
+          customer_id: session.userId,
+          customer_phone: '9999999999', // Cashfree requires a phone, we'll use placeholder or real if passed
+          customer_name: app.patientName || 'Doctivo User'
+        },
+        order_meta: {
+          return_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://doctivo.in'}/verify?order_id=${orderId}`
+        }
+      })
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      // If Cashfree fails, we delete the pending appointment to free the slot
+      await AppointmentService.updateAppointmentStatus(app.id!, 'Cancelled');
+      throw new Error(data.message || 'Failed to create payment gateway session');
+    }
+
+    return { 
+      success: true, 
+      payment_session_id: data.payment_session_id, 
+      order_id: orderId, 
+      environment: env === 'PRODUCTION' ? 'production' : 'sandbox',
+      dbData: dbResult
+    };
+
+  } catch (error: any) {
+    if (error.message.includes('already booked')) {
+      return { success: false, error: 'This time slot is already booked. Please choose another slot.' };
+    }
+    return { success: false, error: error.message || 'Internal Server Error' };
+  }
+}
+
+/**
+ * Server-side verification of payment which marks the DB appointment as Confirmed
+ */
+export async function verifyAndConfirmBooking(orderId: string) {
+  try {
+    // 1. We must find the appointment by transaction_id = orderId
+    const { query } = await import('@/lib/db');
+    const appRes = await query('SELECT * FROM appointments WHERE transaction_id = $1', [orderId]);
+    
+    if (appRes.rowCount === 0) {
+      return { success: false, error: 'No matching appointment found in database for this order.' };
+    }
+    
+    const appointment = appRes.rows[0];
+    
+    if (appointment.status === 'Confirmed' && appointment.payment_status === 'Paid') {
+      // Already confirmed (maybe via webhook or refresh)
+      return { success: true, appointmentId: appointment.appointment_id, data: appointment };
+    }
+
+    const appId = process.env.NEXT_PUBLIC_CASHFREE_APP_ID;
+    const secretKey = process.env.CASHFREE_SECRET_KEY;
+    const env = process.env.CASHFREE_ENVIRONMENT || 'SANDBOX';
+    const baseUrl = env === 'PRODUCTION' ? 'https://api.cashfree.com/pg' : 'https://sandbox.cashfree.com/pg';
+
+    const response = await fetch(`${baseUrl}/orders/${orderId}/payments`, {
+      method: 'GET',
+      headers: {
+        'x-client-id': appId || '',
+        'x-client-secret': secretKey || '',
+        'x-api-version': '2023-08-01',
+        'Accept': 'application/json'
+      }
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      return { success: false, error: 'Could not fetch payment details from gateway.' };
+    }
+
+    const successfulPayment = data.find((payment: any) => payment.payment_status === 'SUCCESS');
+
+    if (successfulPayment) {
+      // Payment verified on server! Update DB to Confirmed
+      await query("UPDATE appointments SET status = 'Confirmed', payment_status = 'Paid' WHERE appointment_id = $1", [appointment.appointment_id]);
+      
+      // Fetch the updated appointment to return token_number and visit_otp
+      const updatedRes = await query('SELECT * FROM appointments WHERE appointment_id = $1', [appointment.appointment_id]);
+      return { success: true, appointmentId: appointment.appointment_id, data: updatedRes.rows[0] };
+    } else {
+      // Payment failed or incomplete
+      return { success: false, error: 'Payment has not been completed successfully.', appointmentId: appointment.appointment_id };
+    }
+
+  } catch (error: any) {
+    return { success: false, error: error.message || 'Internal verification error' };
+  }
+}
+
+/**
  * Fetches all appointments for a specific user and auto-handles missed visits
  */
 export async function getUserAppointments(userId: string) {
