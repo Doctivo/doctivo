@@ -137,7 +137,13 @@ function BookingContent({ id }: { id: string }) {
 
   const processPayment = async () => {
     const patient = patients.find(p => p.id === selectedPatientId) || user;
-    if (!patient?.age || !patient?.gender) {
+    
+    if (!doc || !user || !patient) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Missing doctor or patient information.' });
+      return;
+    }
+
+    if (!patient.age || !patient.gender) {
       setShowCompleteProfile(true);
       return;
     }
@@ -163,18 +169,18 @@ function BookingContent({ id }: { id: string }) {
     try {
       const appData = {
         id: `${Math.floor(100000 + Math.random() * 900000)}`,
-        doctorId: doc.id,
-        doctorName: doc.name,
-        patientId: user.id,
-        patientName: patient.name,
-        patientAge: patient.age,
-        patientGender: patient.gender,
-        patientBloodGroup: patient.blood_group,
-        patientType: patient.id === user.id ? 'Self' as const : 'Family_Member' as const,
+        doctorId: doc!.id,
+        doctorName: doc!.name,
+        patientId: user!.id,
+        patientName: patient!.name,
+        patientAge: patient!.age,
+        patientGender: patient!.gender,
+        patientBloodGroup: patient!.blood_group,
+        patientType: patient!.id === user!.id ? 'Self' as const : 'Family_Member' as const,
         date: selectedDate,
         time: selectedSlot,
         current_symptoms: [...selectedReasons, symptoms].filter(Boolean).join(', '),
-        consultation_fee_amount: doc.fees,
+        consultation_fee_amount: doc!.fees,
         payment_status: 'Pending' as const,
         payment_mode: 'Online_UPI' as const,
         status: 'Pending_Payment' as const
@@ -215,7 +221,7 @@ function BookingContent({ id }: { id: string }) {
 
       let checkoutOptions = {
         paymentSessionId: resOrder.payment_session_id,
-        redirectTarget: "_self", // Redirects entirely for mobile safety
+        redirectTarget: "_modal", // Opens Cashfree's mobile-responsive modal overlay
       };
 
       cashfree.checkout(checkoutOptions);
