@@ -7,7 +7,9 @@ import { createAppointment } from '@/actions/appointments';
 import { useToast } from '@/hooks/use-toast';
 import { useStore } from '@/lib/store';
 
-export default function VerifyPage() {
+import { Suspense } from 'react';
+
+function VerifyContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -102,5 +104,17 @@ export default function VerifyPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function VerifyPage() {
+  return (
+    <Suspense fallback={
+      <div className="mobile-container flex flex-col items-center justify-center min-h-[70vh] p-6 bg-slate-50 dark:bg-slate-950">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    }>
+      <VerifyContent />
+    </Suspense>
   );
 }
