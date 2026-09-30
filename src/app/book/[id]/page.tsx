@@ -221,7 +221,7 @@ function BookingContent({ id }: { id: string }) {
 
       let checkoutOptions = {
         paymentSessionId: resOrder.payment_session_id,
-        redirectTarget: "_modal", // Opens Cashfree's mobile-responsive modal overlay
+        redirectTarget: "_self", // Opens Cashfree natively in the same tab to survive background browser kills
       };
 
       cashfree.checkout(checkoutOptions);
