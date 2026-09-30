@@ -214,11 +214,6 @@ export default function AppointmentsPage() {
     return dateStr;
   };
 
-  const getQueuePosition = (app: any, index: number) => {
-    if (app.status === 'Waiting') return index + 1;
-    if (app.status === 'In Consultation') return 'NOW';
-    return index + 2; 
-  };
 
   if (!isAuthenticated) return null;
 
@@ -286,7 +281,6 @@ export default function AppointmentsPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {currentList.map((app, index) => {
-              const pos = getQueuePosition(app, index);
               const isMissed = app.status === 'Missed';
               
               return (
@@ -338,14 +332,16 @@ export default function AppointmentsPage() {
                       <div className="bg-slate-900 dark:bg-slate-950 text-white rounded-[2rem] p-6 shadow-xl">
                         <div className="flex items-center divide-x divide-slate-800">
                           <div className="flex-1 text-center pr-4">
-                            <p className="text-2xl font-black text-blue-400">{typeof pos === 'number' ? `#${pos}` : pos}</p>
-                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Your Turn</p>
+                            <p className="text-2xl font-black text-blue-400">#{app.tokenNumber || '-'}</p>
+                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Your Token</p>
                           </div>
-                          <div className="flex-1 text-center pl-4">
-                            <p className="text-2xl font-black text-blue-400">
-                              {pos === 'NOW' ? '0' : (typeof pos === 'number' ? (pos * 12) : 15)}m
-                            </p>
-                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Wait Time</p>
+                          <div className="flex-1 text-center pl-4 cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => { e.stopPropagation(); router.push(`/queue/${app.id}`); }}>
+                            <div className="flex flex-col items-center justify-center space-y-1">
+                              <div className="h-8 w-8 bg-indigo-500/20 rounded-full flex items-center justify-center">
+                                <Clock className="h-4 w-4 text-indigo-400" />
+                              </div>
+                              <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Track Live</p>
+                            </div>
                           </div>
                         </div>
                       </div>
