@@ -157,7 +157,9 @@ export async function verifyAndConfirmBooking(orderId: string) {
       return { success: false, error: 'Could not fetch payment details from gateway.' };
     }
 
+    // Cashfree returns an array of payment attempts
     const successfulPayment = data.find((payment: any) => payment.payment_status === 'SUCCESS');
+    const pendingPayment = data.find((payment: any) => payment.payment_status === 'PENDING');
 
     if (successfulPayment) {
       // Payment verified on server! Update DB to Confirmed
@@ -166,9 +168,14 @@ export async function verifyAndConfirmBooking(orderId: string) {
       // Fetch the updated appointment to return token_number and visit_otp
       const updatedRes = await query('SELECT * FROM appointments WHERE appointment_id = $1', [appointment.appointment_id]);
       return { success: true, appointmentId: appointment.appointment_id, data: updatedRes.rows[0] };
+    } else if (pendingPayment) {
+      // Payment is caught in a processing state
+      return { success: false, error: 'Payment is currently pending at the bank. Please check back in a few minutes.', appointmentId: appointment.appointment_id };
     } else {
-      // Payment failed or incomplete
-      return { success: false, error: 'Payment has not been completed successfully.', appointmentId: appointment.appointment_id };
+      // Payment failed, user dropped, or no attempts were made. 
+      // Release the slot so other patients can book it.
+      await query("UPDATE appointments SET status = 'Cancelled' WHERE appointment_id = $1", [appointment.appointment_id]);
+      return { success: false, error: 'Payment failed or was cancelled. The booking slot has been released.', appointmentId: appointment.appointment_id };
     }
 
   } catch (error: any) {
