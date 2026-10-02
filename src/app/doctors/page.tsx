@@ -119,10 +119,23 @@ function DoctorsContent() {
     }
   };
 
+  const globalDoctors = useStore(state => state.doctors);
+  const setGlobalDoctors = useStore(state => state.setDoctors);
+
   const loadDoctors = async () => {
+    // If we have cached doctors and we are loading 'All', show them instantly!
+    if (selectedCategory === 'All' && globalDoctors && globalDoctors.length > 0) {
+      setDoctors(globalDoctors);
+      setIsLoading(false);
+      // Optional: Background re-fetch to keep it fresh without blocking UI
+      getDoctors().then(setGlobalDoctors);
+      return;
+    }
+
     setIsLoading(true);
     const data = await getDoctors(selectedCategory === 'All' ? undefined : selectedCategory);
     setDoctors(data);
+    if (selectedCategory === 'All') setGlobalDoctors(data);
     setIsLoading(false);
   };
 

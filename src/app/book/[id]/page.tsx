@@ -3,6 +3,7 @@
 import { use, useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
+import Script from 'next/script';
 import { 
   ChevronLeft, Star, MapPin, Loader2, Award, Briefcase, Info 
 } from 'lucide-react';
@@ -78,7 +79,6 @@ function BookingContent({ id }: { id: string }) {
   const [isFetching, setIsFetching] = useState(true);
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
-  const [bypassTxnId, setBypassTxnId] = useState<string | null>(null);
   const [conflictData, setConflictData] = useState<{ txnId: string, errorMsg: string } | null>(null);
 
   const getNext7Days = () => {
@@ -101,7 +101,12 @@ function BookingContent({ id }: { id: string }) {
 
   useEffect(() => {
     async function load() {
-      const data = await getDoctorById(id);
+      // Run queries in parallel for ms latency
+      const [data, booked] = await Promise.all([
+        getDoctorById(id),
+        getBookedSlots(id, selectedDate)
+      ]);
+      
       setDoc(data);
       
       const isRestricted = data?.stops_booking_at_midnight === true;
@@ -116,7 +121,6 @@ function BookingContent({ id }: { id: string }) {
         return; // Effect will re-run with the updated selectedDate
       }
 
-      const booked = await getBookedSlots(id, selectedDate);
       setBookedSlots(booked);
       setIsFetching(false);
     }
@@ -149,11 +153,6 @@ function BookingContent({ id }: { id: string }) {
     }
     setIsBooking(true);
 
-    if (bypassTxnId) {
-      finalizeBooking(bypassTxnId, patient);
-      return;
-    }
-    
     if (rescheduleAppId) {
       const res = await rescheduleAppointment(rescheduleAppId, selectedDate, selectedSlot);
       if (res.success) {
@@ -196,22 +195,9 @@ function BookingContent({ id }: { id: string }) {
         return;
       }
 
-      // Load Cashfree SDK Script
-      const resScript = await new Promise((resolve) => {
-        if ((window as any).Cashfree) {
-          resolve(true);
-          return;
-        }
-        const script = document.createElement('script');
-        script.src = 'https://sdk.cashfree.com/js/v3/cashfree.js';
-        script.onload = () => resolve(true);
-        script.onerror = () => resolve(false);
-        document.body.appendChild(script);
-      });
-
-      if (!resScript || !(window as any).Cashfree) {
+      if (!(window as any).Cashfree) {
         setIsBooking(false);
-        toast({ variant: 'destructive', title: 'Script Error', description: 'Failed to load Cashfree checkout script.', duration: 9999999 });
+        toast({ variant: 'destructive', title: 'Script Error', description: 'Failed to load Cashfree checkout script. Please refresh the page.', duration: 9999999 });
         return;
       }
 
@@ -230,43 +216,6 @@ function BookingContent({ id }: { id: string }) {
     } catch (err) {
       setIsBooking(false);
       toast({ variant: 'destructive', title: 'Error', description: 'An unexpected error occurred during payment initiation.', duration: 9999999 });
-    }
-  };
-
-  const finalizeBooking = async (txnId: string, patient: any, razorpayData?: any) => {
-    if (!doc || !user) return;
-    const appData = {
-      id: `${Math.floor(100000 + Math.random() * 900000)}`,
-      doctorId: doc.id,
-      doctorName: doc.name,
-      patientId: user.id,
-      patientName: patient.name,
-      patientAge: patient.age,
-      patientGender: patient.gender,
-      patientBloodGroup: patient.blood_group,
-      patientType: patient.id === user.id ? 'Self' as const : 'Family_Member' as const,
-      date: selectedDate,
-      time: selectedSlot,
-      current_symptoms: [...selectedReasons, symptoms].filter(Boolean).join(', '),
-      consultation_fee_amount: doc.fees,
-      payment_status: 'Paid' as const,
-      payment_mode: 'Online_UPI' as const,
-      transaction_id: txnId,
-      status: 'Confirmed' as const
-    };
-    const res = await createAppointment(appData, razorpayData);
-    if (res.success) {
-      addAppointmentStore({...appData, tokenNumber: res.data.token_number, visit_otp: res.data.visit_otp} as any);
-      router.push(`/success?id=${appData.id}`);
-      setBypassTxnId(null);
-    } else {
-      setIsBooking(false);
-      setBypassTxnId(txnId);
-      if (res.error && res.error.includes('already booked')) {
-        setConflictData({ txnId, errorMsg: res.error });
-      } else {
-        toast({ variant: 'destructive', title: 'Booking Failed', description: res.error + ' (Your payment was successful. Please select a different slot and try again to book without paying.)', duration: 9999999 });
-      }
     }
   };
 
@@ -314,6 +263,7 @@ function BookingContent({ id }: { id: string }) {
 
   return (
     <div className="mobile-container pb-60 bg-slate-50 dark:bg-slate-950 min-h-screen overflow-y-auto">
+      <Script src="https://sdk.cashfree.com/js/v3/cashfree.js" strategy="afterInteractive" />
       <div className="bg-white dark:bg-slate-900 p-4 flex items-center justify-between sticky top-0 z-30 border-b border-border shadow-sm">
         <div className="flex items-center gap-4">
           <button onClick={() => router.back()} className="h-10 w-10 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-full border border-border">
@@ -463,7 +413,12 @@ function BookingContent({ id }: { id: string }) {
               <div className="flex-1"><span className="text-slate-400 text-[10px] font-black block">FEES</span><span className="text-slate-900 dark:text-slate-100 text-2xl font-black">₹{doc.fees}</span></div>
             )}
             <Button className="h-14 px-10 text-lg font-black bg-primary rounded-2xl flex-1" disabled={!selectedSlot || !selectedPatientId || !acceptedTerms || isBooking} onClick={processPayment}>
-              {isBooking ? <Loader2 className="animate-spin" /> : rescheduleAppId ? 'Confirm Reschedule' : 'Confirm Booking'}
+              {isBooking ? (
+                <div className="flex items-center space-x-2">
+                  <Loader2 className="animate-spin h-5 w-5" />
+                  <span>Redirecting...</span>
+                </div>
+              ) : rescheduleAppId ? 'Confirm Reschedule' : 'Confirm Booking'}
             </Button>
           </div>
         </div>
