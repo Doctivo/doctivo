@@ -4,6 +4,9 @@ import { isBefore, parseISO, startOfDay } from 'date-fns';
 
 export const AppointmentRepository = {
   async create(app: Partial<Appointment>): Promise<any> {
+    // 1. Pre-sweep abandoned slots before checking availability
+    await query("UPDATE appointments SET status = 'Cancelled' WHERE status = 'Pending_Payment' AND created_at < NOW() - INTERVAL '15 minutes'");
+
     const existingCheck = await query(
       "SELECT appointment_id FROM appointments WHERE doctor_id = $1 AND appointment_date = $2 AND appointment_time_slot = $3 AND status != 'Cancelled'",
       [app.doctorId, app.date, app.time]
@@ -121,6 +124,14 @@ export const AppointmentRepository = {
   },
 
   async getBookedSlots(doctorId: string, date: string): Promise<string[]> {
+    // 1. Lazy Sweep: Auto-cancel any abandoned 'Pending_Payment' slots older than 15 minutes
+    // This ensures if a user drops off at the payment gateway and never returns to verify, 
+    // the slot is automatically freed up for others.
+    await query(
+      "UPDATE appointments SET status = 'Cancelled' WHERE status = 'Pending_Payment' AND created_at < NOW() - INTERVAL '15 minutes'"
+    );
+
+    // 2. Fetch the actually confirmed and active slots
     const result = await query(
       "SELECT appointment_time_slot as time FROM appointments WHERE doctor_id = $1 AND appointment_date = $2 AND status != 'Cancelled'",
       [doctorId, date]
