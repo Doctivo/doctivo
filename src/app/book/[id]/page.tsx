@@ -231,7 +231,6 @@ function BookingContent({ id }: { id: string }) {
       if (res.ok && data.success) {
         toast({ title: 'Refund Successful', description: 'Your money has been refunded to your source account.', duration: 9999999 });
         setConflictData(null);
-        setBypassTxnId(null);
       } else {
         toast({ variant: 'destructive', title: 'Refund Failed', description: data.error || 'Failed to process refund.', duration: 9999999 });
       }
