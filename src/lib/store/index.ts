@@ -37,6 +37,9 @@ interface AppState {
   addAppointment: (appointment: Appointment) => void;
   login: (phone: string, id: string) => void;
   logout: () => void;
+  
+  doctors: import('@/types').Doctor[];
+  setDoctors: (doctors: import('@/types').Doctor[]) => void;
 }
 
 export const useStore = create<AppState>()(
@@ -54,10 +57,12 @@ export const useStore = create<AppState>()(
       language: null,
       isAuthenticated: false,
       _hasHydrated: false,
+      doctors: [],
 
       setUser: (user) => set({ user }),
       setAdmin: (admin) => set({ admin }),
       setIsAuthenticated: (isAuthenticated) => set({ isAuthenticated }),
+      setDoctors: (doctors) => set({ doctors }),
       setPatients: (patients) => set({ patients }),
       setAppointments: (appointments) => set({ appointments }),
       setHomeCardImages: (homeCardImages) => set({ homeCardImages }),
