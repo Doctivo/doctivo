@@ -140,9 +140,13 @@ export const AppointmentRepository = {
   },
 
   async reschedule(appId: string, newDate: string, newTime: string): Promise<void> {
-    const app = await query("SELECT doctor_id FROM appointments WHERE appointment_id = $1", [appId]);
+    const app = await query("SELECT doctor_id, status FROM appointments WHERE appointment_id = $1", [appId]);
     if (!app.rows.length) throw new Error('Appointment not found');
-    const doctorId = app.rows[0].doctor_id;
+    
+    const { doctor_id: doctorId, status } = app.rows[0];
+    if (status !== 'Confirmed') {
+      throw new Error(`Appointments with status '${status}' cannot be rescheduled.`);
+    }
 
     const existingCheck = await query(
       "SELECT appointment_id FROM appointments WHERE doctor_id = $1 AND appointment_date = $2 AND appointment_time_slot = $3 AND status != 'Cancelled'",

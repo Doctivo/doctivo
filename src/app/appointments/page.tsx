@@ -409,7 +409,7 @@ export default function AppointmentsPage() {
                     Track Live Queue
                   </Button>
                 )}
-                {activeTab === 'Upcoming' && selectedApp.status !== 'Cancelled' && selectedApp.status !== 'Completed' && selectedApp.status !== 'Pending_Payment' && (
+                {activeTab === 'Upcoming' && selectedApp.status === 'Confirmed' && (
                   <div className="flex gap-3">
                     <Button variant="outline" onClick={() => handleCancel(selectedApp.id)} disabled={isCancelling} className="flex-1 h-14 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/50 font-black rounded-2xl gap-2">
                       {isCancelling ? <Loader2 className="animate-spin h-5 w-5" /> : 'Cancel'}
