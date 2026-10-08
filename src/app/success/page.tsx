@@ -201,6 +201,9 @@ function SuccessContent() {
         </div>
 
         <div className="mt-6 mb-8 space-y-4">
+          <a href={`intent://success?id=${appointment.id}#Intent;scheme=doctivo;package=com.doctivo.doctivo_webview;end`} className="w-full flex items-center justify-center h-14 text-lg font-black bg-emerald-600 text-white rounded-[2rem] shadow-2xl hover:bg-emerald-700 transition-all">
+            Open in Doctivo App 📱
+          </a>
           <Button className="w-full h-14 text-lg font-black bg-primary rounded-[2rem] shadow-2xl hover:bg-blue-700 transition-all" onClick={() => router.push('/appointments')}>Track Live Queue</Button>
           <Button variant="ghost" className="w-full h-12 text-slate-400 font-bold hover:bg-slate-200 rounded-xl transition-all" onClick={() => router.push('/home')}>Go Back Home</Button>
         </div>

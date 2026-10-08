@@ -206,7 +206,7 @@ export default function PatientsPage() {
   if (!hasHydrated) return <div className="flex justify-center items-center min-h-screen"><Loader2 className="animate-spin text-primary" /></div>;
 
   return (
-    <div className="mobile-container pb-24 bg-slate-50 dark:bg-slate-950 min-h-screen">
+    <div className="w-full max-w-6xl mx-auto px-4 md:px-8 pb-28 pt-4 md:pt-8 bg-slate-50 dark:bg-slate-950 min-h-screen">
       <div className="bg-white dark:bg-slate-900 sticky top-0 z-20 shadow-sm border-b border-border dark:border-slate-800">
         <div className="p-4 flex items-center gap-3">
           <div className="h-12 w-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden relative border border-border dark:border-slate-700 shadow-sm shrink-0">

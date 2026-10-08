@@ -377,7 +377,7 @@ function BookingContent({ id }: { id: string }) {
 
         <div className="space-y-4">
           <h3 className="text-xs font-black uppercase text-slate-400 px-1">Select Time Slot</h3>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
             {generateTimeSlots(doc.startTime, doc.endTime, doc.slotDuration, selectedDate).map(slot => {
               const isBooked = bookedSlots.includes(slot);
               return (
@@ -386,7 +386,7 @@ function BookingContent({ id }: { id: string }) {
                   disabled={isBooked}
                   onClick={() => setSelectedSlot(slot)} 
                   className={cn(
-                    "py-3 rounded-xl font-black text-[10px] border-2 transition-all", 
+                    "py-3 px-1 text-center rounded-xl font-black text-[10px] border-2 transition-all truncate", 
                     isBooked ? "bg-slate-100 dark:bg-slate-800 border-slate-100 dark:border-slate-800 text-slate-300 dark:text-slate-600 cursor-not-allowed line-through" :
                     selectedSlot === slot ? "bg-primary border-primary text-white" : "bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-800 dark:text-slate-200"
                   )}

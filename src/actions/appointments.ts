@@ -69,6 +69,15 @@ export async function createPendingBooking(app: Partial<Appointment>) {
     // 2. Save to DB first
     const dbResult = await AppointmentService.createAppointment(app);
     
+    const { query } = await import('@/lib/db');
+    let realPhone = '9999999999';
+    try {
+      const userRes = await query('SELECT phone_number FROM users WHERE user_id = $1', [session.userId]);
+      if (userRes.rowCount && userRes.rowCount > 0) {
+        realPhone = userRes.rows[0].phone_number;
+      }
+    } catch(e) {}
+
     // 3. Create Cashfree Order
     const response = await fetch(`${baseUrl}/orders`, {
       method: 'POST',
@@ -85,7 +94,7 @@ export async function createPendingBooking(app: Partial<Appointment>) {
         order_id: orderId,
         customer_details: {
           customer_id: session.userId,
-          customer_phone: '9999999999', // Cashfree requires a phone, we'll use placeholder or real if passed
+          customer_phone: realPhone, 
           customer_name: app.patientName || 'Doctivo User'
         },
         order_meta: {
@@ -142,7 +151,8 @@ export async function verifyAndConfirmBooking(orderId: string) {
     const env = process.env.CASHFREE_ENVIRONMENT || 'SANDBOX';
     const baseUrl = env === 'PRODUCTION' ? 'https://api.cashfree.com/pg' : 'https://sandbox.cashfree.com/pg';
 
-    const response = await fetch(`${baseUrl}/orders/${orderId}/payments`, {
+    // Fetch Order details from Cashfree
+    const orderRes = await fetch(`${baseUrl}/orders/${orderId}`, {
       method: 'GET',
       headers: {
         'x-client-id': appId || '',
@@ -152,30 +162,35 @@ export async function verifyAndConfirmBooking(orderId: string) {
       }
     });
 
-    const data = await response.json();
-    if (!response.ok) {
-      return { success: false, error: 'Could not fetch payment details from gateway.' };
-    }
+    const orderData = await orderRes.json();
 
-    // Cashfree returns an array of payment attempts
-    const successfulPayment = data.find((payment: any) => payment.payment_status === 'SUCCESS');
-    const pendingPayment = data.find((payment: any) => payment.payment_status === 'PENDING');
+    // Fetch Payments attempts from Cashfree
+    const paymentsRes = await fetch(`${baseUrl}/orders/${orderId}/payments`, {
+      method: 'GET',
+      headers: {
+        'x-client-id': appId || '',
+        'x-client-secret': secretKey || '',
+        'x-api-version': '2023-08-01',
+        'Accept': 'application/json'
+      }
+    });
 
-    if (successfulPayment) {
+    const paymentsData = await paymentsRes.json();
+
+    const isOrderPaid = orderRes.ok && orderData.order_status === 'PAID';
+    const isPaymentSuccess = Array.isArray(paymentsData) && paymentsData.some((p: any) => p.payment_status === 'SUCCESS');
+
+    if (isOrderPaid || isPaymentSuccess) {
       // Payment verified on server! Update DB to Confirmed
       await query("UPDATE appointments SET status = 'Confirmed', payment_status = 'Paid' WHERE appointment_id = $1", [appointment.appointment_id]);
       
       // Fetch the updated appointment to return token_number and visit_otp
       const updatedRes = await query('SELECT * FROM appointments WHERE appointment_id = $1', [appointment.appointment_id]);
       return { success: true, appointmentId: appointment.appointment_id, data: updatedRes.rows[0] };
-    } else if (pendingPayment) {
-      // Payment is caught in a processing state
-      return { success: false, error: 'Payment is currently pending at the bank. Please check back in a few minutes.', appointmentId: appointment.appointment_id };
     } else {
-      // Payment failed, user dropped, or no attempts were made. 
-      // Release the slot so other patients can book it.
-      await query("UPDATE appointments SET status = 'Cancelled' WHERE appointment_id = $1", [appointment.appointment_id]);
-      return { success: false, error: 'Payment failed or was cancelled. The booking slot has been released.', appointmentId: appointment.appointment_id };
+      // Payment NOT successful. Ensure DB status is NOT Paid.
+      await query("UPDATE appointments SET status = 'Cancelled', payment_status = 'Failed' WHERE appointment_id = $1", [appointment.appointment_id]);
+      return { success: false, error: 'Payment was not completed or failed verification.', appointmentId: appointment.appointment_id };
     }
 
   } catch (error: any) {

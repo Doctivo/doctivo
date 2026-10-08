@@ -38,9 +38,17 @@ function VerifyContent() {
           setStatus('success');
           setMessage('Booking Confirmed! Redirecting...');
           
+          // Trigger Android Intent URI to launch Doctivo App
+          try {
+            window.location.href = `intent://success?id=${res.appointmentId}#Intent;scheme=doctivo;package=com.doctivo.doctivo_webview;end`;
+          } catch (e) {
+            try { window.location.href = `doctivo://success?id=${res.appointmentId}`; } catch (err) {}
+          }
+
+          // Fallback to web success page after 2.5s if app is not installed or on web
           setTimeout(() => {
             router.replace(`/success?id=${res.appointmentId}`);
-          }, 1500);
+          }, 2500);
         } else {
           setStatus('error');
           setMessage(res.error || 'Payment verification failed.');

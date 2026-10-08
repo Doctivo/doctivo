@@ -329,101 +329,93 @@ const quickActions = [
 
         {/* Quick Actions Grid */}
         <div className="grid grid-cols-4 gap-6">
-          <Link href="/doctors" className="bg-white rounded-[2rem] p-8 h-[200px] flex flex-col items-center justify-center text-center border border-slate-200 hover:shadow-xl hover:-translate-y-1 transition-all group">
-            <div className="h-16 w-16 bg-[#EFF6FF] text-[#1A56DB] rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+          <Link href="/doctors" className="bg-white dark:bg-slate-900 rounded-[2rem] p-8 h-[200px] flex flex-col items-center justify-center text-center border border-slate-200 dark:border-slate-800 hover:shadow-xl hover:-translate-y-1 transition-all group">
+            <div className="h-16 w-16 bg-[#EFF6FF] dark:bg-blue-950/50 text-[#1A56DB] dark:text-blue-400 rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
               <div className="relative">
                 <Calendar className="h-7 w-7" strokeWidth={2.5} />
-                <div className="absolute -top-1 -right-1 bg-[#1A56DB] rounded-full p-0.5 border-2 border-[#EFF6FF]">
+                <div className="absolute -top-1 -right-1 bg-[#1A56DB] rounded-full p-0.5 border-2 border-[#EFF6FF] dark:border-blue-950">
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                 </div>
               </div>
             </div>
-            <h3 className="font-black text-[13px] uppercase tracking-wider text-[#1E293B] mb-2">Book Appointment</h3>
-            <p className="text-xs font-medium text-slate-500">Schedule visit with top doctors</p>
+            <h3 className="font-black text-[13px] uppercase tracking-wider text-[#1E293B] dark:text-slate-100 mb-2">{t("Book Appointment")}</h3>
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{t("Schedule visit with top doctors")}</p>
           </Link>
 
-          <Link href="/appointments" className="bg-white rounded-[2rem] p-8 h-[200px] flex flex-col items-center justify-center text-center border border-slate-200 hover:shadow-xl hover:-translate-y-1 transition-all group">
-            <div className="h-16 w-16 bg-[#EFF6FF] text-[#1A56DB] rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+          <Link href="/appointments" className="bg-white dark:bg-slate-900 rounded-[2rem] p-8 h-[200px] flex flex-col items-center justify-center text-center border border-slate-200 dark:border-slate-800 hover:shadow-xl hover:-translate-y-1 transition-all group">
+            <div className="h-16 w-16 bg-[#EFF6FF] dark:bg-blue-950/50 text-[#1A56DB] dark:text-blue-400 rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
               <div className="relative">
                 <Calendar className="h-7 w-7" strokeWidth={2.5} />
-                <div className="absolute -top-1 -right-1 bg-[#10B981] rounded-full p-0.5 border-2 border-[#EFF6FF]">
+                <div className="absolute -top-1 -right-1 bg-[#10B981] rounded-full p-0.5 border-2 border-[#EFF6FF] dark:border-blue-950">
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                 </div>
               </div>
             </div>
-            <h3 className="font-black text-[13px] uppercase tracking-wider text-[#1E293B] mb-2">My Appointment</h3>
-            <p className="text-xs font-medium text-slate-500">Check upcoming & past visits</p>
+            <h3 className="font-black text-[13px] uppercase tracking-wider text-[#1E293B] dark:text-slate-100 mb-2">{t("My Appointment")}</h3>
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{t("Check upcoming & past visits")}</p>
           </Link>
 
-          <div onClick={() => setIsPhysioOpen(true)} className="bg-white rounded-[2rem] p-8 h-[200px] flex flex-col items-center justify-center text-center border border-slate-200 hover:shadow-xl hover:-translate-y-1 transition-all group cursor-pointer">
-            <div className="h-16 w-16 bg-[#EFF6FF] text-[#1A56DB] rounded-full flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+          <div onClick={() => setIsPhysioOpen(true)} className="bg-white dark:bg-slate-900 rounded-[2rem] p-8 h-[200px] flex flex-col items-center justify-center text-center border border-slate-200 dark:border-slate-800 hover:shadow-xl hover:-translate-y-1 transition-all group cursor-pointer">
+            <div className="h-16 w-16 bg-[#EFF6FF] dark:bg-blue-950/50 text-[#1A56DB] dark:text-blue-400 rounded-full flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
             </div>
-            <h3 className="font-black text-[13px] uppercase tracking-wider text-[#1E293B] mb-2">Physiotherapist</h3>
-            <p className="text-xs font-medium text-slate-500">Specialized muscle & rehab care</p>
+            <h3 className="font-black text-[13px] uppercase tracking-wider text-[#1E293B] dark:text-slate-100 mb-2">{t("Physiotherapist")}</h3>
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{t("Specialized muscle & rehab care")}</p>
           </div>
 
-          <Link href="/patient/dashboard" className="bg-white rounded-[2rem] p-8 h-[200px] flex flex-col items-center justify-center text-center border border-slate-200 hover:shadow-xl hover:-translate-y-1 transition-all group">
-            <div className="h-16 w-16 bg-[#EFF6FF] text-[#1A56DB] rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+          <Link href="/patient/dashboard" className="bg-white dark:bg-slate-900 rounded-[2rem] p-8 h-[200px] flex flex-col items-center justify-center text-center border border-slate-200 dark:border-slate-800 hover:shadow-xl hover:-translate-y-1 transition-all group">
+            <div className="h-16 w-16 bg-[#EFF6FF] dark:bg-blue-950/50 text-[#1A56DB] dark:text-blue-400 rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
               <div className="relative">
                 <Users className="h-7 w-7" strokeWidth={2.5} />
-                <div className="absolute -top-1 -right-1 bg-[#1A56DB] rounded-full p-0.5 border-2 border-[#EFF6FF]">
+                <div className="absolute -top-1 -right-1 bg-[#1A56DB] rounded-full p-0.5 border-2 border-[#EFF6FF] dark:border-blue-950">
                   <span className="text-white text-[10px] font-black leading-none block">+</span>
                 </div>
               </div>
             </div>
-            <h3 className="font-black text-[13px] uppercase tracking-wider text-[#1E293B] mb-2">Add Patient</h3>
-            <p className="text-xs font-medium text-slate-500">Add family members or records</p>
+            <h3 className="font-black text-[13px] uppercase tracking-wider text-[#1E293B] dark:text-slate-100 mb-2">{t("Add Patient")}</h3>
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{t("Add family members or records")}</p>
           </Link>
         </div>
 
         {/* Lower Grid: Recent Appointments & Overview */}
         <div className="grid grid-cols-3 gap-6 pt-2">
           {/* Left: Recent Appointments */}
-          <div className="col-span-2 bg-white rounded-[2rem] p-8 border border-slate-200 shadow-sm flex flex-col">
+          <div className="col-span-2 bg-white dark:bg-slate-900 rounded-[2rem] p-8 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col">
             <div className="flex justify-between items-start mb-8">
               <div>
-                <h3 className="font-black text-[17px] text-slate-800 tracking-tight">My Recent Appointments</h3>
-                <p className="text-xs font-medium text-slate-400 mt-1">Overview of your scheduled consultations</p>
+                <h3 className="font-black text-[17px] text-slate-800 dark:text-slate-100 tracking-tight">{t("My Recent Appointments")}</h3>
+                <p className="text-xs font-medium text-slate-400 mt-1">{t("Overview of your scheduled consultations")}</p>
               </div>
-              <Link href="/appointments" className="text-blue-600 font-bold text-[13px] hover:underline flex items-center">
-                View All <ArrowRight className="h-3.5 w-3.5 ml-1" />
+              <Link href="/appointments" className="text-blue-600 dark:text-blue-400 font-bold text-[13px] hover:underline flex items-center">
+                {t("View All")} <ArrowRight className="h-3.5 w-3.5 ml-1" />
               </Link>
             </div>
             
             <div className="overflow-x-auto flex-1">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="border-b border-slate-100">
+                  <tr className="border-b border-slate-100 dark:border-slate-800">
                     <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Doctor / Specialist</th>
                     <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Category</th>
                     <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Date & Time</th>
                     <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right pr-4">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100/50">
+                <tbody className="divide-y divide-slate-100/50 dark:divide-slate-800/50">
                   <tr>
-                    <td className="py-5 font-black text-sm text-slate-800">Dr. Alex Smith</td>
-                    <td className="py-5 font-medium text-[13px] text-slate-500">Physiotherapy Rehabilitation</td>
-                    <td className="py-5 font-medium text-[13px] text-slate-500">Today, 10:30 AM</td>
+                    <td className="py-5 font-black text-sm text-slate-800 dark:text-slate-200">Dr. Smart OPD Specialist</td>
+                    <td className="py-5 font-medium text-[13px] text-slate-500 dark:text-slate-400">General Consultation</td>
+                    <td className="py-5 font-medium text-[13px] text-slate-500 dark:text-slate-400">Today, 10:30 AM</td>
                     <td className="py-5 text-right">
-                      <span className="bg-[#DCFCE7] text-[#166534] px-4 py-1.5 rounded-full text-[11px] font-bold">Confirmed</span>
+                      <span className="bg-[#DCFCE7] dark:bg-green-950/60 text-[#166534] dark:text-green-400 px-4 py-1.5 rounded-full text-[11px] font-bold">Confirmed</span>
                     </td>
                   </tr>
                   <tr>
-                    <td className="py-5 font-black text-sm text-slate-800">Dr. Neha Verma</td>
-                    <td className="py-5 font-medium text-[13px] text-slate-500">Spine Specialist</td>
-                    <td className="py-5 font-medium text-[13px] text-slate-500">Tomorrow, 02:15 PM</td>
+                    <td className="py-5 font-black text-sm text-slate-800 dark:text-slate-200">Dr. Physiotherapy Expert</td>
+                    <td className="py-5 font-medium text-[13px] text-slate-500 dark:text-slate-400">Muscle Rehab</td>
+                    <td className="py-5 font-medium text-[13px] text-slate-500 dark:text-slate-400">Tomorrow, 02:15 PM</td>
                     <td className="py-5 text-right">
-                      <span className="bg-[#FEF9C3] text-[#A16207] px-4 py-1.5 rounded-full text-[11px] font-bold">Pending</span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="py-5 font-black text-sm text-slate-800">Dr. R. K. Kapoor</td>
-                    <td className="py-5 font-medium text-[13px] text-slate-500">General Health Checkup</td>
-                    <td className="py-5 font-medium text-[13px] text-slate-500">04 Oct 2026, 11:00 AM</td>
-                    <td className="py-5 text-right">
-                      <span className="bg-[#EFF6FF] text-[#1D4ED8] px-4 py-1.5 rounded-full text-[11px] font-bold">Upcoming</span>
+                      <span className="bg-[#FEF9C3] dark:bg-yellow-950/60 text-[#A16207] dark:text-yellow-400 px-4 py-1.5 rounded-full text-[11px] font-bold">Pending</span>
                     </td>
                   </tr>
                 </tbody>
@@ -432,38 +424,38 @@ const quickActions = [
           </div>
 
           {/* Right: Overview */}
-          <div className="col-span-1 bg-white rounded-[2rem] p-8 border border-slate-200 shadow-sm flex flex-col">
-            <h3 className="font-black text-[17px] text-slate-800 tracking-tight">Overview</h3>
-            <p className="text-xs font-medium text-slate-400 mt-1 mb-8">Your healthcare activity</p>
+          <div className="col-span-1 bg-white dark:bg-slate-900 rounded-[2rem] p-8 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col">
+            <h3 className="font-black text-[17px] text-slate-800 dark:text-slate-100 tracking-tight">{t("Overview")}</h3>
+            <p className="text-xs font-medium text-slate-400 mt-1 mb-8">{t("Your healthcare activity")}</p>
 
             <div className="space-y-4 flex-1">
-              <div className="bg-slate-50 border border-slate-100 rounded-[1.25rem] p-5 flex items-center gap-5">
-                <div className="h-12 w-12 bg-[#EFF6FF] text-[#3B82F6] rounded-xl flex items-center justify-center shrink-0">
+              <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-[1.25rem] p-5 flex items-center gap-5">
+                <div className="h-12 w-12 bg-[#EFF6FF] dark:bg-blue-950 text-[#3B82F6] dark:text-blue-400 rounded-xl flex items-center justify-center shrink-0">
                   <Calendar className="h-5 w-5" strokeWidth={2.5} />
                 </div>
                 <div>
-                  <h4 className="font-black text-[17px] text-slate-800 leading-tight">03</h4>
-                  <p className="text-[11px] font-medium text-slate-500 mt-0.5">Active Bookings</p>
+                  <h4 className="font-black text-[17px] text-slate-800 dark:text-slate-100 leading-tight">Active</h4>
+                  <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">{t("Live OPD Token Queue")}</p>
                 </div>
               </div>
 
-              <div className="bg-slate-50 border border-slate-100 rounded-[1.25rem] p-5 flex items-center gap-5">
-                <div className="h-12 w-12 bg-[#DCFCE7] text-[#22C55E] rounded-xl flex items-center justify-center shrink-0">
+              <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-[1.25rem] p-5 flex items-center gap-5">
+                <div className="h-12 w-12 bg-[#DCFCE7] dark:bg-green-950 text-[#22C55E] dark:text-green-400 rounded-xl flex items-center justify-center shrink-0">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                 </div>
                 <div>
-                  <h4 className="font-black text-[17px] text-slate-800 leading-tight">12</h4>
-                  <p className="text-[11px] font-medium text-slate-500 mt-0.5">Completed Sessions</p>
+                  <h4 className="font-black text-[17px] text-slate-800 dark:text-slate-100 leading-tight">Verified</h4>
+                  <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">{t("Completed Visits")}</p>
                 </div>
               </div>
 
-              <div className="bg-slate-50 border border-slate-100 rounded-[1.25rem] p-5 flex items-center gap-5">
-                <div className="h-12 w-12 bg-[#F3E8FF] text-[#A855F7] rounded-xl flex items-center justify-center shrink-0">
+              <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-[1.25rem] p-5 flex items-center gap-5">
+                <div className="h-12 w-12 bg-[#F3E8FF] dark:bg-purple-950 text-[#A855F7] dark:text-purple-400 rounded-xl flex items-center justify-center shrink-0">
                   <UserPlus className="h-5 w-5" strokeWidth={2.5} />
                 </div>
                 <div>
-                  <h4 className="font-black text-[17px] text-slate-800 leading-tight">02</h4>
-                  <p className="text-[11px] font-medium text-slate-500 mt-0.5">Saved Family Profiles</p>
+                  <h4 className="font-black text-[17px] text-slate-800 dark:text-slate-100 leading-tight">Profiles</h4>
+                  <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">{t("Family Members")}</p>
                 </div>
               </div>
             </div>
@@ -495,14 +487,8 @@ function HomeSkeleton() {
       {/* Mobile Content Skeleton */}
       <div className="md:hidden p-6 space-y-6">
         <div className="w-full h-40 rounded-[2.5rem] bg-slate-200 dark:bg-slate-800" />
-        <div className="grid grid-cols-4 gap-4">
-          {[1,2,3,4].map(i => <div key={i} className="h-20 bg-slate-200 dark:bg-slate-800 rounded-[1.5rem]" />)}
-        </div>
-        <div className="space-y-4">
-          <div className="h-6 w-32 bg-slate-200 dark:bg-slate-800 rounded-md" />
-          <div className="grid grid-cols-2 gap-4">
-            {[1,2,3,4].map(i => <div key={i} className="h-32 bg-slate-200 dark:bg-slate-800 rounded-3xl" />)}
-          </div>
+        <div className="grid grid-cols-2 gap-4">
+          {[1,2,3,4].map(i => <div key={i} className="h-28 bg-slate-200 dark:bg-slate-800 rounded-[1.5rem]" />)}
         </div>
       </div>
 

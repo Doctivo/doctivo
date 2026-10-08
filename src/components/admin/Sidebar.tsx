@@ -4,11 +4,11 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { 
   LayoutDashboard, UserCheck, Calendar, 
-  Wallet, Download, LogOut, ShieldCheck, Settings 
+  Wallet, Download, LogOut, ShieldCheck, Settings, Menu, X 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useStore } from '@/lib/store';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { logoutSession } from '@/actions/auth';
 
 const ALL_MENU_ITEMS = [
@@ -27,6 +27,7 @@ export function AdminSidebar() {
   const admin = useStore(state => state.admin);
   const isAuthenticated = useStore(state => state.isAuthenticated);
   const logout = useStore(state => state.logout);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated || !admin) {
@@ -63,60 +64,88 @@ export function AdminSidebar() {
     }
   });
 
-  // Render logic without early returns to avoid hook mismatch
   const shouldShowSidebar = !!admin;
-
   if (!shouldShowSidebar) return null;
 
   return (
-    <div className={cn(
-      "w-64 bg-slate-900 h-screen sticky top-0 flex flex-col border-r border-slate-800 transition-all"
-    )}>
-      <div className="p-8">
+    <>
+      {/* Mobile Header Bar */}
+      <div className="md:hidden flex items-center justify-between p-4 bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-50">
         <div className="flex items-center space-x-3">
-          <div className="h-10 w-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-900/20">
-            <span className="text-white font-black text-xl">D</span>
-          </div>
-          <span className="text-white font-black text-xl tracking-tight">DOCTIVO <span className="text-[10px] bg-blue-600 px-1.5 py-0.5 rounded ml-1">ADMIN</span></span>
-        </div>
-      </div>
-
-      <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
-        {filteredMenuItems.map((item) => {
-          const isActive = pathname === item.href;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all font-medium text-sm group",
-                isActive 
-                  ? "bg-blue-600 text-white shadow-lg shadow-blue-600/10" 
-                  : "text-slate-400 hover:bg-slate-800 hover:text-white"
-              )}
-            >
-              <item.icon className={cn("h-5 w-5", isActive ? "text-white" : "text-slate-500 group-hover:text-white")} />
-              <span>{item.label}</span>
-            </Link>
-          );
-        })}
-      </nav>
-
-      <div className="p-6 border-t border-slate-800">
-        <div className="px-4 py-3 mb-4">
-          <p className="text-xs font-black text-slate-500 uppercase tracking-widest mb-1">Logged in as</p>
-          <p className="text-sm font-bold text-white truncate">{String(admin?.full_name || 'Administrator')}</p>
-          <p className="text-[10px] font-bold text-blue-400 uppercase tracking-tighter">{String(admin?.role || 'Admin')}</p>
+          <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center font-black text-sm text-white">D</div>
+          <span className="font-black text-lg">DOCTIVO ADMIN</span>
         </div>
         <button 
-          onClick={handleLogout}
-          className="flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:text-red-400 hover:bg-red-400/5 transition-all w-full text-sm font-medium"
+          onClick={() => setIsMobileOpen(!isMobileOpen)}
+          className="p-2 text-slate-400 hover:text-white rounded-lg focus:outline-none"
+          aria-label="Toggle Navigation"
         >
-          <LogOut className="h-5 w-5" />
-          <span>Logout</span>
+          {isMobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
       </div>
-    </div>
+
+      {/* Sidebar Container */}
+      <div className={cn(
+        "bg-slate-900 h-screen sticky top-0 flex flex-col border-r border-slate-800 transition-all z-40",
+        "w-64",
+        isMobileOpen ? "fixed inset-y-0 left-0 flex w-64 z-50" : "hidden md:flex"
+      )}>
+        <div className="p-8 hidden md:block">
+          <div className="flex items-center space-x-3">
+            <div className="h-10 w-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-900/20">
+              <span className="text-white font-black text-xl">D</span>
+            </div>
+            <span className="text-white font-black text-xl tracking-tight">DOCTIVO <span className="text-[10px] bg-blue-600 px-1.5 py-0.5 rounded ml-1">ADMIN</span></span>
+          </div>
+        </div>
+
+        <nav className="flex-1 px-4 space-y-1 overflow-y-auto mt-4 md:mt-0">
+          {filteredMenuItems.map((item) => {
+            const isActive = pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setIsMobileOpen(false)}
+                className={cn(
+                  "flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all font-medium text-sm group",
+                  isActive 
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/10" 
+                    : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                )}
+              >
+                <item.icon className={cn("h-5 w-5", isActive ? "text-white" : "text-slate-500 group-hover:text-white")} />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+
+        <div className="p-6 border-t border-slate-800">
+          <div className="px-4 py-3 mb-4">
+            <p className="text-xs font-black text-slate-500 uppercase tracking-widest mb-1">Logged in as</p>
+            <p className="text-sm font-bold text-white truncate">{String(admin?.full_name || 'Administrator')}</p>
+            <p className="text-[10px] font-bold text-blue-400 uppercase tracking-tighter">{String(admin?.role || 'Admin')}</p>
+          </div>
+          <button 
+            onClick={handleLogout}
+            className="flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:text-red-400 hover:bg-red-400/5 transition-all w-full text-sm font-medium"
+          >
+            <LogOut className="h-5 w-5" />
+            <span>Logout</span>
+          </button>
+        </div>
+      </div>
+      
+      {/* Mobile Backdrop Overlay */}
+      {isMobileOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 z-30 md:hidden"
+          onClick={() => setIsMobileOpen(false)}
+        />
+      )}
+    </>
   );
 }
+
 

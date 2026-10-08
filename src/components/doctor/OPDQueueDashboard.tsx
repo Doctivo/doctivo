@@ -343,13 +343,13 @@ export function OPDQueueDashboard({ mode }: OPDQueueDashboardProps) {
   const completed = appointments.filter(a => a.status === 'Completed').length;
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6 md:p-10">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-10 text-slate-900 dark:text-slate-100">
       <div className="max-w-7xl mx-auto space-y-8">
       {/* Header */}
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm">
         <div className="space-y-1">
-          <h1 className="text-3xl font-black text-slate-800 tracking-tight">OPD Queue Control</h1>
-          <p className="text-sm font-bold text-slate-400 uppercase tracking-wider">
+          <h1 className="text-3xl font-black text-slate-800 dark:text-slate-100 tracking-tight">OPD Queue Control</h1>
+          <p className="text-sm font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">
             Logged in as: {admin.full_name} ({admin.role})
           </p>
         </div>
@@ -359,7 +359,7 @@ export function OPDQueueDashboard({ mode }: OPDQueueDashboardProps) {
             <span className="text-xs font-black uppercase text-slate-400">Date:</span>
             <Input 
               type="date" 
-              className="w-[160px] h-12 bg-slate-50 border-none font-bold rounded-xl focus-visible:ring-0 focus-visible:ring-offset-0" 
+              className="w-[160px] h-12 bg-slate-50 dark:bg-slate-800 border-none font-bold rounded-xl focus-visible:ring-0 focus-visible:ring-offset-0 dark:text-slate-100" 
               value={selectedDate} 
               onChange={e => setSelectedDate(e.target.value)} 
             />
@@ -367,17 +367,17 @@ export function OPDQueueDashboard({ mode }: OPDQueueDashboardProps) {
 
           {/* Dropdown removed for Attendant as they are locked to their creator doctor */}
 
-          <Button onClick={loadQueue} variant="outline" size="icon" className="h-12 w-12 rounded-xl border-slate-200 hover:bg-slate-50">
-            <RefreshCw className={`h-5 w-5 text-slate-600 ${loading ? 'animate-spin' : ''}`} />
+          <Button onClick={loadQueue} variant="outline" size="icon" className="h-12 w-12 rounded-xl border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800">
+            <RefreshCw className={`h-5 w-5 text-slate-600 dark:text-slate-300 ${loading ? 'animate-spin' : ''}`} />
           </Button>
 
           {mode === 'Doctor' && (
-            <Button onClick={handleOpenSettings} variant="outline" className="h-12 rounded-xl border-slate-200 hover:bg-slate-50 font-bold px-4 flex items-center gap-2">
-              <Settings className="h-5 w-5 text-slate-600" /> Settings
+            <Button onClick={handleOpenSettings} variant="outline" className="h-12 rounded-xl border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 font-bold px-4 flex items-center gap-2 dark:text-slate-200">
+              <Settings className="h-5 w-5 text-slate-600 dark:text-slate-300" /> Settings
             </Button>
           )}
 
-          <Button onClick={handleLogout} variant="ghost" className="h-12 rounded-xl text-red-500 hover:text-red-600 hover:bg-red-50 font-bold px-4">
+          <Button onClick={handleLogout} variant="ghost" className="h-12 rounded-xl text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 font-bold px-4">
             <LogOut className="mr-2 h-5 w-5" /> Sign Out
           </Button>
         </div>
@@ -385,38 +385,38 @@ export function OPDQueueDashboard({ mode }: OPDQueueDashboardProps) {
 
       {/* Metrics Summary */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-6">
-        <Card className="border-none shadow-sm rounded-3xl bg-white overflow-hidden">
+        <Card className="border-none shadow-sm rounded-3xl bg-white dark:bg-slate-900 overflow-hidden">
           <div className="p-6 flex items-center space-x-4">
-            <div className="h-14 w-14 rounded-2xl bg-blue-50 text-blue-500 flex items-center justify-center">
+            <div className="h-14 w-14 rounded-2xl bg-blue-50 dark:bg-blue-950 text-blue-500 dark:text-blue-400 flex items-center justify-center">
               <Users className="h-7 w-7" />
             </div>
             <div>
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Booked</p>
-              <p className="text-2xl font-black text-slate-800">{totalBooked}</p>
+              <p className="text-2xl font-black text-slate-800 dark:text-slate-100">{totalBooked}</p>
             </div>
           </div>
         </Card>
 
-        <Card className="border-none shadow-sm rounded-3xl bg-white overflow-hidden">
+        <Card className="border-none shadow-sm rounded-3xl bg-white dark:bg-slate-900 overflow-hidden">
           <div className="p-6 flex items-center space-x-4">
-            <div className="h-14 w-14 rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center">
+            <div className="h-14 w-14 rounded-2xl bg-amber-50 dark:bg-amber-950 text-amber-500 dark:text-amber-400 flex items-center justify-center">
               <UserCheck className="h-7 w-7" />
             </div>
             <div>
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Waiting Room</p>
-              <p className="text-2xl font-black text-amber-600">{waitingRoom}</p>
+              <p className="text-2xl font-black text-amber-600 dark:text-amber-400">{waitingRoom}</p>
             </div>
           </div>
         </Card>
 
-        <Card className="border-none shadow-sm rounded-3xl bg-white overflow-hidden">
+        <Card className="border-none shadow-sm rounded-3xl bg-white dark:bg-slate-900 overflow-hidden">
           <div className="p-6 flex items-center space-x-4">
-            <div className="h-14 w-14 rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center">
+            <div className="h-14 w-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950 text-indigo-500 dark:text-indigo-400 flex items-center justify-center">
               <Stethoscope className="h-7 w-7" />
             </div>
             <div>
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">In Cabin</p>
-              <p className="text-2xl font-black text-indigo-600">{withDoctor}</p>
+              <p className="text-2xl font-black text-indigo-600 dark:text-indigo-400">{withDoctor}</p>
             </div>
           </div>
         </Card>
