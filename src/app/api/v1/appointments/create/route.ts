@@ -39,17 +39,18 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. Get User Details
-    const userRes = await query("SELECT phone_number FROM patients WHERE patient_id = $1", [decoded.userId]);
+    const userRes = await query("SELECT phone_number, full_name FROM patients WHERE patient_id = $1", [decoded.userId]);
     const phone = userRes.rows[0]?.phone_number || '9999999999';
+    const patientName = userRes.rows[0]?.full_name || 'Mobile User';
 
     // 4. Create Pending Appointment
     const appointmentId = `APT_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
     const amount = Number(doctor.fees || 0);
     
     await query(`
-      INSERT INTO appointments (appointment_id, patient_id, doctor_id, appointment_date, appointment_time_slot, status, amount, created_at)
-      VALUES ($1, $2, $3, $4, $5, 'Pending_Payment', $6, NOW())
-    `, [appointmentId, decoded.userId, doctorId, date, time, amount]);
+      INSERT INTO appointments (appointment_id, booked_by_user_id, doctor_id, doctor_name, patient_name, appointment_date, appointment_time_slot, status, consultation_fee_amount, created_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, 'Pending_Payment', $8, NOW())
+    `, [appointmentId, decoded.userId, doctorId, doctor.name, patientName, date, time, amount]);
 
     // 5. Create Cashfree Order
     const orderData = {
