@@ -55,23 +55,26 @@ export async function POST(req: NextRequest) {
     // 5. Create Cashfree Order
     const orderData = {
       order_id: appointmentId,
-      order_amount: amount,
+      order_amount: amount > 0 ? amount : 1, // Minimum 1 INR
       order_currency: "INR",
       customer_details: {
         customer_id: decoded.userId,
         customer_phone: phone.replace('+91', ''),
-        customer_name: "Doctivo App User"
+        customer_name: patientName
       },
       order_meta: {
         return_url: "https://doctivo.in/verify?order_id={order_id}" // Fallback, not really used in mobile
       }
     };
 
-    const cashfreeRes = await fetch("https://sandbox.cashfree.com/pg/orders", {
+    const isSandbox = process.env.CASHFREE_ENVIRONMENT !== "PRODUCTION";
+    const cashfreeUrl = isSandbox ? "https://sandbox.cashfree.com/pg/orders" : "https://api.cashfree.com/pg/orders";
+
+    const cashfreeRes = await fetch(cashfreeUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-client-id": process.env.CASHFREE_APP_ID || '',
+        "x-client-id": process.env.NEXT_PUBLIC_CASHFREE_APP_ID || process.env.CASHFREE_APP_ID || '',
         "x-client-secret": process.env.CASHFREE_SECRET_KEY || '',
         "x-api-version": "2023-08-01"
       },
