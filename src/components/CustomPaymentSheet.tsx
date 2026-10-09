@@ -127,151 +127,48 @@ export function CustomPaymentSheet({
     return await (window as any).Cashfree({ mode: environment || 'sandbox' });
   };
 
-  // 1. Direct UPI App Intent Trigger (PhonePe, GPay, Paytm, BHIM)
-  const handleDirectUpiApp = async (appCode: string) => {
-    setLoadingApp(appCode);
+  // Launch Cashfree Modal Checkout
+  const handleLaunchCheckout = async () => {
+    setLoadingApp('checkout');
     try {
       const cashfree = await getCashfreeInstance();
       if (!cashfree) { setLoadingApp(null); return; }
 
-      await cashfree.pay({
-        paymentMethod: {
-          upi: {
-            channel: 'intent',
-            upiApp: appCode // 'phonepe' | 'gpay' | 'paytm' | 'bhim'
-          }
-        },
-        paymentSessionId: paymentSessionId
+      await cashfree.checkout({
+        paymentSessionId: paymentSessionId,
+        redirectTarget: "_modal"
       });
     } catch (err: any) {
       debugPrintErr(err);
-      toast({ variant: 'destructive', title: 'Payment Failed', description: err.message || 'Could not launch UPI app.' });
+      toast({ variant: 'destructive', title: 'Payment Failed', description: err.message || 'Could not open payment gateway.' });
     } finally {
       setLoadingApp(null);
     }
+  };
+
+  // 1. Direct UPI App Intent Trigger (PhonePe, GPay, Paytm, BHIM)
+  const handleDirectUpiApp = async (appCode: string) => {
+    await handleLaunchCheckout();
   };
 
   // 2. Pay by UPI ID / Collect
   const handleUpiCollect = async () => {
-    if (!upiId || !upiId.includes('@')) {
-      toast({ variant: 'destructive', title: 'Invalid UPI ID', description: 'Please enter a valid UPI ID (e.g. user@ybl).' });
-      return;
-    }
-    setLoadingApp('collect');
-    try {
-      const cashfree = await getCashfreeInstance();
-      if (!cashfree) { setLoadingApp(null); return; }
-
-      await cashfree.pay({
-        paymentMethod: {
-          upi: {
-            channel: 'collect',
-            upiId: upiId.trim()
-          }
-        },
-        paymentSessionId: paymentSessionId
-      });
-
-      setView('collect_waiting');
-    } catch (err: any) {
-      debugPrintErr(err);
-      toast({ variant: 'destructive', title: 'Collect Failed', description: err.message || 'Failed to send collect request.' });
-    } finally {
-      setLoadingApp(null);
-    }
+    await handleLaunchCheckout();
   };
 
   // 3. Credit / Debit Card Pay
   const handleCardPay = async () => {
-    const cleanCard = cardNumber.replace(/\s+/g, '');
-    if (cleanCard.length < 15) {
-      toast({ variant: 'destructive', title: 'Invalid Card Number', description: 'Please enter a valid 16-digit card number.' });
-      return;
-    }
-    if (!cardExpiry || !cardExpiry.includes('/')) {
-      toast({ variant: 'destructive', title: 'Invalid Expiry', description: 'Please enter MM/YY expiry.' });
-      return;
-    }
-    const [mm, yy] = cardExpiry.split('/');
-    if (!mm || !yy || mm.length !== 2 || yy.length !== 2) {
-      toast({ variant: 'destructive', title: 'Invalid Expiry', description: 'Expiry must be in MM/YY format.' });
-      return;
-    }
-    if (!cardCvv || cardCvv.length < 3) {
-      toast({ variant: 'destructive', title: 'Invalid CVV', description: 'Please enter a 3 or 4 digit CVV.' });
-      return;
-    }
-
-    setLoadingApp('card');
-    try {
-      const cashfree = await getCashfreeInstance();
-      if (!cashfree) { setLoadingApp(null); return; }
-
-      await cashfree.pay({
-        paymentMethod: {
-          card: {
-            card_number: cleanCard,
-            card_holder_name: cardHolder.trim() || 'Cardholder',
-            card_expiry_mm: mm,
-            card_expiry_yy: yy,
-            card_cvv: cardCvv
-          }
-        },
-        paymentSessionId: paymentSessionId
-      });
-    } catch (err: any) {
-      debugPrintErr(err);
-      toast({ variant: 'destructive', title: 'Card Payment Failed', description: err.message || 'Failed to process card payment.' });
-    } finally {
-      setLoadingApp(null);
-    }
+    await handleLaunchCheckout();
   };
 
   // 4. Netbanking Pay
   const handleNetbankingPay = async (bankCode: string) => {
-    setLoadingApp(bankCode);
-    try {
-      const cashfree = await getCashfreeInstance();
-      if (!cashfree) { setLoadingApp(null); return; }
-
-      await cashfree.pay({
-        paymentMethod: {
-          netbanking: {
-            netbanking_bank_code: bankCode
-          }
-        },
-        paymentSessionId: paymentSessionId
-      });
-    } catch (err: any) {
-      debugPrintErr(err);
-      toast({ variant: 'destructive', title: 'Netbanking Failed', description: err.message || 'Failed to launch Netbanking.' });
-    } finally {
-      setLoadingApp(null);
-    }
+    await handleLaunchCheckout();
   };
 
   // 5. Wallet Pay
   const handleWalletPay = async (providerCode: string) => {
-    setLoadingApp(providerCode);
-    try {
-      const cashfree = await getCashfreeInstance();
-      if (!cashfree) { setLoadingApp(null); return; }
-
-      await cashfree.pay({
-        paymentMethod: {
-          app: {
-            channel: 'app',
-            provider: providerCode
-          }
-        },
-        paymentSessionId: paymentSessionId
-      });
-    } catch (err: any) {
-      debugPrintErr(err);
-      toast({ variant: 'destructive', title: 'Wallet Payment Failed', description: err.message || 'Failed to launch Wallet.' });
-    } finally {
-      setLoadingApp(null);
-    }
+    await handleLaunchCheckout();
   };
 
   const debugPrintErr = (err: any) => {
