@@ -127,6 +127,44 @@ export async function createPendingBooking(app: Partial<Appointment>) {
 }
 
 /**
+ * 100% Custom Server-to-Server Payment API call to Cashfree (0% Cashfree UI Interface)
+ */
+export async function payWithCashfreeS2S(paymentSessionId: string, paymentMethod: any) {
+  try {
+    const appId = process.env.NEXT_PUBLIC_CASHFREE_APP_ID;
+    const secretKey = process.env.CASHFREE_SECRET_KEY;
+    const env = process.env.CASHFREE_ENVIRONMENT || 'SANDBOX';
+    const baseUrl = env === 'PRODUCTION' ? 'https://api.cashfree.com/pg' : 'https://sandbox.cashfree.com/pg';
+
+    const response = await fetch(`${baseUrl}/orders/sessions`, {
+      method: 'POST',
+      headers: {
+        'x-client-id': appId || '',
+        'x-client-secret': secretKey || '',
+        'x-api-version': '2023-08-01',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        payment_session_id: paymentSessionId,
+        payment_method: paymentMethod
+      })
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      console.error('Cashfree S2S Pay Error:', data);
+      return { success: false, error: data.message || 'Payment initiation failed via API.' };
+    }
+
+    return { success: true, data };
+  } catch (error: any) {
+    console.error('payWithCashfreeS2S exception:', error);
+    return { success: false, error: error.message || 'Server error initiating payment' };
+  }
+}
+
+/**
  * Server-side verification of payment which marks the DB appointment as Confirmed
  */
 export async function verifyAndConfirmBooking(orderId: string) {
