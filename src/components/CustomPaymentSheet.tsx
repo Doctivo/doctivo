@@ -112,7 +112,19 @@ export function CustomPaymentSheet({
     };
   }, [view, orderId, router, toast, onClose]);
 
-  if (!isOpen) return null;
+  const launchSdkCheckoutFallback = async () => {
+    try {
+      if (!(window as any).Cashfree) return false;
+      const cashfree = await (window as any).Cashfree({ mode: environment || 'sandbox' });
+      await cashfree.checkout({
+        paymentSessionId: paymentSessionId,
+        redirectTarget: "_modal"
+      });
+      return true;
+    } catch (e) {
+      return false;
+    }
+  };
 
   // 1. Direct Native UPI App Launch via S2S REST API (PhonePe, GPay, Paytm, BHIM)
   const handleDirectUpiApp = async (appCode: string) => {
@@ -132,13 +144,20 @@ export function CustomPaymentSheet({
         } else if (res.data.data?.url) {
           window.location.href = res.data.data.url;
         } else {
-          toast({ variant: 'destructive', title: 'Payment Failed', description: 'Could not generate UPI intent payload.' });
+          await launchSdkCheckoutFallback();
         }
       } else {
+        if (res.error?.includes('not enabled') || res.error?.includes('not approved')) {
+          const launched = await launchSdkCheckoutFallback();
+          if (launched) return;
+        }
         toast({ variant: 'destructive', title: 'Payment Failed', description: res.error || 'Failed to launch UPI app via API.' });
       }
     } catch (err: any) {
-      toast({ variant: 'destructive', title: 'Error', description: err.message || 'UPI App launch error.' });
+      const launched = await launchSdkCheckoutFallback();
+      if (!launched) {
+        toast({ variant: 'destructive', title: 'Error', description: err.message || 'UPI App launch error.' });
+      }
     } finally {
       setLoadingApp(null);
     }
@@ -163,10 +182,17 @@ export function CustomPaymentSheet({
         setView('collect_waiting');
         setCountdown(300);
       } else {
+        if (res.error?.includes('not enabled') || res.error?.includes('not approved')) {
+          const launched = await launchSdkCheckoutFallback();
+          if (launched) return;
+        }
         toast({ variant: 'destructive', title: 'Collect Failed', description: res.error || 'Failed to send collect request.' });
       }
     } catch (err: any) {
-      toast({ variant: 'destructive', title: 'Error', description: err.message || 'Collect request error.' });
+      const launched = await launchSdkCheckoutFallback();
+      if (!launched) {
+        toast({ variant: 'destructive', title: 'Error', description: err.message || 'Collect request error.' });
+      }
     } finally {
       setLoadingApp(null);
     }
