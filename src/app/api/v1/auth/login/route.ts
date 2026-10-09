@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ 
       success: true, 
       ...tokens, 
-      user: { id: user.user_id, role: user.role, name: user.name, phone }
+      user: { id: user.patient_id, role: 'PATIENT', name: user.name, phone }
     });
 
   } catch (error: any) {
