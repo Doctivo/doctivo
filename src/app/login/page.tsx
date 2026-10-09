@@ -156,11 +156,13 @@ export default function LoginPage() {
   };
 
   const handleVerifyOtp = async () => {
+    if (isVerifying) return;
     if (otpInput.length !== 6) {
       toast({ variant: 'destructive', title: 'Invalid Code', description: 'Please enter a 6-digit OTP code.' });
       return;
     }
     setIsVerifying(true);
+    let isSuccess = false;
     try {
       const isPhoneOtp = /^\d{10}$/.test(otpEmail);
       
@@ -170,6 +172,7 @@ export default function LoginPage() {
         : await verifyAdminOtp(otpEmail, otpInput);
 
       if (result.success) {
+        isSuccess = true;
         setUserStore(null);
         setPatientsStore([]);
         setAppointmentsStore([]);
@@ -219,7 +222,9 @@ export default function LoginPage() {
         description: error.message || "Something went wrong",
       });
     } finally {
-      setIsVerifying(false);
+      if (!isSuccess) {
+        setIsVerifying(false);
+      }
     }
   };
 

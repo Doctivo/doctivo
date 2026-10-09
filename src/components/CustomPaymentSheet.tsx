@@ -33,6 +33,8 @@ const WALLETS = [
   { code: 'airtelmoney', name: 'Airtel Money', logo: '👛' },
 ];
 
+import { cancelPendingBooking } from '@/actions/appointments';
+
 export function CustomPaymentSheet({
   isOpen,
   onClose,
@@ -46,6 +48,7 @@ export function CustomPaymentSheet({
   const { toast } = useToast();
   const [view, setView] = useState<'options' | 'upi_id' | 'card' | 'netbanking' | 'wallets' | 'collect_waiting'>('options');
   const [loadingApp, setLoadingApp] = useState<string | null>(null);
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
 
   // Form states
   const [upiId, setUpiId] = useState('');
@@ -58,6 +61,18 @@ export function CustomPaymentSheet({
 
   // Collect countdown timer
   const [countdown, setCountdown] = useState(300); // 5 minutes
+
+  useEffect(() => {
+    const checkMobile = () => {
+      const ua = typeof window !== 'undefined' ? navigator.userAgent || '' : '';
+      const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+      const isSmall = typeof window !== 'undefined' ? window.innerWidth < 768 : false;
+      setIsMobileDevice(isMobileUA || isSmall);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     let timer: any;
@@ -263,6 +278,13 @@ export function CustomPaymentSheet({
     console.error('Cashfree Direct Pay Error:', err);
   };
 
+  const handleCloseSheet = async () => {
+    try {
+      await cancelPendingBooking(orderId);
+    } catch (e) {}
+    onClose();
+  };
+
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
@@ -286,7 +308,7 @@ export function CustomPaymentSheet({
               <p className="text-xs text-slate-500">Dr. {doctorName} • Fee: <span className="font-bold text-primary">₹{amount}</span></p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600">
+          <button onClick={handleCloseSheet} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -297,72 +319,74 @@ export function CustomPaymentSheet({
           {/* VIEW: MAIN OPTIONS */}
           {view === 'options' && (
             <>
-              {/* Instant UPI Apps Section */}
-              <div className="space-y-3">
-                <p className="text-xs font-black text-slate-400 uppercase tracking-wider">Instant UPI Apps (Recommended)</p>
-                <div className="grid grid-cols-2 gap-3">
-                  
-                  {/* PhonePe Button */}
-                  <button
-                    onClick={() => handleDirectUpiApp('phonepe')}
-                    disabled={loadingApp !== null}
-                    className="flex items-center gap-3 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-purple-500 hover:bg-purple-50/30 dark:hover:bg-purple-950/20 transition-all text-left bg-slate-50/50 dark:bg-slate-800/50 group"
-                  >
-                    <div className="h-10 w-10 rounded-xl bg-purple-600 text-white font-bold flex items-center justify-center text-sm shadow-md group-hover:scale-105 transition-transform">
-                      {loadingApp === 'phonepe' ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Pe'}
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-slate-800 dark:text-white">PhonePe</p>
-                      <p className="text-[10px] text-slate-400">Direct App Launch</p>
-                    </div>
-                  </button>
+              {/* Instant UPI Apps Section (Mobile Devices Only) */}
+              {isMobileDevice && (
+                <div className="space-y-3">
+                  <p className="text-xs font-black text-slate-400 uppercase tracking-wider">Instant UPI Apps (Recommended)</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    
+                    {/* PhonePe Button */}
+                    <button
+                      onClick={() => handleDirectUpiApp('phonepe')}
+                      disabled={loadingApp !== null}
+                      className="flex items-center gap-3 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-purple-500 hover:bg-purple-50/30 dark:hover:bg-purple-950/20 transition-all text-left bg-slate-50/50 dark:bg-slate-800/50 group"
+                    >
+                      <div className="h-10 w-10 rounded-xl bg-purple-600 text-white font-bold flex items-center justify-center text-sm shadow-md group-hover:scale-105 transition-transform">
+                        {loadingApp === 'phonepe' ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Pe'}
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-slate-800 dark:text-white">PhonePe</p>
+                        <p className="text-[10px] text-slate-400">Direct App Launch</p>
+                      </div>
+                    </button>
 
-                  {/* Google Pay Button */}
-                  <button
-                    onClick={() => handleDirectUpiApp('gpay')}
-                    disabled={loadingApp !== null}
-                    className="flex items-center gap-3 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-blue-500 hover:bg-blue-50/30 dark:hover:bg-blue-950/20 transition-all text-left bg-slate-50/50 dark:bg-slate-800/50 group"
-                  >
-                    <div className="h-10 w-10 rounded-xl bg-blue-600 text-white font-bold flex items-center justify-center text-sm shadow-md group-hover:scale-105 transition-transform">
-                      {loadingApp === 'gpay' ? <Loader2 className="h-5 w-5 animate-spin" /> : 'GPay'}
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-slate-800 dark:text-white">Google Pay</p>
-                      <p className="text-[10px] text-slate-400">Direct App Launch</p>
-                    </div>
-                  </button>
+                    {/* Google Pay Button */}
+                    <button
+                      onClick={() => handleDirectUpiApp('gpay')}
+                      disabled={loadingApp !== null}
+                      className="flex items-center gap-3 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-blue-500 hover:bg-blue-50/30 dark:hover:bg-blue-950/20 transition-all text-left bg-slate-50/50 dark:bg-slate-800/50 group"
+                    >
+                      <div className="h-10 w-10 rounded-xl bg-blue-600 text-white font-bold flex items-center justify-center text-sm shadow-md group-hover:scale-105 transition-transform">
+                        {loadingApp === 'gpay' ? <Loader2 className="h-5 w-5 animate-spin" /> : 'GPay'}
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-slate-800 dark:text-white">Google Pay</p>
+                        <p className="text-[10px] text-slate-400">Direct App Launch</p>
+                      </div>
+                    </button>
 
-                  {/* Paytm Button */}
-                  <button
-                    onClick={() => handleDirectUpiApp('paytm')}
-                    disabled={loadingApp !== null}
-                    className="flex items-center gap-3 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-sky-500 hover:bg-sky-50/30 dark:hover:bg-sky-950/20 transition-all text-left bg-slate-50/50 dark:bg-slate-800/50 group"
-                  >
-                    <div className="h-10 w-10 rounded-xl bg-sky-500 text-white font-bold flex items-center justify-center text-sm shadow-md group-hover:scale-105 transition-transform">
-                      {loadingApp === 'paytm' ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Paytm'}
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-slate-800 dark:text-white">Paytm UPI</p>
-                      <p className="text-[10px] text-slate-400">Direct App Launch</p>
-                    </div>
-                  </button>
+                    {/* Paytm Button */}
+                    <button
+                      onClick={() => handleDirectUpiApp('paytm')}
+                      disabled={loadingApp !== null}
+                      className="flex items-center gap-3 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-sky-500 hover:bg-sky-50/30 dark:hover:bg-sky-950/20 transition-all text-left bg-slate-50/50 dark:bg-slate-800/50 group"
+                    >
+                      <div className="h-10 w-10 rounded-xl bg-sky-500 text-white font-bold flex items-center justify-center text-sm shadow-md group-hover:scale-105 transition-transform">
+                        {loadingApp === 'paytm' ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Paytm'}
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-slate-800 dark:text-white">Paytm UPI</p>
+                        <p className="text-[10px] text-slate-400">Direct App Launch</p>
+                      </div>
+                    </button>
 
-                  {/* BHIM Button */}
-                  <button
-                    onClick={() => handleDirectUpiApp('bhim')}
-                    disabled={loadingApp !== null}
-                    className="flex items-center gap-3 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-orange-500 hover:bg-orange-50/30 dark:hover:bg-orange-950/20 transition-all text-left bg-slate-50/50 dark:bg-slate-800/50 group"
-                  >
-                    <div className="h-10 w-10 rounded-xl bg-orange-600 text-white font-bold flex items-center justify-center text-xs shadow-md group-hover:scale-105 transition-transform">
-                      {loadingApp === 'bhim' ? <Loader2 className="h-5 w-5 animate-spin" /> : 'BHIM'}
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-slate-800 dark:text-white">BHIM UPI</p>
-                      <p className="text-[10px] text-slate-400">Direct App Launch</p>
-                    </div>
-                  </button>
+                    {/* BHIM Button */}
+                    <button
+                      onClick={() => handleDirectUpiApp('bhim')}
+                      disabled={loadingApp !== null}
+                      className="flex items-center gap-3 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-orange-500 hover:bg-orange-50/30 dark:hover:bg-orange-950/20 transition-all text-left bg-slate-50/50 dark:bg-slate-800/50 group"
+                    >
+                      <div className="h-10 w-10 rounded-xl bg-orange-600 text-white font-bold flex items-center justify-center text-xs shadow-md group-hover:scale-105 transition-transform">
+                        {loadingApp === 'bhim' ? <Loader2 className="h-5 w-5 animate-spin" /> : 'BHIM'}
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-slate-800 dark:text-white">BHIM UPI</p>
+                        <p className="text-[10px] text-slate-400">Direct App Launch</p>
+                      </div>
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Other Payment Options */}
               <div className="space-y-3 pt-2">

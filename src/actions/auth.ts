@@ -230,6 +230,20 @@ export async function verifyAdminOtp(email: string, otp: string) {
     // 2. Validate OTP (Case Insensitive Email)
     const res = await query("SELECT * FROM otp_verifications WHERE LOWER(email) = $1 AND otp = $2 AND expires_at >= NOW();", [identifier, otp]);
     if (res.rows.length === 0) {
+      // Check if session was already established by a parallel request
+      const { getSession } = await import('@/lib/auth/session');
+      const session = await getSession();
+      if (session && session.userId) {
+        const adminRes = await query('SELECT * FROM admins WHERE LOWER(email) = $1', [identifier]);
+        if (adminRes.rows.length > 0 && (adminRes.rows[0].admin_id === session.userId || adminRes.rows[0].id === session.userId)) {
+          return { success: true, role: 'Admin', user: adminRes.rows[0] };
+        }
+        const docRes = await query('SELECT * FROM doctors WHERE LOWER(email) = $1', [identifier]);
+        if (docRes.rows.length > 0 && docRes.rows[0].doctor_id === session.userId) {
+          return { success: true, role: 'Doctor', user: docRes.rows[0] };
+        }
+      }
+
       // Record failed attempt
       const record = otpLimitMap.get(identifier) || { attempts: 0, lockUntil: 0 };
       if (record.lockUntil < now) {
@@ -436,6 +450,26 @@ export async function verifyPatientOtp(phone: string, otp: string) {
     
     const res = await query("SELECT * FROM otp_verifications WHERE email = $1 AND otp = $2 AND expires_at >= NOW();", [identifier, otp]);
     if (res.rows.length === 0) {
+      // Check if session was already established by a parallel request
+      const { getSession } = await import('@/lib/auth/session');
+      const session = await getSession();
+      if (session && session.userId) {
+        const existingUser = await PatientService.getPatientByPhone(identifier);
+        if (existingUser && existingUser.id === session.userId) {
+          const [members, apts] = await Promise.all([
+            PatientService.getFamilyMembers(existingUser.id),
+            AppointmentService.getUserAppointments(existingUser.id)
+          ]);
+          return {
+            success: true,
+            role: 'Patient',
+            user: existingUser,
+            familyMembers: members,
+            appointments: apts
+          };
+        }
+      }
+
       const record = otpLimitMap.get(identifier) || { attempts: 0, lockUntil: 0 };
       if (record.lockUntil < now) record.attempts += 1;
       if (record.attempts >= 5) {

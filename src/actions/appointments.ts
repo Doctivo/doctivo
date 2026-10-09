@@ -389,3 +389,17 @@ export async function getLiveQueueStatus(appointmentId: string) {
     return { success: false, error: 'Failed to load queue status.' };
   }
 }
+
+/**
+ * Cancels a pending booking when payment sheet is closed by user
+ */
+export async function cancelPendingBooking(orderId: string) {
+  try {
+    if (!orderId) return { success: false };
+    const { query } = await import('@/lib/db');
+    await query("UPDATE appointments SET status = 'Cancelled' WHERE transaction_id = $1 AND status = 'Pending_Payment'", [orderId]);
+    return { success: true };
+  } catch (e) {
+    return { success: false };
+  }
+}

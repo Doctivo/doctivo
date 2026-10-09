@@ -4,8 +4,11 @@ import { isBefore, parseISO, startOfDay } from 'date-fns';
 
 export const AppointmentRepository = {
   async create(app: Partial<Appointment>): Promise<any> {
-    // 1. Pre-sweep abandoned slots before checking availability
-    await query("UPDATE appointments SET status = 'Cancelled' WHERE status = 'Pending_Payment' AND created_at < NOW() - INTERVAL '15 minutes'");
+    // 1. Cancel previous Pending_Payment appointments for the same user on this slot or older abandoned Pending_Payment
+    await query(
+      "UPDATE appointments SET status = 'Cancelled' WHERE doctor_id = $1 AND appointment_date = $2 AND appointment_time_slot = $3 AND status = 'Pending_Payment' AND (booked_by_user_id = $4 OR created_at < NOW() - INTERVAL '15 minutes')",
+      [app.doctorId, app.date, app.time, app.patientId]
+    );
 
     const existingCheck = await query(
       "SELECT appointment_id FROM appointments WHERE doctor_id = $1 AND appointment_date = $2 AND appointment_time_slot = $3 AND status != 'Cancelled'",
