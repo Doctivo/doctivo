@@ -11,20 +11,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Phone and OTP are required' }, { status: 400 });
     }
 
-    // Standard Auth Verification (using our existing users table)
-    const res = await query('SELECT user_id, role, name FROM users WHERE phone_number = $1', [phone]);
+    // Standard Auth Verification (using our existing patients table)
+    const res = await query('SELECT patient_id, full_name as name FROM patients WHERE phone_number = $1 OR phone_number = $2', [phone, `+91${phone}`]);
     
     if (res.rowCount === 0) {
-      // Create new user for the mobile app if they don't exist
-      const userId = `U_${Date.now()}`;
-      await query('INSERT INTO users (user_id, phone_number, role, name) VALUES ($1, $2, $3, $4)', [userId, phone, 'PATIENT', 'New Patient']);
+      // Create new patient for the mobile app if they don't exist
+      const userId = `PT-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+      await query('INSERT INTO patients (patient_id, phone_number, full_name) VALUES ($1, $2, $3)', [userId, phone, 'New Patient']);
       
       const tokens = generateTokens(userId, 'PATIENT');
       return NextResponse.json({ success: true, ...tokens, user: { id: userId, role: 'PATIENT', phone } });
     }
 
     const user = res.rows[0];
-    const tokens = generateTokens(user.user_id, user.role);
+    const tokens = generateTokens(user.patient_id, 'PATIENT');
 
     return NextResponse.json({ 
       success: true, 

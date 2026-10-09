@@ -1,0 +1,595 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Loader2, ShieldCheck, CreditCard, Landmark, Wallet, QrCode, Smartphone, X, CheckCircle2, ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
+
+interface CustomPaymentSheetProps {
+  isOpen: boolean;
+  onClose: () => void;
+  paymentSessionId: string;
+  orderId: string;
+  amount: number;
+  doctorName: string;
+  environment: string;
+}
+
+const NETBANKING_BANKS = [
+  { code: 'HDF', name: 'HDFC Bank', logo: '🏦' },
+  { code: 'SBI', name: 'State Bank of India', logo: '🏦' },
+  { code: 'ICI', name: 'ICICI Bank', logo: '🏦' },
+  { code: 'UTI', name: 'Axis Bank', logo: '🏦' },
+  { code: 'KKB', name: 'Kotak Mahindra Bank', logo: '🏦' },
+  { code: 'PNB', name: 'Punjab National Bank', logo: '🏦' },
+];
+
+const WALLETS = [
+  { code: 'amazonpay', name: 'Amazon Pay', logo: '👛' },
+  { code: 'paytm', name: 'Paytm Wallet', logo: '👛' },
+  { code: 'mobikwik', name: 'MobiKwik', logo: '👛' },
+  { code: 'airtelmoney', name: 'Airtel Money', logo: '👛' },
+];
+
+export function CustomPaymentSheet({
+  isOpen,
+  onClose,
+  paymentSessionId,
+  orderId,
+  amount,
+  doctorName,
+  environment
+}: CustomPaymentSheetProps) {
+  const router = useRouter();
+  const { toast } = useToast();
+  const [view, setView] = useState<'options' | 'upi_id' | 'card' | 'netbanking' | 'wallets' | 'collect_waiting'>('options');
+  const [loadingApp, setLoadingApp] = useState<string | null>(null);
+
+  // Form states
+  const [upiId, setUpiId] = useState('');
+  const [cardNumber, setCardNumber] = useState('');
+  const [cardHolder, setCardHolder] = useState('');
+  const [cardExpiry, setCardExpiry] = useState('');
+  const [cardCvv, setCardCvv] = useState('');
+  const [selectedBank, setSelectedBank] = useState('');
+  const [selectedWallet, setSelectedWallet] = useState('');
+
+  // Collect countdown timer
+  const [countdown, setCountdown] = useState(300); // 5 minutes
+
+  useEffect(() => {
+    let timer: any;
+    let pollInterval: any;
+
+    if (view === 'collect_waiting') {
+      timer = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            clearInterval(pollInterval);
+            toast({ variant: 'destructive', title: 'Payment Expired', description: 'Collect request expired. Please try again.' });
+            onClose();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      // Poll verification API every 3 seconds
+      pollInterval = setInterval(async () => {
+        try {
+          const res = await fetch(`/api/cashfree-verify`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ order_id: orderId }),
+          });
+          const data = await res.json();
+          if (res.ok && data.success) {
+            clearInterval(timer);
+            clearInterval(pollInterval);
+            toast({ title: 'Payment Successful', description: 'Redirecting...' });
+            router.replace(`/verify?order_id=${orderId}`);
+          }
+        } catch (e) {}
+      }, 3000);
+    }
+
+    return () => {
+      if (timer) clearInterval(timer);
+      if (pollInterval) clearInterval(pollInterval);
+    };
+  }, [view, orderId, router, toast, onClose]);
+
+  if (!isOpen) return null;
+
+  const getCashfreeInstance = async () => {
+    if (!(window as any).Cashfree) {
+      toast({ variant: 'destructive', title: 'Script Error', description: 'Cashfree SDK not loaded.' });
+      return null;
+    }
+    return await (window as any).Cashfree({ mode: environment || 'sandbox' });
+  };
+
+  // 1. Direct UPI App Intent Trigger (PhonePe, GPay, Paytm, BHIM)
+  const handleDirectUpiApp = async (appCode: string) => {
+    setLoadingApp(appCode);
+    try {
+      const cashfree = await getCashfreeInstance();
+      if (!cashfree) { setLoadingApp(null); return; }
+
+      await cashfree.pay({
+        paymentMethod: {
+          upi: {
+            channel: 'intent',
+            upiApp: appCode // 'phonepe' | 'gpay' | 'paytm' | 'bhim'
+          }
+        },
+        paymentSessionId: paymentSessionId
+      });
+    } catch (err: any) {
+      debugPrintErr(err);
+      toast({ variant: 'destructive', title: 'Payment Failed', description: err.message || 'Could not launch UPI app.' });
+    } finally {
+      setLoadingApp(null);
+    }
+  };
+
+  // 2. Pay by UPI ID / Collect
+  const handleUpiCollect = async () => {
+    if (!upiId || !upiId.includes('@')) {
+      toast({ variant: 'destructive', title: 'Invalid UPI ID', description: 'Please enter a valid UPI ID (e.g. user@ybl).' });
+      return;
+    }
+    setLoadingApp('collect');
+    try {
+      const cashfree = await getCashfreeInstance();
+      if (!cashfree) { setLoadingApp(null); return; }
+
+      await cashfree.pay({
+        paymentMethod: {
+          upi: {
+            channel: 'collect',
+            upiId: upiId.trim()
+          }
+        },
+        paymentSessionId: paymentSessionId
+      });
+
+      setView('collect_waiting');
+    } catch (err: any) {
+      debugPrintErr(err);
+      toast({ variant: 'destructive', title: 'Collect Failed', description: err.message || 'Failed to send collect request.' });
+    } finally {
+      setLoadingApp(null);
+    }
+  };
+
+  // 3. Credit / Debit Card Pay
+  const handleCardPay = async () => {
+    const cleanCard = cardNumber.replace(/\s+/g, '');
+    if (cleanCard.length < 15) {
+      toast({ variant: 'destructive', title: 'Invalid Card Number', description: 'Please enter a valid 16-digit card number.' });
+      return;
+    }
+    if (!cardExpiry || !cardExpiry.includes('/')) {
+      toast({ variant: 'destructive', title: 'Invalid Expiry', description: 'Please enter MM/YY expiry.' });
+      return;
+    }
+    const [mm, yy] = cardExpiry.split('/');
+    if (!mm || !yy || mm.length !== 2 || yy.length !== 2) {
+      toast({ variant: 'destructive', title: 'Invalid Expiry', description: 'Expiry must be in MM/YY format.' });
+      return;
+    }
+    if (!cardCvv || cardCvv.length < 3) {
+      toast({ variant: 'destructive', title: 'Invalid CVV', description: 'Please enter a 3 or 4 digit CVV.' });
+      return;
+    }
+
+    setLoadingApp('card');
+    try {
+      const cashfree = await getCashfreeInstance();
+      if (!cashfree) { setLoadingApp(null); return; }
+
+      await cashfree.pay({
+        paymentMethod: {
+          card: {
+            card_number: cleanCard,
+            card_holder_name: cardHolder.trim() || 'Cardholder',
+            card_expiry_mm: mm,
+            card_expiry_yy: yy,
+            card_cvv: cardCvv
+          }
+        },
+        paymentSessionId: paymentSessionId
+      });
+    } catch (err: any) {
+      debugPrintErr(err);
+      toast({ variant: 'destructive', title: 'Card Payment Failed', description: err.message || 'Failed to process card payment.' });
+    } finally {
+      setLoadingApp(null);
+    }
+  };
+
+  // 4. Netbanking Pay
+  const handleNetbankingPay = async (bankCode: string) => {
+    setLoadingApp(bankCode);
+    try {
+      const cashfree = await getCashfreeInstance();
+      if (!cashfree) { setLoadingApp(null); return; }
+
+      await cashfree.pay({
+        paymentMethod: {
+          netbanking: {
+            netbanking_bank_code: bankCode
+          }
+        },
+        paymentSessionId: paymentSessionId
+      });
+    } catch (err: any) {
+      debugPrintErr(err);
+      toast({ variant: 'destructive', title: 'Netbanking Failed', description: err.message || 'Failed to launch Netbanking.' });
+    } finally {
+      setLoadingApp(null);
+    }
+  };
+
+  // 5. Wallet Pay
+  const handleWalletPay = async (providerCode: string) => {
+    setLoadingApp(providerCode);
+    try {
+      const cashfree = await getCashfreeInstance();
+      if (!cashfree) { setLoadingApp(null); return; }
+
+      await cashfree.pay({
+        paymentMethod: {
+          app: {
+            channel: 'app',
+            provider: providerCode
+          }
+        },
+        paymentSessionId: paymentSessionId
+      });
+    } catch (err: any) {
+      debugPrintErr(err);
+      toast({ variant: 'destructive', title: 'Wallet Payment Failed', description: err.message || 'Failed to launch Wallet.' });
+    } finally {
+      setLoadingApp(null);
+    }
+  };
+
+  const debugPrintErr = (err: any) => {
+    console.error('Cashfree Direct Pay Error:', err);
+  };
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end justify-center sm:items-center p-0 sm:p-4 animate-in fade-in duration-200">
+      <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden border border-slate-100 dark:border-slate-800 animate-in slide-in-from-bottom duration-300 max-h-[90vh] flex flex-col">
+        
+        {/* Header */}
+        <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
+          <div className="flex items-center gap-3">
+            {view !== 'options' && view !== 'collect_waiting' && (
+              <button onClick={() => setView('options')} className="p-1 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">
+                <ArrowLeft className="h-5 w-5 text-slate-600 dark:text-slate-300" />
+              </button>
+            )}
+            <div>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Payment Checkout</h2>
+              <p className="text-xs text-slate-500">Dr. {doctorName} • Fee: <span className="font-bold text-primary">₹{amount}</span></p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        {/* Body Content */}
+        <div className="p-5 overflow-y-auto space-y-6">
+
+          {/* VIEW: MAIN OPTIONS */}
+          {view === 'options' && (
+            <>
+              {/* Instant UPI Apps Section */}
+              <div className="space-y-3">
+                <p className="text-xs font-black text-slate-400 uppercase tracking-wider">Instant UPI Apps (Recommended)</p>
+                <div className="grid grid-cols-2 gap-3">
+                  
+                  {/* PhonePe Button */}
+                  <button
+                    onClick={() => handleDirectUpiApp('phonepe')}
+                    disabled={loadingApp !== null}
+                    className="flex items-center gap-3 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-purple-500 hover:bg-purple-50/30 dark:hover:bg-purple-950/20 transition-all text-left bg-slate-50/50 dark:bg-slate-800/50 group"
+                  >
+                    <div className="h-10 w-10 rounded-xl bg-purple-600 text-white font-bold flex items-center justify-center text-sm shadow-md group-hover:scale-105 transition-transform">
+                      {loadingApp === 'phonepe' ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Pe'}
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-slate-800 dark:text-white">PhonePe</p>
+                      <p className="text-[10px] text-slate-400">Direct App Launch</p>
+                    </div>
+                  </button>
+
+                  {/* Google Pay Button */}
+                  <button
+                    onClick={() => handleDirectUpiApp('gpay')}
+                    disabled={loadingApp !== null}
+                    className="flex items-center gap-3 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-blue-500 hover:bg-blue-50/30 dark:hover:bg-blue-950/20 transition-all text-left bg-slate-50/50 dark:bg-slate-800/50 group"
+                  >
+                    <div className="h-10 w-10 rounded-xl bg-blue-600 text-white font-bold flex items-center justify-center text-sm shadow-md group-hover:scale-105 transition-transform">
+                      {loadingApp === 'gpay' ? <Loader2 className="h-5 w-5 animate-spin" /> : 'GPay'}
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-slate-800 dark:text-white">Google Pay</p>
+                      <p className="text-[10px] text-slate-400">Direct App Launch</p>
+                    </div>
+                  </button>
+
+                  {/* Paytm Button */}
+                  <button
+                    onClick={() => handleDirectUpiApp('paytm')}
+                    disabled={loadingApp !== null}
+                    className="flex items-center gap-3 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-sky-500 hover:bg-sky-50/30 dark:hover:bg-sky-950/20 transition-all text-left bg-slate-50/50 dark:bg-slate-800/50 group"
+                  >
+                    <div className="h-10 w-10 rounded-xl bg-sky-500 text-white font-bold flex items-center justify-center text-sm shadow-md group-hover:scale-105 transition-transform">
+                      {loadingApp === 'paytm' ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Paytm'}
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-slate-800 dark:text-white">Paytm UPI</p>
+                      <p className="text-[10px] text-slate-400">Direct App Launch</p>
+                    </div>
+                  </button>
+
+                  {/* BHIM Button */}
+                  <button
+                    onClick={() => handleDirectUpiApp('bhim')}
+                    disabled={loadingApp !== null}
+                    className="flex items-center gap-3 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-orange-500 hover:bg-orange-50/30 dark:hover:bg-orange-950/20 transition-all text-left bg-slate-50/50 dark:bg-slate-800/50 group"
+                  >
+                    <div className="h-10 w-10 rounded-xl bg-orange-600 text-white font-bold flex items-center justify-center text-xs shadow-md group-hover:scale-105 transition-transform">
+                      {loadingApp === 'bhim' ? <Loader2 className="h-5 w-5 animate-spin" /> : 'BHIM'}
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-slate-800 dark:text-white">BHIM UPI</p>
+                      <p className="text-[10px] text-slate-400">Direct App Launch</p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Other Payment Options */}
+              <div className="space-y-3 pt-2">
+                <p className="text-xs font-black text-slate-400 uppercase tracking-wider">Other Payment Methods</p>
+                <div className="space-y-2">
+                  
+                  <button
+                    onClick={() => setView('upi_id')}
+                    className="w-full flex items-center justify-between p-4 rounded-2xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all text-left"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="h-9 w-9 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                        <QrCode className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-slate-800 dark:text-white">Pay by UPI ID / VPA</p>
+                        <p className="text-[10px] text-slate-400">user@ybl, user@okhdfcbank</p>
+                      </div>
+                    </div>
+                    <span className="text-xs text-slate-400 font-bold">›</span>
+                  </button>
+
+                  <button
+                    onClick={() => setView('card')}
+                    className="w-full flex items-center justify-between p-4 rounded-2xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all text-left"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="h-9 w-9 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center">
+                        <CreditCard className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-slate-800 dark:text-white">Credit / Debit Card</p>
+                        <p className="text-[10px] text-slate-400">Visa, Mastercard, RuPay</p>
+                      </div>
+                    </div>
+                    <span className="text-xs text-slate-400 font-bold">›</span>
+                  </button>
+
+                  <button
+                    onClick={() => setView('netbanking')}
+                    className="w-full flex items-center justify-between p-4 rounded-2xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all text-left"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="h-9 w-9 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center">
+                        <Landmark className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-slate-800 dark:text-white">Netbanking</p>
+                        <p className="text-[10px] text-slate-400">HDFC, SBI, ICICI, Axis & All Banks</p>
+                      </div>
+                    </div>
+                    <span className="text-xs text-slate-400 font-bold">›</span>
+                  </button>
+
+                  <button
+                    onClick={() => setView('wallets')}
+                    className="w-full flex items-center justify-between p-4 rounded-2xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all text-left"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="h-9 w-9 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center">
+                        <Wallet className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-slate-800 dark:text-white">Wallets</p>
+                        <p className="text-[10px] text-slate-400">Amazon Pay, Paytm Wallet, Mobikwik</p>
+                      </div>
+                    </div>
+                    <span className="text-xs text-slate-400 font-bold">›</span>
+                  </button>
+
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* VIEW: UPI ID / VPA */}
+          {view === 'upi_id' && (
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Enter UPI ID (VPA)</label>
+                <Input
+                  type="text"
+                  placeholder="e.g. 9876543210@ybl or name@okhdfcbank"
+                  value={upiId}
+                  onChange={(e) => setUpiId(e.target.value)}
+                  className="h-12 rounded-xl"
+                />
+              </div>
+              <Button
+                onClick={handleUpiCollect}
+                disabled={loadingApp === 'collect'}
+                className="w-full h-12 bg-primary text-white rounded-xl font-bold"
+              >
+                {loadingApp === 'collect' ? <Loader2 className="h-5 w-5 animate-spin" /> : `Send Collect Request (₹${amount})`}
+              </Button>
+            </div>
+          )}
+
+          {/* VIEW: CARD */}
+          {view === 'card' && (
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Card Number</label>
+                <Input
+                  type="text"
+                  placeholder="4111 2222 3333 4444"
+                  maxLength={19}
+                  value={cardNumber}
+                  onChange={(e) => setCardNumber(e.target.value)}
+                  className="h-12 rounded-xl"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Expiry (MM/YY)</label>
+                  <Input
+                    type="text"
+                    placeholder="12/28"
+                    maxLength={5}
+                    value={cardExpiry}
+                    onChange={(e) => setCardExpiry(e.target.value)}
+                    className="h-12 rounded-xl"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">CVV</label>
+                  <Input
+                    type="password"
+                    placeholder="123"
+                    maxLength={4}
+                    value={cardCvv}
+                    onChange={(e) => setCardCvv(e.target.value)}
+                    className="h-12 rounded-xl"
+                  />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Cardholder Name</label>
+                <Input
+                  type="text"
+                  placeholder="Rahul Sharma"
+                  value={cardHolder}
+                  onChange={(e) => setCardHolder(e.target.value)}
+                  className="h-12 rounded-xl"
+                />
+              </div>
+              <Button
+                onClick={handleCardPay}
+                disabled={loadingApp === 'card'}
+                className="w-full h-12 bg-primary text-white rounded-xl font-bold"
+              >
+                {loadingApp === 'card' ? <Loader2 className="h-5 w-5 animate-spin" /> : `Pay ₹${amount}`}
+              </Button>
+            </div>
+          )}
+
+          {/* VIEW: NETBANKING */}
+          {view === 'netbanking' && (
+            <div className="space-y-3">
+              <p className="text-xs font-bold text-slate-700 dark:text-slate-300">Select Bank</p>
+              <div className="grid grid-cols-2 gap-3">
+                {NETBANKING_BANKS.map((bank) => (
+                  <button
+                    key={bank.code}
+                    onClick={() => handleNetbankingPay(bank.code)}
+                    disabled={loadingApp !== null}
+                    className="flex items-center gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-primary hover:bg-blue-50/30 transition-all text-left bg-slate-50/50 dark:bg-slate-800/50"
+                  >
+                    <span className="text-2xl">{bank.logo}</span>
+                    <span className="text-xs font-bold text-slate-800 dark:text-white">{bank.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* VIEW: WALLETS */}
+          {view === 'wallets' && (
+            <div className="space-y-3">
+              <p className="text-xs font-bold text-slate-700 dark:text-slate-300">Select Wallet</p>
+              <div className="space-y-2">
+                {WALLETS.map((w) => (
+                  <button
+                    key={w.code}
+                    onClick={() => handleWalletPay(w.code)}
+                    disabled={loadingApp !== null}
+                    className="w-full flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-primary hover:bg-blue-50/30 transition-all text-left"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{w.logo}</span>
+                      <span className="text-sm font-bold text-slate-800 dark:text-white">{w.name}</span>
+                    </div>
+                    <span className="text-xs text-slate-400 font-bold">›</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* VIEW: COLLECT WAITING TIMER */}
+          {view === 'collect_waiting' && (
+            <div className="py-8 flex flex-col items-center justify-center text-center space-y-4">
+              <div className="relative flex items-center justify-center">
+                <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full"></div>
+                <Loader2 className="h-16 w-16 animate-spin text-primary relative z-10" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">Request Sent to {upiId}</h3>
+                <p className="text-xs text-slate-500 max-w-xs">
+                  Please open your UPI app (PhonePe / GPay / Paytm) and approve the pending collect request of <span className="font-bold text-primary">₹{amount}</span>.
+                </p>
+              </div>
+              <div className="bg-slate-100 dark:bg-slate-800 px-4 py-2 rounded-full text-xs font-mono font-bold text-primary">
+                Time Remaining: {formatTime(countdown)}
+              </div>
+            </div>
+          )}
+
+        </div>
+
+        {/* Footer Security Badge */}
+        <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 flex items-center justify-center gap-2 text-[11px] text-slate-400">
+          <ShieldCheck className="h-4 w-4 text-emerald-500" />
+          <span>256-bit Encrypted • Powered by Cashfree Payment</span>
+        </div>
+
+      </div>
+    </div>
+  );
+}

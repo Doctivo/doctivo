@@ -1,0 +1,1 @@
+import { query } from './src/lib/db'; query('SELECT * FROM doctors LIMIT 1').then(res => console.log(Object.keys(res.rows[0])));

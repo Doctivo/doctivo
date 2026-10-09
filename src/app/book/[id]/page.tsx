@@ -24,6 +24,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import Link from 'next/link';
+import { CustomPaymentSheet } from '@/components/CustomPaymentSheet';
 
 const generateTimeSlots = (start: string, end: string, duration: number, selectedDate: string) => {
   const slots = [];
@@ -80,6 +81,12 @@ function BookingContent({ id }: { id: string }) {
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [conflictData, setConflictData] = useState<{ txnId: string, errorMsg: string } | null>(null);
+
+  // Custom Payment Sheet State
+  const [isPaymentSheetOpen, setIsPaymentSheetOpen] = useState(false);
+  const [paymentSessionId, setPaymentSessionId] = useState('');
+  const [paymentOrderId, setPaymentOrderId] = useState('');
+  const [paymentEnvironment, setPaymentEnvironment] = useState('production');
 
   const getNext7Days = () => {
     const dates = [];
@@ -195,23 +202,12 @@ function BookingContent({ id }: { id: string }) {
         return;
       }
 
-      if (!(window as any).Cashfree) {
-        setIsBooking(false);
-        toast({ variant: 'destructive', title: 'Script Error', description: 'Failed to load Cashfree checkout script. Please refresh the page.', duration: 9999999 });
-        return;
-      }
-
-      const cashfree = await (window as any).Cashfree({
-        mode: resOrder.environment || 'sandbox'
-      });
-
-      let checkoutOptions = {
-        paymentSessionId: resOrder.payment_session_id,
-        redirectTarget: "_self", // Opens Cashfree natively in the same tab to survive background browser kills
-      };
-
-      cashfree.checkout(checkoutOptions);
-      // Wait for Cashfree redirect to /verify page
+      // Open Custom Native Payment Sheet
+      setPaymentSessionId(resOrder.payment_session_id!);
+      setPaymentOrderId(resOrder.order_id!);
+      setPaymentEnvironment(resOrder.environment || 'production');
+      setIsPaymentSheetOpen(true);
+      setIsBooking(false);
 
     } catch (err) {
       setIsBooking(false);
@@ -485,6 +481,16 @@ function BookingContent({ id }: { id: string }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <CustomPaymentSheet
+        isOpen={isPaymentSheetOpen}
+        onClose={() => setIsPaymentSheetOpen(false)}
+        paymentSessionId={paymentSessionId}
+        orderId={paymentOrderId}
+        amount={doc?.fees || 0}
+        doctorName={doc?.name || 'Doctor'}
+        environment={paymentEnvironment}
+      />
     </div>
   );
 }

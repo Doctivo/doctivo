@@ -1,7 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AppointmentService } from '@/server/services/appointment.service';
 import { DoctorService } from '@/server/services/doctor.service';
-import { generateTimeSlots } from '@/lib/utils';
+
+const generateTimeSlots = (start: string, end: string) => {
+  const slots = [];
+  try {
+    const [startH, startM] = start.split(':').map(Number);
+    const [endH, endM] = end.split(':').map(Number);
+    let current = new Date();
+    current.setHours(startH, startM, 0, 0);
+    const endTime = new Date();
+    endTime.setHours(endH, endM, 0, 0);
+
+    while (current < endTime) {
+      let hours = current.getHours();
+      let minutes = current.getMinutes();
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12; hours = hours ? hours : 12;
+      const minStr = minutes < 10 ? '0' + minutes : minutes;
+      slots.push(`${hours}:${minStr} ${ampm}`);
+      current.setMinutes(current.getMinutes() + 15); // Default 15 min duration
+    }
+  } catch (e) {}
+  return slots;
+};
 
 export async function GET(
   req: NextRequest,
@@ -27,8 +49,8 @@ export async function GET(
 
     // Generate all possible slots based on doctor's shift
     const allSlots = generateTimeSlots(
-      doctor.shift_start_time || '09:00',
-      doctor.shift_end_time || '17:00'
+      doctor.startTime || '09:00',
+      doctor.endTime || '17:00'
     );
 
     // Return the slots and mark which ones are booked
