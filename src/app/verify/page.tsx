@@ -49,7 +49,7 @@ function VerifyContent() {
           if (isApp && !isInsideAppWebView) {
             // User initiated from Mobile App but completed payment in external browser -> Launch App Intent
             try {
-              window.location.href = `intent://success?id=${res.appointmentId}#Intent;scheme=doctivo;package=com.doctivo.doctivo_webview;end`;
+              window.location.href = `intent://success?id=${res.appointmentId}#Intent;scheme=doctivo;package=in.doctivo.app;end`;
             } catch (e) {
               try { window.location.href = `doctivo://success?id=${res.appointmentId}`; } catch (err) {}
             }
