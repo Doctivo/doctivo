@@ -41,23 +41,26 @@ function VerifyContent() {
           const storedSource = typeof window !== 'undefined' 
             ? (searchParams.get('source') || sessionStorage.getItem('doctivo_payment_source') || localStorage.getItem('doctivo_payment_source') || '')
             : '';
-          const isApp = storedSource === 'app' || (typeof window !== 'undefined' && (navigator.userAgent.includes('DoctivoApp') || !!(window as any).DoctivoAppChannel));
+          const isInsideAppWebView = typeof window !== 'undefined' && (
+            navigator.userAgent.includes('DoctivoApp') || !!(window as any).DoctivoAppChannel
+          );
+          const isApp = storedSource === 'app' || isInsideAppWebView;
 
-          if (isApp) {
-            // User came from Mobile App -> Launch App Intent
+          if (isApp && !isInsideAppWebView) {
+            // User initiated from Mobile App but completed payment in external browser -> Launch App Intent
             try {
               window.location.href = `intent://success?id=${res.appointmentId}#Intent;scheme=doctivo;package=com.doctivo.doctivo_webview;end`;
             } catch (e) {
               try { window.location.href = `doctivo://success?id=${res.appointmentId}`; } catch (err) {}
             }
             setTimeout(() => {
-              router.replace(`/success?id=${res.appointmentId}`);
-            }, 2500);
+              window.location.href = `/success?id=${res.appointmentId}`;
+            }, 1500);
           } else {
-            // User came from Website -> Redirect to Web Success Page
+            // Seamless web navigation (or inside app webview) -> Redirect directly to Success Page
             setTimeout(() => {
-              router.replace(`/success?id=${res.appointmentId}`);
-            }, 1000);
+              window.location.href = `/success?id=${res.appointmentId}`;
+            }, 800);
           }
         } else {
           setStatus('error');

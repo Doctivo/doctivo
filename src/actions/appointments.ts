@@ -45,7 +45,7 @@ export async function createAppointment(app: Partial<Appointment>, razorpayData?
 /**
  * Creates a Pending Appointment in DB and generates Cashfree Payment Session
  */
-export async function createPendingBooking(app: Partial<Appointment>) {
+export async function createPendingBooking(app: Partial<Appointment>, source?: string) {
   const session = await requireAuth();
   
   if (session.userId !== app.patientId && session.role !== ROLES.ADMIN && session.role !== ROLES.SUPER_ADMIN) {
@@ -80,6 +80,8 @@ export async function createPendingBooking(app: Partial<Appointment>) {
     } catch(e) {}
 
     // 3. Create Cashfree Order
+    const returnUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://doctivo.in'}/verify?order_id=${orderId}${source ? `&source=${encodeURIComponent(source)}` : ''}`;
+
     const response = await fetch(`${baseUrl}/orders`, {
       method: 'POST',
       headers: {
@@ -99,7 +101,7 @@ export async function createPendingBooking(app: Partial<Appointment>) {
           customer_name: app.patientName || 'Doctivo User'
         },
         order_meta: {
-          return_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://doctivo.in'}/verify?order_id=${orderId}`
+          return_url: returnUrl
         }
       })
     });

@@ -191,16 +191,6 @@ function BookingContent({ id }: { id: string }) {
         status: 'Pending_Payment' as const
       };
 
-      // 1. Create Pending Order securely in Database + Cashfree
-      const { createPendingBooking } = await import('@/actions/appointments');
-      const resOrder = await createPendingBooking(appData as any);
-
-      if (!resOrder.success) {
-        setIsBooking(false);
-        toast({ variant: 'destructive', title: 'Booking Failed', description: resOrder.error || 'Failed to create payment order.', duration: 9999999 });
-        return;
-      }
-
       // Detect if request originated from Doctivo Mobile App or Web
       const isApp = typeof window !== 'undefined' && (
         navigator.userAgent.includes('DoctivoApp') || 
@@ -209,14 +199,20 @@ function BookingContent({ id }: { id: string }) {
       );
       const source = isApp ? 'app' : 'web';
 
+      // 1. Create Pending Order securely in Database + Cashfree
+      const { createPendingBooking } = await import('@/actions/appointments');
+      const resOrder = await createPendingBooking(appData as any, source);
+
+      if (!resOrder.success) {
+        setIsBooking(false);
+        toast({ variant: 'destructive', title: 'Booking Failed', description: resOrder.error || 'Failed to create payment order.', duration: 9999999 });
+        return;
+      }
+
       const paymentUrl = `/payment?order_id=${resOrder.order_id}&session_id=${resOrder.payment_session_id}&source=${source}&env=${resOrder.environment || 'production'}`;
 
-      // Open payment page in a new browser tab/window
-      const newWin = window.open(paymentUrl, '_blank');
-      if (!newWin || newWin.closed || typeof newWin.closed === 'undefined') {
-        // Fallback if popup blocker intercepted new tab
-        window.location.href = paymentUrl;
-      }
+      // Direct navigation to payment page in current tab / webview
+      window.location.href = paymentUrl;
       setIsBooking(false);
 
     } catch (err) {
