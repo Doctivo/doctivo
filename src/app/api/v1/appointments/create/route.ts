@@ -101,7 +101,7 @@ export async function POST(req: NextRequest) {
         success: true, 
         orderId: appointmentId, 
         paymentSessionId: cashfreeResult.payment_session_id,
-        environment: "SANDBOX" // change to PRODUCTION when live
+        environment: isSandbox ? "SANDBOX" : "PRODUCTION"
       });
     } else {
       console.error("Cashfree Error:", cashfreeResult);
