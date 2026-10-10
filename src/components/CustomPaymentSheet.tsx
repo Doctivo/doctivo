@@ -114,6 +114,10 @@ export function CustomPaymentSheet({
 
   const launchSdkCheckoutFallback = async () => {
     try {
+      if (!paymentSessionId) {
+        toast({ variant: 'destructive', title: 'Payment Session Expired', description: 'Please close and retry booking.' });
+        return false;
+      }
       if (!(window as any).Cashfree) return false;
       const cashfree = await (window as any).Cashfree({ mode: environment || 'sandbox' });
       await cashfree.checkout({

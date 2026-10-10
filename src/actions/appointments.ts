@@ -72,9 +72,10 @@ export async function createPendingBooking(app: Partial<Appointment>) {
     const { query } = await import('@/lib/db');
     let realPhone = '9999999999';
     try {
-      const userRes = await query('SELECT phone_number FROM users WHERE user_id = $1', [session.userId]);
-      if (userRes.rowCount && userRes.rowCount > 0) {
-        realPhone = userRes.rows[0].phone_number;
+      const userRes = await query('SELECT phone FROM patients WHERE id = $1', [session.userId]);
+      if (userRes.rowCount && userRes.rowCount > 0 && userRes.rows[0].phone) {
+        const cleanP = userRes.rows[0].phone.replace(/\D/g, '').slice(-10);
+        if (cleanP.length === 10) realPhone = cleanP;
       }
     } catch(e) {}
 
@@ -104,10 +105,11 @@ export async function createPendingBooking(app: Partial<Appointment>) {
     });
 
     const data = await response.json();
-    if (!response.ok) {
+    if (!response.ok || !data.payment_session_id) {
+      console.error('Cashfree Create Order Failed:', data);
       // If Cashfree fails, we delete the pending appointment to free the slot
       await AppointmentService.updateAppointmentStatus(app.id!, 'Cancelled');
-      throw new Error(data.message || 'Failed to create payment gateway session');
+      throw new Error(data.message || 'Failed to generate payment_session_id from Cashfree');
     }
 
     return { 
@@ -130,6 +132,11 @@ export async function createPendingBooking(app: Partial<Appointment>) {
  * 100% Custom Server-to-Server Payment API call to Cashfree (0% Cashfree UI Interface)
  */
 export async function payWithCashfreeS2S(paymentSessionId: string, paymentMethod: any) {
+  if (!paymentSessionId) {
+    console.error('payWithCashfreeS2S: payment_session_id is missing or empty');
+    return { success: false, error: 'payment_session_id is missing in the request. Please retry booking.' };
+  }
+
   try {
     const appId = process.env.NEXT_PUBLIC_CASHFREE_APP_ID;
     const secretKey = process.env.CASHFREE_SECRET_KEY;
