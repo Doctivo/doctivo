@@ -178,9 +178,9 @@ export async function payWithCashfreeS2S(paymentSessionId: string, paymentMethod
  */
 export async function verifyAndConfirmBooking(orderId: string) {
   try {
-    // 1. We must find the appointment by transaction_id = orderId
+    // 1. We must find the appointment by transaction_id = orderId or appointment_id = orderId (mobile uses appointment_id)
     const { query } = await import('@/lib/db');
-    const appRes = await query('SELECT * FROM appointments WHERE transaction_id = $1', [orderId]);
+    const appRes = await query('SELECT * FROM appointments WHERE transaction_id = $1 OR appointment_id = $1', [orderId]);
     
     if (appRes.rowCount === 0) {
       return { success: false, error: 'No matching appointment found in database for this order.' };

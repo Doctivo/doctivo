@@ -48,8 +48,8 @@ export async function POST(req: NextRequest) {
     const amount = Number(doctor.fees || 0);
     
     await query(`
-      INSERT INTO appointments (appointment_id, booked_by_user_id, doctor_id, doctor_name, patient_name, appointment_date, appointment_time_slot, status, consultation_fee_amount, created_at)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, 'Pending_Payment', $8, NOW())
+      INSERT INTO appointments (appointment_id, booked_by_user_id, doctor_id, doctor_name, patient_name, appointment_date, appointment_time_slot, status, consultation_fee_amount, transaction_id, created_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, 'Pending_Payment', $8, $1, NOW())
     `, [appointmentId, decoded.userId, doctorId, doctor.name, patientName, date, time, amount]);
 
     // 5. Create Cashfree Order
