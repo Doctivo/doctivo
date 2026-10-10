@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAndConfirmBooking } from '@/actions/appointments';
-import { verifyToken } from '@/lib/auth';
+import { verifyAccessToken } from '@/lib/auth/jwt';
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     }
 
     const token = authHeader.split(' ')[1];
-    const decoded = await verifyToken(token);
+    const decoded = verifyAccessToken(token);
     
     if (!decoded || !decoded.userId) {
       return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 });

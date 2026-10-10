@@ -38,23 +38,33 @@ function VerifyContent() {
           setStatus('success');
           setMessage('Booking Confirmed! Redirecting...');
           
-          // Trigger Android Intent URI to launch Doctivo App
-          try {
-            window.location.href = `intent://success?id=${res.appointmentId}#Intent;scheme=doctivo;package=com.doctivo.doctivo_webview;end`;
-          } catch (e) {
-            try { window.location.href = `doctivo://success?id=${res.appointmentId}`; } catch (err) {}
-          }
+          const storedSource = typeof window !== 'undefined' 
+            ? (searchParams.get('source') || sessionStorage.getItem('doctivo_payment_source') || localStorage.getItem('doctivo_payment_source') || '')
+            : '';
+          const isApp = storedSource === 'app' || (typeof window !== 'undefined' && (navigator.userAgent.includes('DoctivoApp') || !!(window as any).DoctivoAppChannel));
 
-          // Fallback to web success page after 2.5s if app is not installed or on web
-          setTimeout(() => {
-            router.replace(`/success?id=${res.appointmentId}`);
-          }, 2500);
+          if (isApp) {
+            // User came from Mobile App -> Launch App Intent
+            try {
+              window.location.href = `intent://success?id=${res.appointmentId}#Intent;scheme=doctivo;package=com.doctivo.doctivo_webview;end`;
+            } catch (e) {
+              try { window.location.href = `doctivo://success?id=${res.appointmentId}`; } catch (err) {}
+            }
+            setTimeout(() => {
+              router.replace(`/success?id=${res.appointmentId}`);
+            }, 2500);
+          } else {
+            // User came from Website -> Redirect to Web Success Page
+            setTimeout(() => {
+              router.replace(`/success?id=${res.appointmentId}`);
+            }, 1000);
+          }
         } else {
           setStatus('error');
           setMessage(res.error || 'Payment verification failed.');
           setTimeout(() => {
-            router.replace('/appointments'); // Redirect to appointments list where they can retry or see the failure
-          }, 4000);
+            router.replace('/appointments');
+          }, 3000);
         }
       } catch (err) {
         console.error(err);

@@ -201,22 +201,23 @@ function BookingContent({ id }: { id: string }) {
         return;
       }
 
-      if (!(window as any).Cashfree) {
-        setIsBooking(false);
-        toast({ variant: 'destructive', title: 'Script Error', description: 'Failed to load Cashfree checkout script. Please refresh the page.' });
-        return;
+      // Detect if request originated from Doctivo Mobile App or Web
+      const isApp = typeof window !== 'undefined' && (
+        navigator.userAgent.includes('DoctivoApp') || 
+        !!(window as any).DoctivoAppChannel ||
+        new URLSearchParams(window.location.search).get('source') === 'app'
+      );
+      const source = isApp ? 'app' : 'web';
+
+      const paymentUrl = `/payment?order_id=${resOrder.order_id}&session_id=${resOrder.payment_session_id}&source=${source}&env=${resOrder.environment || 'production'}`;
+
+      // Open payment page in a new browser tab/window
+      const newWin = window.open(paymentUrl, '_blank');
+      if (!newWin || newWin.closed || typeof newWin.closed === 'undefined') {
+        // Fallback if popup blocker intercepted new tab
+        window.location.href = paymentUrl;
       }
-
-      const cashfree = await (window as any).Cashfree({
-        mode: resOrder.environment || 'production'
-      });
-
-      let checkoutOptions = {
-        paymentSessionId: resOrder.payment_session_id,
-        redirectTarget: "_self",
-      };
-
-      cashfree.checkout(checkoutOptions);
+      setIsBooking(false);
 
     } catch (err) {
       setIsBooking(false);
