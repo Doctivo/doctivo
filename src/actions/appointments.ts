@@ -209,10 +209,10 @@ export async function verifyAndConfirmBooking(orderId: string) {
       }
     });
 
-    const orderData = await orderRes.json();
+    let orderData = await orderRes.json();
 
     // Fetch Payments attempts from Cashfree
-    const paymentsRes = await fetch(`${baseUrl}/orders/${orderId}/payments`, {
+    let paymentsRes = await fetch(`${baseUrl}/orders/${orderId}/payments`, {
       method: 'GET',
       headers: {
         'x-client-id': appId || '',
@@ -222,10 +222,29 @@ export async function verifyAndConfirmBooking(orderId: string) {
       }
     });
 
-    const paymentsData = await paymentsRes.json();
+    let paymentsData = await paymentsRes.json();
 
-    const isOrderPaid = orderRes.ok && orderData.order_status === 'PAID';
-    const isPaymentSuccess = Array.isArray(paymentsData) && paymentsData.some((p: any) => p.payment_status === 'SUCCESS');
+    let isOrderPaid = orderRes.ok && orderData.order_status === 'PAID';
+    let isPaymentSuccess = Array.isArray(paymentsData) && paymentsData.some((p: any) => p.payment_status === 'SUCCESS');
+
+    // If it's active/pending, Cashfree's webhook might be delayed. Wait 3 seconds and retry once!
+    if (!isOrderPaid && !isPaymentSuccess && orderData.order_status !== 'FAILED') {
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      const retryOrderRes = await fetch(`${baseUrl}/orders/${orderId}`, {
+        method: 'GET',
+        headers: { 'x-client-id': appId || '', 'x-client-secret': secretKey || '', 'x-api-version': '2023-08-01', 'Accept': 'application/json' }
+      });
+      orderData = await retryOrderRes.json();
+      isOrderPaid = retryOrderRes.ok && orderData.order_status === 'PAID';
+      
+      const retryPaymentsRes = await fetch(`${baseUrl}/orders/${orderId}/payments`, {
+        method: 'GET',
+        headers: { 'x-client-id': appId || '', 'x-client-secret': secretKey || '', 'x-api-version': '2023-08-01', 'Accept': 'application/json' }
+      });
+      paymentsData = await retryPaymentsRes.json();
+      isPaymentSuccess = Array.isArray(paymentsData) && paymentsData.some((p: any) => p.payment_status === 'SUCCESS');
+    }
 
     if (isOrderPaid || isPaymentSuccess) {
       // Payment verified on server! Update DB to Confirmed
@@ -234,10 +253,13 @@ export async function verifyAndConfirmBooking(orderId: string) {
       // Fetch the updated appointment to return token_number and visit_otp
       const updatedRes = await query('SELECT * FROM appointments WHERE appointment_id = $1', [appointment.appointment_id]);
       return { success: true, appointmentId: appointment.appointment_id, data: updatedRes.rows[0] };
+    } else if (orderData.order_status === 'ACTIVE' || orderData.order_status === 'PENDING') {
+      // Do NOT cancel the appointment if it's still pending. Just tell the user it's processing.
+      return { success: false, error: 'Payment is still processing by the bank. Please check your appointments later.', appointmentId: appointment.appointment_id };
     } else {
-      // Payment NOT successful. Ensure DB status is NOT Paid.
+      // Payment explicitly failed.
       await query("UPDATE appointments SET status = 'Cancelled', payment_status = 'Failed' WHERE appointment_id = $1", [appointment.appointment_id]);
-      return { success: false, error: 'Payment was not completed or failed verification.', appointmentId: appointment.appointment_id };
+      return { success: false, error: 'Payment failed verification.', appointmentId: appointment.appointment_id };
     }
 
   } catch (error: any) {
