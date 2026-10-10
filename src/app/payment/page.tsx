@@ -24,7 +24,14 @@ function PaymentContent() {
         localStorage.setItem('doctivo_payment_source', source);
       }
     }
-  }, [source]);
+    // Attempt launch immediately on mount if session or channel is ready
+    if (sessionId) {
+      const timer = setTimeout(() => {
+        launchCashfree();
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [sessionId, source]);
 
   const launchCashfree = async () => {
     if (!sessionId) {
@@ -44,8 +51,7 @@ function PaymentContent() {
     }
 
     if (!(window as any).Cashfree) {
-      setErrorMsg('Payment Gateway script failed to load. Please refresh.');
-      setIsLoading(false);
+      // If Cashfree script not loaded yet, onLoad callback will handle it
       return;
     }
 
@@ -87,8 +93,8 @@ function PaymentContent() {
         {errorMsg ? (
           <div className="bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 p-4 rounded-2xl text-xs font-bold space-y-3">
             <p>{errorMsg}</p>
-            <Button variant="outline" className="w-full font-bold" onClick={() => router.replace('/appointments')}>
-              Return to Appointments
+            <Button variant="outline" className="w-full font-bold" onClick={() => router.replace('/home')}>
+              Return to Home
             </Button>
           </div>
         ) : (
@@ -98,6 +104,14 @@ function PaymentContent() {
               <span>Redirecting to Payment...</span>
             </div>
             <p className="text-xs text-slate-400 font-medium">Please wait while we open Cashfree Payment Gateway.</p>
+            
+            <Button 
+              variant="outline"
+              className="w-full mt-4 font-bold rounded-2xl h-12 text-xs border-primary/30 text-primary hover:bg-primary/5" 
+              onClick={launchCashfree}
+            >
+              Click here if not redirected automatically
+            </Button>
           </div>
         )}
 
