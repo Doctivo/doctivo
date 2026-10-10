@@ -24,7 +24,6 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import Link from 'next/link';
-import { CustomPaymentSheet } from '@/components/CustomPaymentSheet';
 
 const generateTimeSlots = (start: string, end: string, duration: number, selectedDate: string) => {
   const slots = [];
@@ -202,12 +201,22 @@ function BookingContent({ id }: { id: string }) {
         return;
       }
 
-      // Open Custom Native Payment Sheet
-      setPaymentSessionId(resOrder.payment_session_id!);
-      setPaymentOrderId(resOrder.order_id!);
-      setPaymentEnvironment(resOrder.environment || 'production');
-      setIsPaymentSheetOpen(true);
-      setIsBooking(false);
+      if (!(window as any).Cashfree) {
+        setIsBooking(false);
+        toast({ variant: 'destructive', title: 'Script Error', description: 'Failed to load Cashfree checkout script. Please refresh the page.' });
+        return;
+      }
+
+      const cashfree = await (window as any).Cashfree({
+        mode: resOrder.environment || 'production'
+      });
+
+      let checkoutOptions = {
+        paymentSessionId: resOrder.payment_session_id,
+        redirectTarget: "_self",
+      };
+
+      cashfree.checkout(checkoutOptions);
 
     } catch (err) {
       setIsBooking(false);
@@ -481,16 +490,6 @@ function BookingContent({ id }: { id: string }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <CustomPaymentSheet
-        isOpen={isPaymentSheetOpen}
-        onClose={() => setIsPaymentSheetOpen(false)}
-        paymentSessionId={paymentSessionId}
-        orderId={paymentOrderId}
-        amount={doc?.fees || 0}
-        doctorName={doc?.name || 'Doctor'}
-        environment={paymentEnvironment}
-      />
     </div>
   );
 }
