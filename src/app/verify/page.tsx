@@ -69,10 +69,10 @@ function VerifyContent() {
             router.replace('/appointments');
           }, 3000);
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error(err);
         setStatus('error');
-        setMessage(err.message || 'An unexpected error occurred during verification.');
+        setMessage(err?.message || 'An unexpected error occurred during verification.');
       }
     };
 
