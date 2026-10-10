@@ -33,6 +33,16 @@ function PaymentContent() {
       return;
     }
 
+    if (typeof window !== 'undefined' && (window as any).DoctivoAppChannel) {
+      (window as any).DoctivoAppChannel.postMessage(JSON.stringify({
+        action: 'startCashfreePayment',
+        paymentSessionId: sessionId,
+        orderId: orderId,
+        environment: environment || 'production'
+      }));
+      return;
+    }
+
     if (!(window as any).Cashfree) {
       setErrorMsg('Payment Gateway script failed to load. Please refresh.');
       setIsLoading(false);
