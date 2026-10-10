@@ -211,18 +211,7 @@ function BookingContent({ id }: { id: string }) {
 
       const paymentUrl = `/payment?order_id=${resOrder.order_id}&session_id=${resOrder.payment_session_id}&source=${source}&env=${resOrder.environment || 'production'}`;
 
-      if (typeof window !== 'undefined' && (window as any).DoctivoAppChannel) {
-        (window as any).DoctivoAppChannel.postMessage(JSON.stringify({
-          action: 'startCashfreePayment',
-          paymentSessionId: resOrder.payment_session_id,
-          orderId: resOrder.order_id,
-          environment: resOrder.environment || 'production'
-        }));
-        setIsBooking(false);
-        return;
-      }
-
-      // Direct navigation to payment page in current web tab
+      // Direct navigation to payment page in current web tab / webview
       window.location.href = paymentUrl;
       setIsBooking(false);
 
