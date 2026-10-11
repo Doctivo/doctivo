@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Script from 'next/script';
-import { Loader2, ShieldCheck, Lock } from 'lucide-react';
+import { ShieldCheck, AlertCircle, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 function PaymentContent() {
@@ -14,15 +14,12 @@ function PaymentContent() {
   const source = searchParams.get('source') || 'web';
   const environment = searchParams.get('env') || 'production';
 
-  const [isLoading, setIsLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      if (source) {
-        sessionStorage.setItem('doctivo_payment_source', source);
-        localStorage.setItem('doctivo_payment_source', source);
-      }
+    if (typeof window !== 'undefined' && source) {
+      sessionStorage.setItem('doctivo_payment_source', source);
+      localStorage.setItem('doctivo_payment_source', source);
     }
     // Launch immediately on mount
     if (sessionId) {
@@ -33,7 +30,6 @@ function PaymentContent() {
   const launchCashfree = async () => {
     if (!sessionId) {
       setErrorMsg('Payment session ID is missing or expired.');
-      setIsLoading(false);
       return;
     }
 
@@ -63,82 +59,93 @@ function PaymentContent() {
       });
     } catch (err: any) {
       console.error('Cashfree launch error:', err);
-      setErrorMsg(err.message || 'Failed to launch payment checkout.');
-      setIsLoading(false);
+      setErrorMsg(err.message || 'Failed to connect to payment gateway.');
     }
   };
 
-  if (source === 'app' && !errorMsg) {
-    return (
-      <div className="min-h-screen bg-white dark:bg-slate-950 flex flex-col items-center justify-center p-6 text-center">
-        <Script 
-          src="https://sdk.cashfree.com/js/v3/cashfree.js" 
-          onLoad={launchCashfree}
-        />
-        <div className="flex flex-col items-center space-y-4">
-          <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
-          <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">Opening Payment Gateway...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-6 select-none">
       <Script 
         src="https://sdk.cashfree.com/js/v3/cashfree.js" 
         onLoad={launchCashfree}
       />
 
-      <div className="bg-white dark:bg-slate-900 w-full max-w-md p-8 rounded-3xl shadow-xl border border-slate-100 dark:border-slate-800 text-center space-y-6">
-        <div className="flex justify-center">
-          <div className="h-16 w-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
-            <Lock className="h-8 w-8" />
+      {errorMsg ? (
+        <div className="flex flex-col items-center max-w-xs text-center space-y-4 animate-in fade-in duration-300">
+          <div className="h-14 w-14 rounded-full bg-red-100 dark:bg-red-950/40 text-red-600 flex items-center justify-center shadow-sm">
+            <AlertCircle className="h-7 w-7" />
           </div>
-        </div>
-
-        <div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white">Secure Payment</h1>
-          <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-wider">Doctivo Payment Gateway</p>
-        </div>
-
-        {errorMsg ? (
-          <div className="bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 p-4 rounded-2xl text-xs font-bold space-y-3">
-            <p>{errorMsg}</p>
-            <Button variant="outline" className="w-full font-bold" onClick={() => router.replace('/home')}>
-              Return to Home
-            </Button>
+          <div className="space-y-1">
+            <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">Unable to Connect</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{errorMsg}</p>
           </div>
-        ) : (
-          <div className="space-y-4 py-4">
-            <div className="flex items-center justify-center gap-3 text-slate-600 dark:text-slate-300 font-bold text-sm">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
-              <span>Redirecting to Payment...</span>
-            </div>
-            <p className="text-xs text-slate-400 font-medium">Please wait while we open Cashfree Payment Gateway.</p>
-            
+          <div className="flex gap-2 w-full pt-2">
             <Button 
-              variant="outline"
-              className="w-full mt-4 font-bold rounded-2xl h-12 text-xs border-primary/30 text-primary hover:bg-primary/5" 
+              variant="outline" 
+              className="flex-1 rounded-xl h-11 text-xs font-bold" 
+              onClick={() => router.back()}
+            >
+              <ArrowLeft className="h-3.5 w-3.5 mr-1" /> Back
+            </Button>
+            <Button 
+              className="flex-1 rounded-xl h-11 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white" 
               onClick={launchCashfree}
             >
-              Click here if not redirected automatically
+              Retry
             </Button>
           </div>
-        )}
-
-        <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-center gap-2 text-[11px] text-slate-400 font-medium">
-          <ShieldCheck className="h-4 w-4 text-emerald-500" />
-          <span>256-bit Encrypted • Cashfree Checkout</span>
         </div>
-      </div>
+      ) : (
+        <div className="flex flex-col items-center text-center space-y-6 animate-in fade-in duration-300 max-w-sm">
+          {/* Interactive Pulsing Security Hub */}
+          <div className="relative flex items-center justify-center">
+            {/* Pulsing outer aura */}
+            <div className="absolute h-24 w-24 rounded-full bg-blue-500/10 dark:bg-blue-400/10 animate-ping"></div>
+            {/* Spinning gradient ring */}
+            <div className="h-20 w-20 rounded-full border-4 border-slate-200 dark:border-slate-800 border-t-blue-600 dark:border-t-blue-500 animate-spin"></div>
+            {/* Center icon */}
+            <div className="absolute h-12 w-12 rounded-full bg-white dark:bg-slate-900 shadow-md flex items-center justify-center text-blue-600 dark:text-blue-400">
+              <ShieldCheck className="h-6 w-6" />
+            </div>
+          </div>
+
+          {/* Clean Interactive Redirect Text */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-center gap-1.5 text-slate-800 dark:text-slate-100 font-bold text-base">
+              <span>Connecting to Secure Payment</span>
+              <span className="flex gap-0.5">
+                <span className="animate-bounce delay-100">.</span>
+                <span className="animate-bounce delay-200">.</span>
+                <span className="animate-bounce delay-300">.</span>
+              </span>
+            </div>
+            <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">
+              Redirecting you to Cashfree Gateway
+            </p>
+          </div>
+
+          {/* Sleek Animated Progress Line */}
+          <div className="w-44 h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden relative">
+            <div className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full w-2/3 animate-[pulse_1s_ease-in-out_infinite]"></div>
+          </div>
+
+          {/* Minimal security guarantee note */}
+          <p className="text-[11px] text-slate-400 dark:text-slate-500 flex items-center gap-1.5 pt-2">
+            <span>🔒 256-bit encrypted • Do not press back</span>
+          </p>
+        </div>
+      )}
     </div>
   );
 }
 
 export default function PaymentPage() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+    <Suspense fallback={
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center">
+        <div className="h-16 w-16 rounded-full border-4 border-slate-200 border-t-blue-600 animate-spin"></div>
+      </div>
+    }>
       <PaymentContent />
     </Suspense>
   );
