@@ -200,7 +200,7 @@ export default function AppointmentsPage() {
     });
   }, [appointments, timeFilter]);
 
-  const upcoming = filteredByTime.filter(a => a.status !== 'Completed' && a.status !== 'Cancelled' && a.status !== 'Missed');
+  const upcoming = filteredByTime.filter(a => a.status === 'Confirmed' || a.status === 'Waiting');
   const past = filteredByTime.filter(a => a.status === 'Completed' || a.status === 'Cancelled' || a.status === 'Missed');
   const currentList = activeTab === 'Upcoming' ? upcoming : past;
 
@@ -425,14 +425,6 @@ export default function AppointmentsPage() {
                       router.push(`/book/${selectedApp.doctorId}?reschedule=${selectedApp.id}`);
                     }} disabled={isCancelling} className="flex-1 h-14 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-900/50 font-black rounded-2xl gap-2">
                       Reschedule
-                    </Button>
-                  </div>
-                )}
-                {activeTab === 'Upcoming' && selectedApp.status === 'Pending_Payment' && (
-                  <div className="flex gap-3">
-                    <Button onClick={() => router.push(`/verify?order_id=${selectedApp.transaction_id}`)} className="flex-1 h-14 bg-amber-500 hover:bg-amber-600 text-white font-black rounded-2xl gap-2">
-                      <RefreshCcw className="w-5 h-5" />
-                      Verify Pending Payment
                     </Button>
                   </div>
                 )}

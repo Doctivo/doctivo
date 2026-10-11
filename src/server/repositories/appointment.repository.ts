@@ -54,7 +54,78 @@ export const AppointmentRepository = {
   },
 
   async findByUserId(userId: string): Promise<Appointment[]> {
-    const result = await query('SELECT * FROM appointments WHERE booked_by_user_id = $1 ORDER BY created_at DESC', [userId]);
+    // 1. Auto-verify any Pending_Payment appointments with Cashfree to ensure paid users directly see Confirmed
+    try {
+      const pendingCheck = await query(
+        "SELECT appointment_id, transaction_id, created_at FROM appointments WHERE booked_by_user_id = $1 AND status = 'Pending_Payment'",
+        [userId]
+      );
+
+      if (pendingCheck.rows.length > 0) {
+        const appId = process.env.NEXT_PUBLIC_CASHFREE_APP_ID || process.env.CASHFREE_APP_ID;
+        const secretKey = process.env.CASHFREE_SECRET_KEY;
+        const env = process.env.CASHFREE_ENVIRONMENT || 'SANDBOX';
+        const baseUrl = env === 'PRODUCTION' ? 'https://api.cashfree.com/pg' : 'https://sandbox.cashfree.com/pg';
+
+        for (const row of pendingCheck.rows) {
+          const orderId = row.transaction_id || row.appointment_id;
+          if (appId && secretKey && orderId) {
+            try {
+              const cfRes = await fetch(`${baseUrl}/orders/${orderId}`, {
+                method: 'GET',
+                headers: {
+                  'x-client-id': appId,
+                  'x-client-secret': secretKey,
+                  'x-api-version': '2023-08-01',
+                  'Accept': 'application/json'
+                }
+              });
+
+              if (cfRes.ok) {
+                const orderData: any = await cfRes.json();
+                if (orderData.order_status === 'PAID') {
+                  await query(
+                    "UPDATE appointments SET status = 'Confirmed', payment_status = 'Paid' WHERE appointment_id = $1",
+                    [row.appointment_id]
+                  );
+                  continue;
+                }
+              }
+
+              const paymentsRes = await fetch(`${baseUrl}/orders/${orderId}/payments`, {
+                method: 'GET',
+                headers: {
+                  'x-client-id': appId,
+                  'x-client-secret': secretKey,
+                  'x-api-version': '2023-08-01',
+                  'Accept': 'application/json'
+                }
+              });
+
+              if (paymentsRes.ok) {
+                const paymentsData: any = await paymentsRes.json();
+                if (Array.isArray(paymentsData) && paymentsData.some((p: any) => p.payment_status === 'SUCCESS')) {
+                  await query(
+                    "UPDATE appointments SET status = 'Confirmed', payment_status = 'Paid' WHERE appointment_id = $1",
+                    [row.appointment_id]
+                  );
+                }
+              }
+            } catch (cfErr) {
+              // Silently handle error
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Error auto-verifying pending appointments:', e);
+    }
+
+    // 2. Fetch appointments, strictly excluding any Pending_Payment
+    const result = await query(
+      "SELECT * FROM appointments WHERE booked_by_user_id = $1 AND status != 'Pending_Payment' ORDER BY created_at DESC",
+      [userId]
+    );
     const today = startOfDay(new Date());
 
     return result.rows.map((r: any) => {
