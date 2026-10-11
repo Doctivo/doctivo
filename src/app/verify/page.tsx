@@ -18,7 +18,17 @@ function VerifyContent() {
   const [message, setMessage] = useState('Verifying your payment...');
   const addAppointmentStore = useStore(state => state.addAppointment);
 
+  const isMobileOrder = Boolean(orderId && orderId.startsWith('APT_'));
+  const [isAppUser, setIsAppUser] = useState(isMobileOrder);
+
   useEffect(() => {
+    const storedSource = typeof window !== 'undefined' 
+      ? (searchParams.get('source') || sessionStorage.getItem('doctivo_payment_source') || localStorage.getItem('doctivo_payment_source') || '')
+      : '';
+    if (storedSource === 'app' || searchParams.get('source') === 'app' || isMobileOrder) {
+      setIsAppUser(true);
+    }
+
     if (!orderId) {
       router.replace('/home');
       return;
@@ -38,13 +48,9 @@ function VerifyContent() {
           setStatus('success');
           setMessage('Booking Confirmed! Redirecting...');
           
-          const storedSource = typeof window !== 'undefined' 
-            ? (searchParams.get('source') || sessionStorage.getItem('doctivo_payment_source') || localStorage.getItem('doctivo_payment_source') || '')
-            : '';
           const isInsideAppWebView = typeof window !== 'undefined' && (
             navigator.userAgent.includes('DoctivoApp') || !!(window as any).DoctivoAppChannel
           );
-          const isMobileOrder = orderId && orderId.startsWith('APT_');
           const isApp = storedSource === 'app' || isInsideAppWebView || searchParams.get('source') === 'app' || isMobileOrder;
 
           if (isApp && !isInsideAppWebView) {
@@ -107,7 +113,7 @@ function VerifyContent() {
               <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Payment Successful</h2>
               <p className="text-sm text-slate-500 dark:text-slate-400">{message}</p>
             </div>
-            {isApp && (
+            {isAppUser && (
               <a
                 href={`intent://success?id=${orderId}#Intent;scheme=doctivo;package=in.doctivo.app;end`}
                 className="mt-4 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-sm font-bold shadow-md transition-all flex items-center justify-center gap-2"
