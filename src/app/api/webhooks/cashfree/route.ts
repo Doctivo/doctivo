@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
       
       // Mark as Paid and Confirmed
       await query(
-        "UPDATE appointments SET status = 'Confirmed', payment_status = 'Paid' WHERE transaction_id = $1 AND status = 'Pending_Payment'",
+        "UPDATE appointments SET status = 'Confirmed', payment_status = 'Paid' WHERE (transaction_id = $1 OR appointment_id = $1) AND status = 'Pending_Payment'",
         [orderId]
       );
       console.log(`Webhook: Order ${orderId} marked as Confirmed.`);
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
 
       // Free the slot instantly
       await query(
-        "UPDATE appointments SET status = 'Cancelled' WHERE transaction_id = $1 AND status = 'Pending_Payment'",
+        "UPDATE appointments SET status = 'Cancelled' WHERE (transaction_id = $1 OR appointment_id = $1) AND status = 'Pending_Payment'",
         [orderId]
       );
       console.log(`Webhook: Order ${orderId} marked as Cancelled (Payment Failed).`);

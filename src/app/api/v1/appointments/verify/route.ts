@@ -27,7 +27,11 @@ export async function POST(request: NextRequest) {
     const verificationResult = await verifyAndConfirmBooking(orderId);
 
     if (verificationResult.success) {
-      return NextResponse.json({ success: true, message: 'Payment verified and appointment confirmed' });
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Payment verified and appointment confirmed',
+        data: verificationResult.data 
+      });
     } else {
       return NextResponse.json({ success: false, error: verificationResult.error || 'Payment not verified' }, { status: 400 });
     }
