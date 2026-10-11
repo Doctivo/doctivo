@@ -44,20 +44,22 @@ function VerifyContent() {
           const isInsideAppWebView = typeof window !== 'undefined' && (
             navigator.userAgent.includes('DoctivoApp') || !!(window as any).DoctivoAppChannel
           );
-          const isApp = storedSource === 'app' || isInsideAppWebView;
+          const isMobileOrder = orderId && orderId.startsWith('APT_');
+          const isApp = storedSource === 'app' || isInsideAppWebView || searchParams.get('source') === 'app' || isMobileOrder;
 
           if (isApp && !isInsideAppWebView) {
-            // User initiated from Mobile App but completed payment in external browser -> Launch App Intent
+            // User initiated from Mobile App -> Instantly launch App Intent to auto-close browser and resume app
             try {
               window.location.href = `intent://success?id=${res.appointmentId}#Intent;scheme=doctivo;package=in.doctivo.app;end`;
             } catch (e) {
               try { window.location.href = `doctivo://success?id=${res.appointmentId}`; } catch (err) {}
             }
+            // Fallback: also try direct doctivo scheme after short tick
             setTimeout(() => {
-              window.location.href = `/success?id=${res.appointmentId}`;
-            }, 1500);
+              try { window.location.href = `doctivo://success?id=${res.appointmentId}`; } catch (err) {}
+            }, 300);
           } else {
-            // Seamless web navigation (or inside app webview) -> Redirect directly to Success Page
+            // Seamless web navigation -> Redirect to Web Success Page
             setTimeout(() => {
               window.location.href = `/success?id=${res.appointmentId}`;
             }, 800);

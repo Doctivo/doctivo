@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
         customer_name: patientName
       },
       order_meta: {
-        return_url: "https://doctivo.in/verify?order_id={order_id}" // Fallback, not really used in mobile
+        return_url: "https://doctivo.in/verify?order_id={order_id}&source=app"
       }
     };
 
