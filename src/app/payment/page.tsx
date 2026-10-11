@@ -24,12 +24,9 @@ function PaymentContent() {
         localStorage.setItem('doctivo_payment_source', source);
       }
     }
-    // Attempt launch immediately on mount if session or channel is ready
+    // Launch immediately on mount
     if (sessionId) {
-      const timer = setTimeout(() => {
-        launchCashfree();
-      }, 300);
-      return () => clearTimeout(timer);
+      launchCashfree();
     }
   }, [sessionId, source]);
 
@@ -70,6 +67,21 @@ function PaymentContent() {
       setIsLoading(false);
     }
   };
+
+  if (source === 'app' && !errorMsg) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-slate-950 flex flex-col items-center justify-center p-6 text-center">
+        <Script 
+          src="https://sdk.cashfree.com/js/v3/cashfree.js" 
+          onLoad={launchCashfree}
+        />
+        <div className="flex flex-col items-center space-y-4">
+          <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
+          <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">Opening Payment Gateway...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-4">

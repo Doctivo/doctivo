@@ -107,6 +107,14 @@ function VerifyContent() {
               <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Payment Successful</h2>
               <p className="text-sm text-slate-500 dark:text-slate-400">{message}</p>
             </div>
+            {isApp && (
+              <a
+                href={`intent://success?id=${orderId}#Intent;scheme=doctivo;package=in.doctivo.app;end`}
+                className="mt-4 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-sm font-bold shadow-md transition-all flex items-center justify-center gap-2"
+              >
+                <span>Return to Doctivo App</span>
+              </a>
+            )}
           </>
         )}
 
