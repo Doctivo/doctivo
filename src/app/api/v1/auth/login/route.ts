@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Standard Auth Verification (using our existing patients table)
-    const res = await query('SELECT patient_id, full_name as name FROM patients WHERE phone_number = $1 OR phone_number = $2', [phone, `+91${phone}`]);
+    const res = await query('SELECT patient_id, full_name as name, phone_number, age, gender, blood_group, city FROM patients WHERE phone_number = $1 OR phone_number = $2', [phone, `+91${phone}`]);
     
     if (res.rowCount === 0) {
       // Create new patient for the mobile app if they don't exist
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
       await query('INSERT INTO patients (patient_id, phone_number, full_name) VALUES ($1, $2, $3)', [userId, phone, 'New Patient']);
       
       const tokens = generateTokens(userId, 'PATIENT');
-      return NextResponse.json({ success: true, ...tokens, user: { id: userId, role: 'PATIENT', phone } });
+      return NextResponse.json({ success: true, ...tokens, user: { id: userId, role: 'PATIENT', name: 'New Patient', phone } });
     }
 
     const user = res.rows[0];
@@ -29,7 +29,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ 
       success: true, 
       ...tokens, 
-      user: { id: user.patient_id, role: 'PATIENT', name: user.name, phone }
+      user: { 
+        id: user.patient_id, 
+        role: 'PATIENT', 
+        name: user.name, 
+        phone: user.phone_number || phone,
+        bloodGroup: user.blood_group,
+        age: user.age,
+        gender: user.gender,
+        city: user.city
+      }
     });
 
   } catch (error: any) {

@@ -29,6 +29,7 @@ export async function POST(req: NextRequest) {
       patientGender, 
       patientType, 
       patientPhone, 
+      patientBloodGroup,
       currentSymptoms 
     } = body;
 
@@ -49,13 +50,14 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. Get User Details
-    const userRes = await query("SELECT phone_number, full_name FROM patients WHERE patient_id = $1", [decoded.userId]);
+    const userRes = await query("SELECT phone_number, full_name, blood_group FROM patients WHERE patient_id = $1", [decoded.userId]);
     const phone = (patientPhone && patientPhone.trim().length >= 10) 
       ? patientPhone.trim() 
       : (userRes.rows[0]?.phone_number || '9999999999');
     const patientName = (reqPatientName && reqPatientName.trim().length > 0)
       ? reqPatientName.trim()
       : (userRes.rows[0]?.full_name || 'Patient');
+    const bloodGroup = patientBloodGroup || userRes.rows[0]?.blood_group || null;
 
     // 4. Create Pending Appointment
     const appointmentId = `APT_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
@@ -64,11 +66,11 @@ export async function POST(req: NextRequest) {
     await query(`
       INSERT INTO appointments (
         appointment_id, booked_by_user_id, doctor_id, doctor_name, 
-        patient_type, patient_name, patient_age, patient_gender, 
+        patient_type, patient_name, patient_age, patient_gender, patient_blood_group,
         appointment_date, appointment_time_slot, current_symptoms, 
         status, consultation_fee_amount, transaction_id, created_at
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'Pending_Payment', $12, $1, NOW())
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'Pending_Payment', $13, $1, NOW())
     `, [
       appointmentId, 
       decoded.userId, 
@@ -78,6 +80,7 @@ export async function POST(req: NextRequest) {
       patientName, 
       patientAge ? String(patientAge) : 'N/A', 
       patientGender || 'N/A', 
+      bloodGroup,
       date, 
       time, 
       currentSymptoms || '', 
