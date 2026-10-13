@@ -20,7 +20,17 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { doctorId, date, time } = body;
+    const { 
+      doctorId, 
+      date, 
+      time, 
+      patientName: reqPatientName, 
+      patientAge, 
+      patientGender, 
+      patientType, 
+      patientPhone, 
+      currentSymptoms 
+    } = body;
 
     if (!doctorId || !date || !time) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -40,17 +50,39 @@ export async function POST(req: NextRequest) {
 
     // 3. Get User Details
     const userRes = await query("SELECT phone_number, full_name FROM patients WHERE patient_id = $1", [decoded.userId]);
-    const phone = userRes.rows[0]?.phone_number || '9999999999';
-    const patientName = userRes.rows[0]?.full_name || 'Mobile User';
+    const phone = (patientPhone && patientPhone.trim().length >= 10) 
+      ? patientPhone.trim() 
+      : (userRes.rows[0]?.phone_number || '9999999999');
+    const patientName = (reqPatientName && reqPatientName.trim().length > 0)
+      ? reqPatientName.trim()
+      : (userRes.rows[0]?.full_name || 'Patient');
 
     // 4. Create Pending Appointment
     const appointmentId = `APT_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
     const amount = Number(doctor.fees || 0);
     
     await query(`
-      INSERT INTO appointments (appointment_id, booked_by_user_id, doctor_id, doctor_name, patient_name, appointment_date, appointment_time_slot, status, consultation_fee_amount, transaction_id, created_at)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, 'Pending_Payment', $8, $1, NOW())
-    `, [appointmentId, decoded.userId, doctorId, doctor.name, patientName, date, time, amount]);
+      INSERT INTO appointments (
+        appointment_id, booked_by_user_id, doctor_id, doctor_name, 
+        patient_type, patient_name, patient_age, patient_gender, 
+        appointment_date, appointment_time_slot, current_symptoms, 
+        status, consultation_fee_amount, transaction_id, created_at
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'Pending_Payment', $12, $1, NOW())
+    `, [
+      appointmentId, 
+      decoded.userId, 
+      doctorId, 
+      doctor.name, 
+      patientType || 'Self', 
+      patientName, 
+      patientAge ? String(patientAge) : 'N/A', 
+      patientGender || 'N/A', 
+      date, 
+      time, 
+      currentSymptoms || '', 
+      amount
+    ]);
 
     // 5. Create Cashfree Order
     const orderData = {
