@@ -1,6 +1,6 @@
 'use client';
 
-import { Activity, Clock, ShieldCheck, Database, Server, Image as ImageIcon, Save, RefreshCw, Upload, Trash2 } from 'lucide-react';
+import { Activity, Clock, ShieldCheck, Database, Server, Image as ImageIcon, Save, RefreshCw, Upload, Trash2, CreditCard, CheckCircle2, ShieldAlert } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -29,6 +29,13 @@ export default function PlatformSettings() {
   });
   const [founderImages, setFounderImages] = useState<string[]>([]);
   const [homeBanners, setHomeBanners] = useState<any[]>([]);
+  const [platformFee, setPlatformFee] = useState<{
+    enabled: boolean;
+    amount: number;
+  }>({
+    enabled: true,
+    amount: 49
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -51,6 +58,14 @@ export default function PlatformSettings() {
       if (res3.success && 'value' in res3 && res3.value) {
         setHomeBanners((res3.value || []).map((b: any) => typeof b === 'string' ? { imageUrl: b } : b));
       }
+      const res4 = await getAppSetting('platform_fee');
+      if (res4.success && 'value' in res4 && res4.value) {
+        const val = typeof res4.value === 'string' ? JSON.parse(res4.value) : res4.value;
+        setPlatformFee({
+          enabled: val.enabled !== false,
+          amount: typeof val.amount === 'number' ? val.amount : 49
+        });
+      }
     } catch (e) {
       console.error(e);
     }
@@ -63,7 +78,8 @@ export default function PlatformSettings() {
       const res = await setAppSetting('homeCardImages', images);
       const res2 = await setAppSetting('founderImages', founderImages);
       const res3 = await setAppSetting('homeBanners', homeBanners);
-      if (res.success && res2.success && res3.success) {
+      const res4 = await setAppSetting('platform_fee', platformFee);
+      if (res.success && res2.success && res3.success && res4.success) {
         toast({ title: 'Success', description: 'Settings updated successfully.' });
       } else {
         toast({ variant: 'destructive', title: 'Error', description: 'Failed to update settings.' });
@@ -168,10 +184,109 @@ export default function PlatformSettings() {
       <Tabs defaultValue="ui" className="w-full">
         <TabsList className="bg-slate-200 p-1 rounded-xl mb-8">
           <TabsTrigger value="ui" className="rounded-lg font-bold data-[state=active]:bg-white data-[state=active]:text-blue-600 px-6">App UI Settings</TabsTrigger>
+          <TabsTrigger value="fees" className="rounded-lg font-bold data-[state=active]:bg-white data-[state=active]:text-blue-600 px-6">Platform Fee</TabsTrigger>
           <TabsTrigger value="banners" className="rounded-lg font-bold data-[state=active]:bg-white data-[state=active]:text-blue-600 px-6">Home Banners</TabsTrigger>
           <TabsTrigger value="founder" className="rounded-lg font-bold data-[state=active]:bg-white data-[state=active]:text-blue-600 px-6">Founder Page</TabsTrigger>
           <TabsTrigger value="logs" className="rounded-lg font-bold data-[state=active]:bg-white data-[state=active]:text-blue-600 px-6">Audit Logs</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="fees" className="space-y-6">
+          <Card className="border-none shadow-sm rounded-[2rem] bg-white overflow-hidden max-w-4xl">
+            <CardHeader className="p-8 border-b border-slate-50">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-xl font-bold text-slate-800 flex items-center">
+                    <CreditCard className="h-6 w-6 mr-3 text-emerald-500" /> Platform Fee Control
+                  </CardTitle>
+                  <p className="text-sm text-slate-500 font-medium mt-2">
+                    Control whether platform convenience fee is charged from patients, and configure the fee amount.
+                  </p>
+                </div>
+                <Badge className={cn("px-4 py-1.5 rounded-full text-xs font-black tracking-wide", platformFee.enabled ? "bg-emerald-100 text-emerald-800 border-emerald-200" : "bg-slate-100 text-slate-600 border-slate-200")}>
+                  {platformFee.enabled ? `Active: ₹${platformFee.amount}` : "Fee Disabled (₹0 Free)"}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="p-8 space-y-8">
+              {isLoading ? (
+                <div className="py-12 flex justify-center"><RefreshCw className="animate-spin h-8 w-8 text-blue-500" /></div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Status Toggle Box */}
+                  <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-800">Platform Convenience Fee Status</h4>
+                      <p className="text-xs text-slate-500 font-medium mt-1">
+                        Turn off to make booking completely free for promotional periods or launch discounts.
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Button
+                        type="button"
+                        variant={platformFee.enabled ? "default" : "outline"}
+                        onClick={() => setPlatformFee({ ...platformFee, enabled: true })}
+                        className={cn("rounded-xl font-bold h-11 px-5", platformFee.enabled ? "bg-emerald-600 hover:bg-emerald-700 text-white" : "text-slate-600")}
+                      >
+                        <CheckCircle2 className="h-4 w-4 mr-2" /> Enabled
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={!platformFee.enabled ? "default" : "outline"}
+                        onClick={() => setPlatformFee({ ...platformFee, enabled: false })}
+                        className={cn("rounded-xl font-bold h-11 px-5", !platformFee.enabled ? "bg-rose-600 hover:bg-rose-700 text-white" : "text-slate-600")}
+                      >
+                        <ShieldAlert className="h-4 w-4 mr-2" /> Disabled (₹0)
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Fee Amount Input */}
+                  <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 space-y-4">
+                    <label className="text-xs font-black uppercase tracking-widest text-slate-500">
+                      Platform Fee Amount (₹)
+                    </label>
+                    <div className="flex items-center gap-4 max-w-sm">
+                      <div className="relative flex-1">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-400">₹</span>
+                        <Input
+                          type="number"
+                          min="0"
+                          max="999"
+                          disabled={!platformFee.enabled}
+                          value={platformFee.enabled ? platformFee.amount : 0}
+                          onChange={(e) => setPlatformFee({ ...platformFee, amount: Math.max(0, parseInt(e.target.value) || 0) })}
+                          className="bg-white border-slate-200 h-12 pl-8 font-bold text-lg rounded-xl"
+                        />
+                      </div>
+                      <span className="text-xs font-semibold text-slate-500">per booking</span>
+                    </div>
+
+                    {/* Policy info box */}
+                    <div className="mt-4 p-4 rounded-2xl bg-white border border-slate-200/80 text-xs text-slate-600 space-y-1.5">
+                      <p className="font-bold text-slate-800 flex items-center">
+                        <Activity className="h-4 w-4 mr-1.5 text-blue-500" /> Cancellation & Refund Impact:
+                      </p>
+                      {platformFee.enabled ? (
+                        <>
+                          <p>• If cancelled ≥ 2 hours before the slot: 100% refund minus <strong>₹{platformFee.amount}</strong> platform fee.</p>
+                          <p>• If cancelled &lt; 2 hours before the slot: Non-refundable as slot was reserved.</p>
+                        </>
+                      ) : (
+                        <p className="text-emerald-600 font-bold">• 100% full refund on cancellation (₹0 deducted, platform fee is currently waived).</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="pt-4 flex justify-end">
+                <Button onClick={handleSave} disabled={isSaving || isLoading} className="h-12 px-8 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl">
+                  {isSaving ? <RefreshCw className="animate-spin h-5 w-5 mr-2" /> : <Save className="h-5 w-5 mr-2" />} Save Changes
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="ui" className="space-y-6">
           <Card className="border-none shadow-sm rounded-[2rem] bg-white overflow-hidden max-w-4xl">

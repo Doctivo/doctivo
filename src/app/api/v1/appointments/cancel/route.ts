@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAccessToken } from '@/lib/auth/jwt';
 import { AppointmentService } from '@/server/services/appointment.service';
+import { AdminService } from '@/server/services/admin.service';
 import { query } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
@@ -40,13 +41,34 @@ export async function POST(request: NextRequest) {
     }
 
     // Policy Rule: Check appointment date & time for refund calculation
-    // Refund Policy: 100% refund (minus platform fee ₹49) if cancelled at least 2 hours before scheduled slot
+    const appDateStr = String(app.date).split('T')[0];
+    const now = new Date();
+    const todayStr = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+
+    // Website Rule: Same-day appointments cannot be cancelled after 2:00 AM on the day of the appointment
+    if (appDateStr === todayStr && now.getHours() >= 2) {
+      return NextResponse.json({ 
+        error: 'Appointments cannot be cancelled after 2:00 AM on the day of the appointment.' 
+      }, { status: 400 });
+    }
+
+    // Dynamic Platform Fee from app_settings
+    let platformFee = 49;
+    try {
+      const feeRes = await AdminService.getAppSetting('platform_fee');
+      if (feeRes && feeRes.value) {
+        const val = typeof feeRes.value === 'string' ? JSON.parse(feeRes.value) : feeRes.value;
+        platformFee = val.enabled !== false ? Number(val.amount ?? 49) : 0;
+      }
+    } catch (_) {
+      platformFee = 49;
+    }
+
     let isEligibleForRefund = false;
     let refundAmount = 0;
     const fee = Number(app.consultation_fee_amount || (app as any).fee || 0);
 
     try {
-      const appDateStr = String(app.date).split('T')[0];
       const timeStr = String(app.time || '10:00 AM');
       
       // Parse slot time
@@ -62,25 +84,24 @@ export async function POST(request: NextRequest) {
       }
 
       const slotDateTime = new Date(`${appDateStr}T${String(slotHour).padStart(2, '0')}:${String(slotMinute).padStart(2, '0')}:00`);
-      const now = new Date();
       const diffHours = (slotDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
 
-      // Eligible if > 2 hours in advance
+      // Refund Policy: 100% refund (minus platform fee) if cancelled at least 2 hours before scheduled slot
       if (diffHours >= 2.0) {
         isEligibleForRefund = true;
-        refundAmount = Math.max(0, fee - 49); // Subtracting platform fee ₹49 as per policy
+        refundAmount = Math.max(0, fee - platformFee);
       }
     } catch (_) {
       // Fallback: if date parsing fails, default to eligible if future date
       isEligibleForRefund = true;
-      refundAmount = Math.max(0, fee - 49);
+      refundAmount = Math.max(0, fee - platformFee);
     }
 
     // Update appointment status to Cancelled
     await AppointmentService.updateAppointmentStatus(appointmentId, 'Cancelled');
 
     // Trigger Cashfree refund if paid and eligible
-    let refundStatus = 'Not Eligible (Cancelled within 2h)';
+    let refundStatus = isEligibleForRefund ? 'Initiated (3-5 business days)' : 'Not Eligible (Cancelled within 2h)';
     if (app.payment_status === 'Paid' && isEligibleForRefund && app.transaction_id) {
       const appId = process.env.NEXT_PUBLIC_CASHFREE_APP_ID;
       const secretKey = process.env.CASHFREE_SECRET_KEY;
@@ -102,12 +123,12 @@ export async function POST(request: NextRequest) {
             body: JSON.stringify({
               refund_amount: refundAmount > 0 ? refundAmount : fee,
               refund_id: refundId,
-              refund_note: reason || 'Patient cancelled booking via Doctivo App'
+              refund_note: reason || 'Patient cancelled booking via Doctivo'
             })
           });
 
           if (cfRefundRes.ok) {
-            refundStatus = 'Initiated (5-7 business days)';
+            refundStatus = 'Initiated (3-5 business days)';
           } else {
             refundStatus = 'Queued for manual reconciliation';
           }
@@ -121,10 +142,11 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Appointment cancelled successfully',
+      message: 'Booking cancelled successfully.',
       isEligibleForRefund,
       refundAmount,
       refundStatus,
+      platformFeeDeducted: isEligibleForRefund ? platformFee : 0
     });
 
   } catch (error: any) {
