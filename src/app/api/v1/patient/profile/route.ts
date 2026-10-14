@@ -104,3 +104,34 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const token = authHeader.split(' ')[1];
+    const decoded = verifyAccessToken(token);
+    if (!decoded || !decoded.userId) {
+      return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 });
+    }
+
+    const { PatientService } = await import('@/server/services/patient.service');
+    await PatientService.deletePatientAccount(decoded.userId);
+
+    // Also cancel any active appointments for this patient
+    await query(
+      "UPDATE appointments SET status = 'Cancelled' WHERE booked_by_user_id = $1 AND status IN ('Confirmed', 'Waiting')",
+      [decoded.userId]
+    );
+
+    return NextResponse.json({
+      success: true,
+      message: 'Account and personal medical data deleted permanently.',
+    });
+  } catch (error: any) {
+    console.error('Delete patient account error:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}

@@ -40,13 +40,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Appointment is already cancelled' }, { status: 400 });
     }
 
-    // Policy Rule: Check appointment date & time for refund calculation
+    // Policy Rule: Check appointment date & time for refund calculation in IST (Asia/Kolkata)
     const appDateStr = String(app.date).split('T')[0];
-    const now = new Date();
-    const todayStr = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+    const istNow = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+    const istYear = istNow.getFullYear();
+    const istMonth = String(istNow.getMonth() + 1).padStart(2, '0');
+    const istDay = String(istNow.getDate()).padStart(2, '0');
+    const todayStr = `${istYear}-${istMonth}-${istDay}`;
 
     // Website Rule: Same-day appointments cannot be cancelled after 2:00 AM on the day of the appointment
-    if (appDateStr === todayStr && now.getHours() >= 2) {
+    if (appDateStr === todayStr && istNow.getHours() >= 2) {
       return NextResponse.json({ 
         error: 'Appointments cannot be cancelled after 2:00 AM on the day of the appointment.' 
       }, { status: 400 });
@@ -84,7 +87,7 @@ export async function POST(request: NextRequest) {
       }
 
       const slotDateTime = new Date(`${appDateStr}T${String(slotHour).padStart(2, '0')}:${String(slotMinute).padStart(2, '0')}:00`);
-      const diffHours = (slotDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+      const diffHours = (slotDateTime.getTime() - istNow.getTime()) / (1000 * 60 * 60);
 
       // Refund Policy: 100% refund (minus platform fee) if cancelled at least 2 hours before scheduled slot
       if (diffHours >= 2.0) {
