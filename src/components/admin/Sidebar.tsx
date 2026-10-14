@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { 
   LayoutDashboard, UserCheck, Calendar, 
-  Wallet, Download, LogOut, ShieldCheck, Settings, Menu, X 
+  Wallet, Download, LogOut, ShieldCheck, Settings, Menu, X, Users, CreditCard 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useStore } from '@/lib/store';
@@ -14,7 +14,9 @@ import { logoutSession } from '@/actions/auth';
 const ALL_MENU_ITEMS = [
   { id: 'dashboard', label: 'Overview', icon: LayoutDashboard, href: '/admin' },
   { id: 'doctors', label: 'Doctor Catalog', icon: UserCheck, href: '/admin/doctors' },
+  { id: 'users', label: 'User Directory', icon: Users, href: '/admin/users' },
   { id: 'bookings', label: 'Bookings Override', icon: Calendar, href: '/admin/bookings' },
+  { id: 'billing', label: 'Billing Config', icon: CreditCard, href: '/admin/billing' },
   { id: 'payroll', label: 'Payroll Console', icon: Wallet, href: '/admin/payroll' },
   { id: 'settings', label: 'Platform Settings', icon: Settings, href: '/admin/settings' },
   { id: 'admins', label: 'Sub-Admins', icon: ShieldCheck, href: '/admin/admins' },
@@ -55,7 +57,9 @@ export function AdminSidebar() {
     switch (item.id) {
       case 'dashboard': return perms.dashboard?.view;
       case 'doctors': return perms.doctors?.view;
+      case 'users': return perms.dashboard?.view || admin.role === 'Super Admin';
       case 'bookings': return perms.bookings?.view;
+      case 'billing': return perms.payroll?.view || admin.role === 'Super Admin';
       case 'payroll': return perms.payroll?.view;
       case 'settings': return perms.settings?.view;
       case 'exporter': return perms.exporter?.allow_export;

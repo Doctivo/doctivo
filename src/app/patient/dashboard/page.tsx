@@ -207,7 +207,7 @@ export default function PatientsPage() {
 
   return (
     <div className="w-full max-w-6xl mx-auto px-4 md:px-8 pb-28 pt-4 md:pt-8 bg-slate-50 dark:bg-slate-950 min-h-screen">
-      <div className="bg-white dark:bg-slate-900 sticky top-0 z-20 shadow-sm border-b border-border dark:border-slate-800">
+      <div className="bg-white dark:bg-slate-900 sticky top-0 md:top-24 z-20 shadow-sm border-b border-border dark:border-slate-800">
         <div className="p-4 flex items-center gap-3">
           <div className="h-12 w-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden relative border border-border dark:border-slate-700 shadow-sm shrink-0">
             {user?.imageUrl ? <Image priority src={user.imageUrl} alt="Me" fill className="object-cover" /> : <span className="text-primary font-bold">{user?.name?.charAt(0) || 'U'}</span>}

@@ -25,13 +25,23 @@ export function GlobalSidebar({ children }: { children: React.ReactNode }) {
     '/success', 
     '/verify',
     '/privacy-policy',
-    '/terms'
+    '/terms',
+    '/refund-policy',
+    '/about',
+    '/about-founder',
+    '/support',
+    '/download-app',
+    '/tutorial',
+    '/booking-conflict',
+    '/physio'
   ];
   
   const isHidden = hidePaths.includes(pathname || '') ||
     pathname?.startsWith('/admin') ||
     pathname?.startsWith('/doctor/') ||
-    pathname?.startsWith('/attendant');
+    pathname?.startsWith('/attendant') ||
+    pathname?.startsWith('/prescription') ||
+    pathname?.startsWith('/queue');
 
   if (isHidden) {
     return <div className="main-wrapper w-full min-h-screen flex flex-col">{children}</div>;

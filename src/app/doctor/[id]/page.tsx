@@ -3,7 +3,7 @@ import { getDoctorById } from '@/actions/doctors';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { MapPin, Award, Star, Clock, HeartPulse } from 'lucide-react';
+import { MapPin, Award, Star, Clock, HeartPulse, UserCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -43,7 +43,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title: `${doctor.name} - ${doctor.specialty} | Doctivo`,
       description: `Book an appointment with ${doctor.name} today.`,
-      images: [doctor.imageUrl || '/default-doctor.png'],
+      images: [doctor.imageUrl || 'https://doctivo.in/logo.png'],
     },
   };
 }
@@ -89,13 +89,17 @@ export default async function DoctorProfilePage({ params }: Props) {
       {/* Public Profile Header */}
       <div className="bg-gradient-to-tr from-blue-600 to-indigo-800 pt-12 pb-24 px-6 relative overflow-hidden">
         <div className="max-w-4xl mx-auto relative z-10 flex flex-col md:flex-row items-center gap-8">
-          <div className="relative w-40 h-40 md:w-48 md:h-48 rounded-[2rem] overflow-hidden border-4 border-white/20 shadow-2xl">
-            <Image 
-              src={doctor.imageUrl || '/default-doctor.png'} 
-              alt={doctor.name}
-              fill
-              className="object-cover"
-            />
+          <div className="relative w-40 h-40 md:w-48 md:h-48 rounded-[2rem] overflow-hidden border-4 border-white/20 shadow-2xl bg-blue-700/50 flex items-center justify-center">
+            {doctor.imageUrl ? (
+              <Image 
+                src={doctor.imageUrl} 
+                alt={doctor.name}
+                fill
+                className="object-cover"
+              />
+            ) : (
+              <UserCircle className="w-24 h-24 text-white/70" />
+            )}
           </div>
           <div className="text-center md:text-left text-white space-y-3 flex-1">
             <h1 className="text-4xl md:text-5xl font-black tracking-tight">{doctor.name}</h1>

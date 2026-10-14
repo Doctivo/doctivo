@@ -67,7 +67,7 @@ function VerifyContent() {
           } else {
             // Seamless web navigation -> Redirect to Web Success Page
             setTimeout(() => {
-              window.location.href = `/success?id=${res.appointmentId}`;
+              router.replace(`/success?id=${res.appointmentId}`);
             }, 800);
           }
         } else {

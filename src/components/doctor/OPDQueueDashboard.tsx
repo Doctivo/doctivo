@@ -421,25 +421,25 @@ export function OPDQueueDashboard({ mode }: OPDQueueDashboardProps) {
           </div>
         </Card>
 
-        <Card className="border-none shadow-sm rounded-3xl bg-white overflow-hidden">
+        <Card className="border-none shadow-sm rounded-3xl bg-white dark:bg-slate-900 overflow-hidden">
           <div className="p-6 flex items-center space-x-4">
-            <div className="h-14 w-14 rounded-2xl bg-green-50 text-green-500 flex items-center justify-center">
+            <div className="h-14 w-14 rounded-2xl bg-green-50 dark:bg-green-950 text-green-500 dark:text-green-400 flex items-center justify-center">
               <CheckCircle className="h-7 w-7" />
             </div>
             <div>
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Completed</p>
-              <p className="text-2xl font-black text-green-600">{completed}</p>
+              <p className="text-2xl font-black text-green-600 dark:text-green-400">{completed}</p>
             </div>
           </div>
         </Card>
       </section>
 
       {/* OPD Queue List */}
-      <section className="bg-white border border-slate-100 rounded-[2rem] shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-50/20">
+      <section className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-[2rem] shadow-sm overflow-hidden">
+        <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-50/20 dark:bg-slate-800/20">
           <div>
-            <h2 className="text-lg font-black text-slate-800 tracking-tight">OPD Patient Queue Table</h2>
-            <Badge className="bg-blue-50 text-blue-600 border-none font-bold uppercase py-1 px-3 mt-2">Today's List</Badge>
+            <h2 className="text-lg font-black text-slate-800 dark:text-slate-100 tracking-tight">OPD Patient Queue Table</h2>
+            <Badge className="bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 border-none font-bold uppercase py-1 px-3 mt-2">Today's List</Badge>
           </div>
           <Button onClick={handleCallNextPatient} className="h-12 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl px-6 gap-2 shadow-lg shadow-indigo-600/20 w-full md:w-auto">
             <UserCheck className="h-5 w-5" />
@@ -450,7 +450,7 @@ export function OPDQueueDashboard({ mode }: OPDQueueDashboardProps) {
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="bg-slate-50/50">
+              <tr className="bg-slate-50/50 dark:bg-slate-800/40">
                 <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Token #</th>
                 <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Patient</th>
                 <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Time Slot</th>
@@ -459,7 +459,7 @@ export function OPDQueueDashboard({ mode }: OPDQueueDashboardProps) {
                 <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {loading ? (
                 <tr>
                   <td colSpan={6} className="text-center py-20 font-bold text-slate-400">
@@ -475,14 +475,14 @@ export function OPDQueueDashboard({ mode }: OPDQueueDashboardProps) {
                 </tr>
               ) : (
                 appointments.map((app) => (
-                  <tr key={app.id} className="hover:bg-slate-50/30 transition-colors">
+                  <tr key={app.id} className="hover:bg-slate-50/30 dark:hover:bg-slate-800/30 transition-colors">
                     <td className="px-8 py-6 font-black text-lg text-primary">#{app.tokenNumber}</td>
                     <td className="px-8 py-6">
-                      <p className="font-bold text-slate-800">{app.patientName}</p>
+                      <p className="font-bold text-slate-800 dark:text-slate-100">{app.patientName}</p>
                       <p className="text-[10px] font-bold text-slate-400 uppercase">{app.patientType}</p>
                     </td>
-                    <td className="px-8 py-6 font-bold text-slate-700">{app.time}</td>
-                    <td className="px-8 py-6 text-sm text-slate-500 max-w-[200px] truncate">
+                    <td className="px-8 py-6 font-bold text-slate-700 dark:text-slate-300">{app.time}</td>
+                    <td className="px-8 py-6 text-sm text-slate-500 dark:text-slate-400 max-w-[200px] truncate">
                       {app.current_symptoms || 'General Checkup'}
                     </td>
                     <td className="px-8 py-6 text-center">

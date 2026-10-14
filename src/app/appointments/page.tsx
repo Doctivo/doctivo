@@ -219,7 +219,7 @@ export default function AppointmentsPage() {
 
   return (
     <div className="w-full max-w-6xl mx-auto px-4 md:px-8 pb-28 pt-4 md:pt-8 min-h-screen bg-slate-50 dark:bg-slate-950">
-      <div className="bg-white dark:bg-slate-900 sticky top-0 z-20 border-b border-slate-100 dark:border-slate-800 shadow-sm">
+      <div className="bg-white dark:bg-slate-900 sticky top-0 md:top-24 z-20 border-b border-slate-100 dark:border-slate-800 shadow-sm">
         <div className="flex justify-between items-center mb-6 px-6 pt-8 pb-4">
           <div className="flex items-center space-x-3">
             <div className="h-9 w-9 rounded-xl overflow-hidden relative shadow-sm border border-slate-100 dark:border-slate-800 shrink-0 bg-white dark:bg-slate-800">

@@ -682,7 +682,7 @@ export default function DoctorCatalog() {
             )}
           </ScrollArea>
           <DialogFooter className="p-8 bg-slate-50 border-t">
-            <Button onClick={handleUpdate} disabled={isSaving} className="w-full h-18 bg-blue-600 font-black text-xl rounded-2xl shadow-xl shadow-blue-600/20">
+            <Button onClick={handleUpdate} disabled={isSaving} className="w-full h-16 bg-blue-600 font-black text-xl rounded-2xl shadow-xl shadow-blue-600/20">
               {isSaving ? <Loader2 className="animate-spin" /> : 'Save Profile Changes'}
             </Button>
           </DialogFooter>

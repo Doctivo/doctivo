@@ -77,7 +77,10 @@ export default function LoginPage() {
 
   const handleLogin = async () => {
     const inputStr = loginInput.trim();
-    if (!inputStr) return;
+    if (!inputStr) {
+      toast({ variant: 'destructive', title: 'Input Required', description: 'Please enter your mobile number or identifier.' });
+      return;
+    }
 
     // Strict validation: if input is only digits, it must be a valid 10-digit Indian number
     const phoneRegex = /^[6-9]\d{9}$/;
@@ -301,9 +304,13 @@ export default function LoginPage() {
                          </div>
                        </div>
                      </div>
-                     {(!isMobile || loginInput.length === 10) && (
+                     {(!isMobile || loginInput.length === 10) ? (
                        <Button className="w-full h-16 text-lg font-black bg-primary text-white rounded-full transition-all flex items-center justify-center gap-2 group shadow-xl shadow-primary/20 hover:bg-primary/90" onClick={handleLogin} disabled={isLoading}>
                          {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : <>Continue <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" /></>}
+                       </Button>
+                     ) : (
+                       <Button className="w-full h-16 text-lg font-black bg-primary/40 text-white rounded-full transition-all flex items-center justify-center gap-2 shadow-sm cursor-not-allowed" disabled>
+                         Continue <ArrowRight className="h-5 w-5" />
                        </Button>
                      )}
                    </div>

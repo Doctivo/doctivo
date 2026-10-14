@@ -183,7 +183,7 @@ function DoctorsContent() {
 
   return (
     <div className="mobile-container pb-24 bg-slate-50 min-h-screen">
-      <div className="bg-white sticky top-0 z-20 border-b border-border shadow-sm">
+      <div className="bg-white sticky top-0 md:top-24 z-20 border-b border-border shadow-sm">
         <div className="p-4 flex items-center gap-3 bg-white">
           <button onClick={() => router.push('/home')} className="h-10 w-10 flex items-center justify-center bg-slate-50 rounded-xl border border-border">
             <ChevronLeft className="h-6 w-6 text-slate-700" />

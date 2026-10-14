@@ -233,7 +233,7 @@ export default function OnboardingPage() {
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 p-6 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 z-50">
-        <Button className="w-full h-18 text-xl font-black bg-primary rounded-2xl shadow-2xl shadow-primary/30" onClick={handleComplete} disabled={isLoading}>
+        <Button className="w-full h-16 text-xl font-black bg-primary rounded-2xl shadow-2xl shadow-primary/30" onClick={handleComplete} disabled={isLoading}>
           {isLoading ? <Loader2 className="animate-spin h-6 w-6 text-white" /> : 'Save Profile'}
         </Button>
       </div>
