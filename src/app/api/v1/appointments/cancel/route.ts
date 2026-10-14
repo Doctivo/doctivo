@@ -30,7 +30,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Security check: verify this appointment belongs to the user
-    if (app.patientId !== decoded.userId && app.patient_id !== decoded.userId) {
+    const appPatientId = app.patientId || (app as any).patient_id;
+    if (appPatientId && appPatientId !== decoded.userId) {
       return NextResponse.json({ error: 'Forbidden: You can only cancel your own appointments' }, { status: 403 });
     }
 
@@ -42,7 +43,7 @@ export async function POST(request: NextRequest) {
     // Refund Policy: 100% refund (minus platform fee ₹49) if cancelled at least 2 hours before scheduled slot
     let isEligibleForRefund = false;
     let refundAmount = 0;
-    const fee = Number(app.consultation_fee_amount || app.fee || 0);
+    const fee = Number(app.consultation_fee_amount || (app as any).fee || 0);
 
     try {
       const appDateStr = String(app.date).split('T')[0];
