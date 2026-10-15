@@ -25,6 +25,9 @@ const generateTimeSlots = (start: string, end: string) => {
   return slots;
 };
 
+// In-memory cache for doctor shift times (5 min TTL) to avoid hitting database on every slot check
+const doctorScheduleCache = new Map<string, { data: any; expiry: number }>();
+
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -38,14 +41,27 @@ export async function GET(
       return NextResponse.json({ error: 'Date is required' }, { status: 400 });
     }
 
-    // Get doctor details to know their start/end working hours
-    const doctor = await DoctorService.getDoctorById(doctorId);
+    const doctorPromise = (async () => {
+      const cached = doctorScheduleCache.get(doctorId);
+      if (cached && cached.expiry > Date.now()) {
+        return cached.data;
+      }
+      const doc = await DoctorService.getDoctorById(doctorId);
+      if (doc) {
+        doctorScheduleCache.set(doctorId, { data: doc, expiry: Date.now() + 5 * 60 * 1000 });
+      }
+      return doc;
+    })();
+
+    // Run doctor lookup & booked slots query in PARALLEL
+    const [doctor, bookedSlots] = await Promise.all([
+      doctorPromise,
+      AppointmentService.getBookedSlots(doctorId, date),
+    ]);
+
     if (!doctor) {
       return NextResponse.json({ error: 'Doctor not found' }, { status: 404 });
     }
-
-    // Fetch already booked slots from the database
-    const bookedSlots = await AppointmentService.getBookedSlots(doctorId, date);
 
     // Generate all possible slots based on doctor's shift
     const allSlots = generateTimeSlots(
@@ -59,7 +75,14 @@ export async function GET(
       isBooked: bookedSlots.includes(time)
     }));
 
-    return NextResponse.json({ success: true, slots });
+    return NextResponse.json(
+      { success: true, slots },
+      {
+        headers: {
+          'Cache-Control': 'public, max-age=5, stale-while-revalidate=15',
+        },
+      }
+    );
   } catch (error: any) {
     console.error('API /v1/doctors/[id]/slots Error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

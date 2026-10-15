@@ -198,16 +198,14 @@ export const AppointmentRepository = {
   },
 
   async getBookedSlots(doctorId: string, date: string): Promise<string[]> {
-    // 1. Lazy Sweep: Auto-cancel any abandoned 'Pending_Payment' slots older than 15 minutes
-    // This ensures if a user drops off at the payment gateway and never returns to verify, 
-    // the slot is automatically freed up for others.
-    await query(
+    // 1. Non-blocking Lazy Sweep: Fire & forget background sweep so slot read isn't blocked
+    query(
       "UPDATE appointments SET status = 'Cancelled' WHERE status = 'Pending_Payment' AND created_at < NOW() - INTERVAL '15 minutes'"
-    );
+    ).catch(err => console.error('Auto-cancel sweep error:', err));
 
     // 2. Fetch the actually confirmed and active slots
     const result = await query(
-      "SELECT appointment_time_slot as time FROM appointments WHERE doctor_id = $1 AND appointment_date = $2 AND status != 'Cancelled'",
+      "SELECT appointment_time_slot as time FROM appointments WHERE doctor_id = $1 AND appointment_date = $2 AND status != 'Cancelled' AND NOT (status = 'Pending_Payment' AND created_at < NOW() - INTERVAL '15 minutes')",
       [doctorId, date]
     );
     return result.rows.map(r => String(r.time));
