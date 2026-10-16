@@ -34,7 +34,7 @@ export function Header({ isAuthenticated }: { isAuthenticated: boolean }) {
           </Link>
         )}
         
-        <Link href={isAuthenticated ? "/home" : "/login"}>
+        <Link href="/doctors">
           <Button className="h-11 px-6 rounded-xl font-black bg-blue-600 text-white shadow-lg shadow-blue-600/10 hover:bg-blue-700">
             Book Now
           </Button>

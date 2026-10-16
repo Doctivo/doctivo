@@ -43,8 +43,8 @@ export default function LandingPage() {
     }
   }, [isAuthenticated, hasHydrated, router, user, admin]);
 
-  // Prevent hydration mismatch or flash of landing page if authenticated
-  if (!isMounted || !hasHydrated || isAuthenticated) {
+  // Only show loading screen if user is already authenticated and actively being redirected
+  if (isMounted && hasHydrated && isAuthenticated) {
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center">
         <div className="flex flex-col items-center gap-6 animate-pulse">
@@ -53,16 +53,18 @@ export default function LandingPage() {
           </div>
           <div className="flex flex-col items-center">
             <h1 className="text-2xl font-black tracking-tight text-slate-800 leading-none">DOCTIVO</h1>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">Loading...</p>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">Redirecting to Dashboard...</p>
           </div>
         </div>
       </div>
     );
   }
 
+  const isAuthed = isMounted && hasHydrated && isAuthenticated;
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 antialiased font-sans selection:bg-blue-600 selection:text-white">
-      <Header isAuthenticated={isAuthenticated} />
+      <Header isAuthenticated={isAuthed} />
       <HeroSection />
       <SpecialtiesSection setIsPhysioOpen={setIsPhysioOpen} />
       <AppPromoSection />

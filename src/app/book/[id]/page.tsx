@@ -148,7 +148,12 @@ function BookingContent({ id }: { id: string }) {
   const processPayment = async () => {
     const patient = patients.find(p => p.id === selectedPatientId) || user;
     
-    if (!doc || !user || !patient) {
+    if (!user) {
+      router.push(`/login?redirect=${encodeURIComponent(typeof window !== 'undefined' ? window.location.pathname + window.location.search : `/book/${id}`)}`);
+      return;
+    }
+
+    if (!doc || !patient) {
       toast({ variant: 'destructive', title: 'Error', description: 'Missing doctor or patient information.' });
       return;
     }

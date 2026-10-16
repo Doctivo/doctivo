@@ -146,10 +146,8 @@ function DoctorsContent() {
   }, [filterSpecialtyFromQuery]);
 
   useEffect(() => {
-    if (!hasHydrated) return;
-    if (!isAuthenticated) { router.push('/login'); return; }
     loadDoctors();
-  }, [selectedCategory, isAuthenticated, router, hasHydrated]);
+  }, [selectedCategory]);
 
   const processedDoctors = useMemo(() => {
     let list = [...doctors];
@@ -179,13 +177,11 @@ function DoctorsContent() {
     return { items: list, type: 'standard' as const };
   }, [doctors, debouncedSearch, isHomeVisit, userLat, userLng, searchParams]);
 
-  if (!hasHydrated) return <div className="flex justify-center items-center min-h-screen"><Loader2 className="animate-spin" /></div>;
-
   return (
     <div className="mobile-container pb-24 bg-slate-50 min-h-screen">
       <div className="bg-white sticky top-0 md:top-24 z-20 border-b border-border shadow-sm">
         <div className="p-4 flex items-center gap-3 bg-white">
-          <button onClick={() => router.push('/home')} className="h-10 w-10 flex items-center justify-center bg-slate-50 rounded-xl border border-border">
+          <button onClick={() => window.history.length > 1 ? router.back() : router.push('/')} className="h-10 w-10 flex items-center justify-center bg-slate-50 rounded-xl border border-border">
             <ChevronLeft className="h-6 w-6 text-slate-700" />
           </button>
           <div className="flex-1 relative">

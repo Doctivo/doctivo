@@ -22,7 +22,7 @@ export function HeroSection() {
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
-          <Link href="/home" className="w-full sm:w-auto">
+          <Link href="/doctors" className="w-full sm:w-auto">
             <Button className="w-full h-16 px-8 rounded-2xl bg-blue-600 text-white font-black text-base shadow-xl shadow-blue-600/20 hover:bg-blue-700 flex items-center justify-center gap-2 group">
               Book Doctor Appointment <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </Button>

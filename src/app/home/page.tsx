@@ -36,9 +36,18 @@ function HomeContent() {
   const homeDataLastFetched = useStore(state => state.homeDataLastFetched);
   const setHomeDataLastFetched = useStore(state => state.setHomeDataLastFetched);
 
-  const [serverImages, setServerImages] = useState<Record<string, string>>({});
-  const [homeBanners, setHomeBanners] = useState<any[]>([]);
+  const [serverImages, setServerImages] = useState<Record<string, string>>(homeCardImagesStore || {});
+  const [homeBanners, setHomeBanners] = useState<any[]>(homeBannersStore || []);
   const [isPhysioOpen, setIsPhysioOpen] = useState(false);
+
+  useEffect(() => {
+    if (homeCardImagesStore && Object.keys(homeCardImagesStore).length > 0) {
+      setServerImages(homeCardImagesStore);
+    }
+    if (homeBannersStore && homeBannersStore.length > 0) {
+      setHomeBanners(homeBannersStore);
+    }
+  }, [homeCardImagesStore, homeBannersStore]);
   
   const { t } = useTranslation();
   const language = useStore(state => state.language);
@@ -106,14 +115,17 @@ function HomeContent() {
     }
 
     try {
-      const res = await getAppSetting('homeCardImages');
-      if (res.success && 'value' in res && res.value) {
+      const [res, res2] = await Promise.all([
+        getAppSetting('homeCardImages'),
+        getAppSetting('homeBanners')
+      ]);
+
+      if (res && res.success && 'value' in res && res.value) {
         setServerImages(res.value);
         setHomeCardImages(res.value);
       }
       
-      const res2 = await getAppSetting('homeBanners');
-      if (res2.success && 'value' in res2 && res2.value) {
+      if (res2 && res2.success && 'value' in res2 && res2.value) {
         setHomeBanners(res2.value.map((b: any) => typeof b === 'string' ? { imageUrl: b } : b));
         setHomeBannersStore(res2.value.map((b: any) => typeof b === 'string' ? { imageUrl: b } : b));
       }

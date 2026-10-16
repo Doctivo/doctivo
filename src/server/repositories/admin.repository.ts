@@ -1,5 +1,12 @@
 import { query } from '@/lib/db';
 
+interface SettingsCacheEntry {
+  value: any;
+  expiresAt: number;
+}
+const settingsCache = new Map<string, SettingsCacheEntry>();
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes TTL
+
 export const AdminRepository = {
   async getEmployeePayroll(): Promise<any[]> {
     const result = await query(`
@@ -154,6 +161,7 @@ export const AdminRepository = {
   },
 
   async setAppSetting(key: string, value: any): Promise<void> {
+    settingsCache.set(key, { value, expiresAt: Date.now() + CACHE_TTL_MS });
     await query(`
       INSERT INTO app_settings (key, value)
       VALUES ($1, $2)
@@ -162,9 +170,15 @@ export const AdminRepository = {
   },
 
   async getAppSetting(key: string): Promise<any> {
+    const cached = settingsCache.get(key);
+    if (cached && Date.now() < cached.expiresAt) {
+      return cached.value;
+    }
     const res = await query('SELECT value FROM app_settings WHERE key = $1', [key]);
     if (res.rows.length > 0) {
-      return res.rows[0].value;
+      const val = res.rows[0].value;
+      settingsCache.set(key, { value: val, expiresAt: Date.now() + CACHE_TTL_MS });
+      return val;
     }
     return null;
   },
