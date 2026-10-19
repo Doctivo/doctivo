@@ -14,11 +14,14 @@ export default function DownloadsPage() {
   const router = useRouter();
   const user = useStore(state => state.user);
   const isAuthenticated = useStore(state => state.isAuthenticated);
+  const hasHydrated = useStore(state => state._hasHydrated);
   const downloadedTickets = useStore(state => state.downloadedTickets);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!hasHydrated) return;
+
     if (!isAuthenticated || !user) {
       router.push('/login');
       return;
@@ -35,7 +38,16 @@ export default function DownloadsPage() {
       setLoading(false);
     }
     load();
-  }, [isAuthenticated, user, router, downloadedTickets]);
+  }, [hasHydrated, isAuthenticated, user, router, downloadedTickets]);
+
+  if (!hasHydrated) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-3">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Loading...</p>
+      </div>
+    );
+  }
 
   if (!isAuthenticated || !user) return null;
 

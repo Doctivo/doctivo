@@ -502,11 +502,13 @@ export async function verifyPatientOtp(phone: string, otp: string) {
       appointments = apts;
     } else {
       isNew = true;
-      patientData = { 
-        id: `DOC-USR-${Date.now()}`, 
-        phone: identifier, 
-        isProfileComplete: false 
-      };
+      const newId = `PAT-${Date.now()}`;
+      await query(
+        'INSERT INTO patients (patient_id, phone_number, full_name, is_profile_complete) VALUES ($1, $2, $3, false) ON CONFLICT (phone_number) DO NOTHING',
+        [newId, identifier, 'New Patient']
+      );
+      const createdOrExisting = await PatientService.getPatientByPhone(identifier);
+      patientData = createdOrExisting || { id: newId, phone: identifier, isProfileComplete: false };
     }
 
     await createSession(patientData.id, 'Patient');

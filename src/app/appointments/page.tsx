@@ -31,6 +31,7 @@ export default function AppointmentsPage() {
   const setAppointments = useStore(state => state.setAppointments);
   const user = useStore(state => state.user);
   const isAuthenticated = useStore(state => state.isAuthenticated);
+  const hasHydrated = useStore(state => state._hasHydrated);
   const downloadedTickets = useStore(state => state.downloadedTickets);
   const setDownloadedTickets = useStore(state => state.setDownloadedTickets);
   
@@ -166,6 +167,8 @@ export default function AppointmentsPage() {
   };
 
   useEffect(() => {
+    if (!hasHydrated) return;
+
     if (!isAuthenticated) {
       router.push('/login');
       return;
@@ -179,7 +182,7 @@ export default function AppointmentsPage() {
       setLoading(false);
     }
     syncData();
-  }, [isAuthenticated, user?.id, router, setAppointments]);
+  }, [hasHydrated, isAuthenticated, user?.id, router, setAppointments]);
 
   const filteredByTime = useMemo(() => {
     if (timeFilter === 'All') return appointments;
@@ -214,6 +217,14 @@ export default function AppointmentsPage() {
     return dateStr;
   };
 
+  if (!hasHydrated) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-3">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Loading...</p>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) return null;
 

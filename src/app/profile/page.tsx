@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { 
   UserCircle, MapPin, Edit3, MessageCircleQuestion,
-  LogOut, ChevronRight, FileText, ShieldCheck, RefreshCcw, Trash2, Moon, Info
+  LogOut, ChevronRight, FileText, ShieldCheck, RefreshCcw, Trash2, Moon, Info, Loader2
 } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
@@ -23,16 +23,18 @@ export default function ProfilePage() {
   const user = useStore(state => state.user);
   const logout = useStore(state => state.logout);
   const isAuthenticated = useStore(state => state.isAuthenticated);
+  const hasHydrated = useStore(state => state._hasHydrated);
   const { t } = useTranslation();
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
+    if (!hasHydrated) return;
     if (!isAuthenticated) {
       router.push('/login');
     }
-  }, [isAuthenticated, router]);
+  }, [hasHydrated, isAuthenticated, router]);
 
   const handleLogout = async () => {
     try {
@@ -61,6 +63,15 @@ export default function ProfilePage() {
       setIsDeleting(false);
     }
   };
+
+  if (!hasHydrated) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-3">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Loading...</p>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) return null;
 

@@ -58,7 +58,7 @@ export default function LoginPage() {
   // Automatic redirect if session exists
   useEffect(() => {
     if (isAuthenticated) {
-      const callbackUrl = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('callbackUrl') : null;
+      const callbackUrl = typeof window !== 'undefined' ? (new URLSearchParams(window.location.search).get('callbackUrl') || new URLSearchParams(window.location.search).get('redirect')) : null;
       if (user?.id) {
         if (user.isProfileComplete) {
           router.replace(callbackUrl || '/home');
@@ -190,7 +190,7 @@ export default function LoginPage() {
           setPatientsStore(fullPatientList);
           setAppointmentsStore((result as any).appointments || []);
           setIsAuthenticated(true);
-          const callbackUrl = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('callbackUrl') : null;
+          const callbackUrl = typeof window !== 'undefined' ? (new URLSearchParams(window.location.search).get('callbackUrl') || new URLSearchParams(window.location.search).get('redirect')) : null;
           if (result.user.isProfileComplete) {
             router.replace(callbackUrl || '/home');
           } else {

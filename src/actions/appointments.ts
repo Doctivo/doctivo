@@ -72,9 +72,9 @@ export async function createPendingBooking(app: Partial<Appointment>, source?: s
     const { query } = await import('@/lib/db');
     let realPhone = '9999999999';
     try {
-      const userRes = await query('SELECT phone FROM patients WHERE id = $1', [session.userId]);
-      if (userRes.rowCount && userRes.rowCount > 0 && userRes.rows[0].phone) {
-        const cleanP = userRes.rows[0].phone.replace(/\D/g, '').slice(-10);
+      const userRes = await query('SELECT phone_number FROM patients WHERE patient_id = $1', [session.userId]);
+      if (userRes.rowCount && userRes.rowCount > 0 && userRes.rows[0].phone_number) {
+        const cleanP = userRes.rows[0].phone_number.replace(/\D/g, '').slice(-10);
         if (cleanP.length === 10) realPhone = cleanP;
       }
     } catch(e) {}
