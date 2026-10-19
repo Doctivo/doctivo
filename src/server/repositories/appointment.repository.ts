@@ -85,7 +85,11 @@ export const AppointmentRepository = {
                 const orderData: any = await cfRes.json();
                 if (orderData.order_status === 'PAID') {
                   await query(
-                    "UPDATE appointments SET status = 'Confirmed', payment_status = 'Paid' WHERE appointment_id = $1",
+                    `UPDATE appointments 
+                     SET status = 'Confirmed', 
+                         payment_status = 'Paid',
+                         visit_otp = COALESCE(NULLIF(visit_otp, ''), LPAD(FLOOR(RANDOM() * 900000 + 100000)::TEXT, 6, '0')) 
+                     WHERE appointment_id = $1`,
                     [row.appointment_id]
                   );
                   continue;
@@ -106,7 +110,11 @@ export const AppointmentRepository = {
                 const paymentsData: any = await paymentsRes.json();
                 if (Array.isArray(paymentsData) && paymentsData.some((p: any) => p.payment_status === 'SUCCESS')) {
                   await query(
-                    "UPDATE appointments SET status = 'Confirmed', payment_status = 'Paid' WHERE appointment_id = $1",
+                    `UPDATE appointments 
+                     SET status = 'Confirmed', 
+                         payment_status = 'Paid',
+                         visit_otp = COALESCE(NULLIF(visit_otp, ''), LPAD(FLOOR(RANDOM() * 900000 + 100000)::TEXT, 6, '0')) 
+                     WHERE appointment_id = $1`,
                     [row.appointment_id]
                   );
                 }
@@ -134,6 +142,10 @@ export const AppointmentRepository = {
       if (isBefore(appDate, today) && (status === 'Confirmed' || status === 'Waiting')) {
         status = 'Missed';
       }
+      const otp = r.visit_otp || (r.appointment_id ? (Math.abs(r.appointment_id.split('').reduce((acc: number, char: string) => acc * 31 + char.charCodeAt(0), 0)) % 900000 + 100000).toString() : '123456');
+      if (!r.visit_otp && r.appointment_id) {
+        query("UPDATE appointments SET visit_otp = $1 WHERE appointment_id = $2", [otp, r.appointment_id]).catch(() => {});
+      }
       return {
         id: r.appointment_id, doctorId: r.doctor_id, doctorName: r.doctor_name,
         patientId: r.booked_by_user_id, patientName: r.patient_name,
@@ -143,7 +155,7 @@ export const AppointmentRepository = {
         time: r.appointment_time_slot, current_symptoms: r.current_symptoms,
         consultation_fee_amount: r.consultation_fee_amount, payment_status: r.payment_status,
         transaction_id: r.transaction_id, status: status,
-        tokenNumber: r.token_number || 1, visit_otp: r.visit_otp
+        tokenNumber: r.token_number || 1, visit_otp: otp, visitOtp: otp
       };
     }) as Appointment[];
   },
@@ -152,6 +164,7 @@ export const AppointmentRepository = {
     const result = await query('SELECT * FROM appointments WHERE appointment_id = $1', [id]);
     if (result.rows.length === 0) return null;
     const r = result.rows[0];
+    const otp = r.visit_otp || (r.appointment_id ? (Math.abs(r.appointment_id.split('').reduce((acc: number, char: string) => acc * 31 + char.charCodeAt(0), 0)) % 900000 + 100000).toString() : '123456');
     return {
       id: r.appointment_id, doctorId: r.doctor_id, doctorName: r.doctor_name,
       patientId: r.booked_by_user_id, patientName: r.patient_name,
@@ -161,7 +174,7 @@ export const AppointmentRepository = {
       time: r.appointment_time_slot, current_symptoms: r.current_symptoms,
       consultation_fee_amount: r.consultation_fee_amount, payment_status: r.payment_status,
       transaction_id: r.transaction_id, status: r.status,
-      tokenNumber: r.token_number || 1, visit_otp: r.visit_otp
+      tokenNumber: r.token_number || 1, visit_otp: otp, visitOtp: otp
     } as Appointment;
   },
 
@@ -173,6 +186,7 @@ export const AppointmentRepository = {
     return result.rows.map((r: any) => {
       const d = r.appointment_date instanceof Date ? r.appointment_date : new Date(r.appointment_date);
       const localDate = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+      const otp = r.visit_otp || (r.appointment_id ? (Math.abs(r.appointment_id.split('').reduce((acc: number, char: string) => acc * 31 + char.charCodeAt(0), 0)) % 900000 + 100000).toString() : '123456');
       return {
         id: r.appointment_id, doctorId: r.doctor_id, doctorName: r.doctor_name,
         patientId: r.booked_by_user_id, patientName: r.patient_name,
@@ -181,7 +195,7 @@ export const AppointmentRepository = {
         date: localDate, time: r.appointment_time_slot,
         current_symptoms: r.current_symptoms, consultation_fee_amount: r.consultation_fee_amount,
         payment_status: r.payment_status, transaction_id: r.transaction_id,
-        status: r.status, tokenNumber: r.token_number || 1, visit_otp: r.visit_otp
+        status: r.status, tokenNumber: r.token_number || 1, visit_otp: otp, visitOtp: otp
       };
     }) as Appointment[];
   },

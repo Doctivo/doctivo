@@ -37,7 +37,11 @@ export async function POST(req: NextRequest) {
       
       // Mark as Paid and Confirmed
       await query(
-        "UPDATE appointments SET status = 'Confirmed', payment_status = 'Paid' WHERE (transaction_id = $1 OR appointment_id = $1) AND status = 'Pending_Payment'",
+        `UPDATE appointments 
+         SET status = 'Confirmed', 
+             payment_status = 'Paid',
+             visit_otp = COALESCE(NULLIF(visit_otp, ''), LPAD(FLOOR(RANDOM() * 900000 + 100000)::TEXT, 6, '0'))
+         WHERE (transaction_id = $1 OR appointment_id = $1) AND status = 'Pending_Payment'`,
         [orderId]
       );
       console.log(`Webhook: Order ${orderId} marked as Confirmed.`);

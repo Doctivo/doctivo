@@ -247,8 +247,14 @@ export async function verifyAndConfirmBooking(orderId: string) {
     }
 
     if (isOrderPaid || isPaymentSuccess) {
-      // Payment verified on server! Update DB to Confirmed
-      await query("UPDATE appointments SET status = 'Confirmed', payment_status = 'Paid' WHERE appointment_id = $1", [appointment.appointment_id]);
+      // Payment verified on server! Update DB to Confirmed and ensure visit_otp is populated
+      await query(`
+        UPDATE appointments 
+        SET status = 'Confirmed', 
+            payment_status = 'Paid',
+            visit_otp = COALESCE(NULLIF(visit_otp, ''), LPAD(FLOOR(RANDOM() * 900000 + 100000)::TEXT, 6, '0'))
+        WHERE appointment_id = $1
+      `, [appointment.appointment_id]);
       
       // Fetch the updated appointment to return token_number and visit_otp
       const updatedRes = await query('SELECT * FROM appointments WHERE appointment_id = $1', [appointment.appointment_id]);

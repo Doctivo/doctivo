@@ -62,6 +62,22 @@ export async function PUT(req: NextRequest) {
       allergiesMedications,
     } = body;
 
+    if (fullName) {
+      if (fullName.trim().length < 2) {
+        return NextResponse.json({ error: 'Name must be at least 2 characters long.' }, { status: 400 });
+      }
+      if (!/^[a-zA-Z\s]+$/.test(fullName.trim())) {
+        return NextResponse.json({ error: 'Name must contain only alphabets and spaces.' }, { status: 400 });
+      }
+      const abusiveWords = ['abuse', 'fuck', 'shit', 'bitch', 'ass', 'bastard', 'cunt', 'dick', 'pussy', 'whore', 'slut', 'fag', 'nigger', 'chutiya', 'bhosadike', 'madarchod', 'behenchod', 'gandu', 'randi', 'kamina', 'harami', 'kutta'];
+      const nameLower = fullName.toLowerCase();
+      for (const word of abusiveWords) {
+        if (nameLower.includes(word)) {
+          return NextResponse.json({ error: 'Name contains inappropriate or abusive content.' }, { status: 400 });
+        }
+      }
+    }
+
     const updateRes = await query(
       `UPDATE patients
        SET full_name = COALESCE($1, full_name),

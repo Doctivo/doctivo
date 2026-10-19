@@ -103,4 +103,5 @@ export interface Appointment {
   current_symptoms?: string;
   payment_mode?: string;
   visit_otp?: string;
+  visitOtp?: string;
 }

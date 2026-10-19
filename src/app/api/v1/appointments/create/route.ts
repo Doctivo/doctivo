@@ -57,20 +57,44 @@ export async function POST(req: NextRequest) {
     const patientName = (reqPatientName && reqPatientName.trim().length > 0)
       ? reqPatientName.trim()
       : (userRes.rows[0]?.full_name || 'Patient');
+
+    if (patientName && patientName !== 'Patient') {
+      if (patientName.length < 2) {
+        return NextResponse.json({ error: 'Patient name must be at least 2 characters long.' }, { status: 400 });
+      }
+      if (!/^[a-zA-Z\s]+$/.test(patientName)) {
+        return NextResponse.json({ error: 'Patient name must contain only alphabets and spaces.' }, { status: 400 });
+      }
+      const abusiveWords = ['abuse', 'fuck', 'shit', 'bitch', 'ass', 'bastard', 'cunt', 'dick', 'pussy', 'whore', 'slut', 'fag', 'nigger', 'chutiya', 'bhosadike', 'madarchod', 'behenchod', 'gandu', 'randi', 'kamina', 'harami', 'kutta'];
+      const nameLower = patientName.toLowerCase();
+      for (const word of abusiveWords) {
+        if (nameLower.includes(word)) {
+          return NextResponse.json({ error: 'Patient name contains inappropriate or abusive content.' }, { status: 400 });
+        }
+      }
+    }
+
     const bloodGroup = patientBloodGroup || userRes.rows[0]?.blood_group || null;
 
     // 4. Create Pending Appointment
     const appointmentId = `APT_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
     const amount = Number(doctor.fees || 0);
+    const tokenResult = await query(
+      "SELECT COUNT(*) as count FROM appointments WHERE doctor_id = $1 AND appointment_date = $2 AND status != 'Cancelled'",
+      [doctorId, date]
+    );
+    const tokenNumber = parseInt(tokenResult.rows[0]?.count || '0', 10) + 1;
+    const visitOtp = Math.floor(100000 + Math.random() * 900000).toString();
     
     await query(`
       INSERT INTO appointments (
         appointment_id, booked_by_user_id, doctor_id, doctor_name, 
         patient_type, patient_name, patient_age, patient_gender, patient_blood_group,
         appointment_date, appointment_time_slot, current_symptoms, 
-        status, consultation_fee_amount, transaction_id, created_at
+        status, consultation_fee_amount, transaction_id, created_at,
+        token_number, visit_otp
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'Pending_Payment', $13, $1, NOW())
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'Pending_Payment', $13, $1, NOW(), $14, $15)
     `, [
       appointmentId, 
       decoded.userId, 
@@ -84,7 +108,9 @@ export async function POST(req: NextRequest) {
       date, 
       time, 
       currentSymptoms || '', 
-      amount
+      amount,
+      tokenNumber,
+      visitOtp
     ]);
 
     // 5. Create Cashfree Order
