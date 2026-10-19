@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { name, relation, age, gender, bloodGroup, phone } = body;
+    const { name, relation, age, gender, bloodGroup, phone, medicalHistory, allergies } = body;
 
     if (!name) {
       return NextResponse.json({ error: 'Family member name is required' }, { status: 400 });
@@ -50,6 +50,8 @@ export async function POST(req: NextRequest) {
         gender: gender || 'Male',
         blood_group: bloodGroup || 'O+',
         phone: phone || '',
+        medicalHistory: medicalHistory || '',
+        allergies: allergies || '',
       } as any,
       decoded.userId
     );
