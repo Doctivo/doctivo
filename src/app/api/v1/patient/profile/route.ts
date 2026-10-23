@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     const res = await query(
       `SELECT patient_id, phone_number, full_name, age, gender, height_cm, weight_kg, 
               blood_group, state, city, area_society, pincode, secondary_phone, 
-              past_medical_history, allergies_medications, is_profile_complete 
+              past_medical_history, allergies_medications, is_profile_complete, image_url 
        FROM patients WHERE patient_id = $1`,
       [decoded.userId]
     );
@@ -60,7 +60,9 @@ export async function PUT(req: NextRequest) {
       secondaryPhone,
       pastMedicalHistory,
       allergiesMedications,
+      imageUrl,
     } = body;
+    const finalImageUrl = imageUrl || body.image_url;
 
     if (fullName) {
       if (fullName.trim().length < 2) {
@@ -93,8 +95,9 @@ export async function PUT(req: NextRequest) {
            secondary_phone = COALESCE($11, secondary_phone),
            past_medical_history = COALESCE($12, past_medical_history),
            allergies_medications = COALESCE($13, allergies_medications),
+           image_url = COALESCE($14, image_url),
            is_profile_complete = true
-       WHERE patient_id = $14
+       WHERE patient_id = $15
        RETURNING *`,
       [
         fullName,
@@ -110,6 +113,7 @@ export async function PUT(req: NextRequest) {
         secondaryPhone,
         pastMedicalHistory,
         allergiesMedications,
+        finalImageUrl !== undefined ? finalImageUrl : null,
         decoded.userId,
       ]
     );
