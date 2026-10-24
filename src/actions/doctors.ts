@@ -82,10 +82,58 @@ export async function addAttendant(attendantData: any, doctorId: string) {
   const session = await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.DOCTOR]);
   if (session.role === ROLES.DOCTOR && session.userId !== doctorId) throw new Error('Forbidden: Data access boundary violation.');
   try {
-    const attendantId = await DoctorService.addAttendant(attendantData, doctorId);
-    return { success: true, attendantId };
+    const result = await DoctorService.addAttendant(attendantData, doctorId);
+    return { success: true, attendantId: result.attendantId, pin: result.pin };
   } catch (error: any) {
     logger.error('Error adding attendant::', { error: error.message || error });
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Removes an attendant from a doctor's clinic
+ */
+export async function deleteAttendant(attendantId: string, doctorId: string) {
+  const session = await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.DOCTOR]);
+  if (session.role === ROLES.DOCTOR && session.userId !== doctorId) throw new Error('Forbidden: Data access boundary violation.');
+  try {
+    await DoctorService.deleteAttendant(attendantId, doctorId);
+    return { success: true };
+  } catch (error: any) {
+    logger.error('Error deleting attendant::', { error: error.message || error });
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Toggles an attendant's status between 'Active' and 'Suspended'
+ */
+export async function toggleAttendantStatus(attendantId: string, doctorId: string, status: string) {
+  const session = await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.DOCTOR]);
+  if (session.role === ROLES.DOCTOR && session.userId !== doctorId) throw new Error('Forbidden: Data access boundary violation.');
+  try {
+    await DoctorService.updateAttendantStatus(attendantId, doctorId, status);
+    return { success: true };
+  } catch (error: any) {
+    logger.error('Error toggling attendant status::', { error: error.message || error });
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Resets an attendant's 6-digit access PIN
+ */
+export async function resetAttendantPin(attendantId: string, doctorId: string, newPin?: string) {
+  const session = await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.DOCTOR]);
+  if (session.role === ROLES.DOCTOR && session.userId !== doctorId) throw new Error('Forbidden: Data access boundary violation.');
+  try {
+    const pin = newPin && /^\d{6}$/.test(newPin) 
+      ? newPin 
+      : Math.floor(100000 + Math.random() * 900000).toString();
+    await DoctorService.resetAttendantPin(attendantId, doctorId, pin);
+    return { success: true, pin };
+  } catch (error: any) {
+    logger.error('Error resetting attendant pin::', { error: error.message || error });
     return { success: false, error: error.message };
   }
 }
@@ -119,4 +167,3 @@ export async function updateDoctorServices(doctorId: string, services: string[])
     return { success: false, error: error.message };
   }
 }
-

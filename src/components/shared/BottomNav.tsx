@@ -26,8 +26,8 @@ export function BottomNav() {
   return (
     <>
       {/* Mobile Bottom Navigation */}
-      <div className={cn("md:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-100 dark:border-slate-800 z-50", pathname?.startsWith('/book/') && "hidden")}>
-        <div className="max-w-[480px] mx-auto h-20 flex items-center justify-around px-2">
+      <div className={cn("md:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-100 dark:border-slate-800 z-50 pb-[env(safe-area-inset-bottom,0px)]", pathname?.startsWith('/book/') && "hidden")}>
+        <div className="max-w-[480px] mx-auto h-16 flex items-center justify-around px-2">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
             return (

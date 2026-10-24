@@ -304,12 +304,25 @@ export async function getAppointmentById(id: string) {
 
 /**
  * Fetches all appointments for a specific doctor on a selected date, sorted by token number.
+ * Strictly checks tenant boundaries for doctors and assigned attendants.
  */
 export async function getDoctorAppointmentsForDate(doctorId: string, dateStr: string) {
   const session = await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.DOCTOR, ROLES.ATTENDANT]);
-  if (session.role === ROLES.DOCTOR && session.userId !== doctorId) throw new Error('Forbidden');
+  if (session.role === ROLES.DOCTOR && session.userId !== doctorId) {
+    throw new Error('Forbidden: Doctor can only view appointments for their own clinic.');
+  }
+  if (session.role === ROLES.ATTENDANT && session.doctorId !== doctorId) {
+    throw new Error('Forbidden: Attendant is not assigned to this doctor clinic.');
+  }
   try {
-    return await AppointmentService.getDoctorAppointmentsForDate(doctorId, dateStr);
+    const apps = await AppointmentService.getDoctorAppointmentsForDate(doctorId, dateStr);
+    // Sanitize OTP for privacy: attendants should only verify OTP provided by patient, not peek it from dashboard
+    return apps.map(app => ({
+      ...app,
+      visit_otp: (app.status === 'Waiting' || app.status === 'Completed' || app.status === 'In Consultation') ? app.visit_otp : undefined,
+      visitOtp: (app.status === 'Waiting' || app.status === 'Completed' || app.status === 'In Consultation') ? app.visitOtp : undefined,
+      requiresOtpVerification: app.status === 'Confirmed'
+    }));
   } catch (error: any) {
     logger.error('Error fetching doctor appointments for date:', { error: error.message });
     return [];
@@ -320,6 +333,27 @@ export async function updateAppointmentStatus(appointmentId: string, status: str
   const session = await requireAuth(); 
   try {
     const existing = await AppointmentService.getAppointmentById(appointmentId);
+    if (!existing) {
+      return { success: false, error: 'Appointment not found.' };
+    }
+
+    // Role-based boundary checks
+    if (session.role === ROLES.PATIENT) {
+      if (existing.patientId !== session.userId) {
+        throw new Error('Forbidden: You can only manage your own appointments.');
+      }
+      if (status !== 'Cancelled') {
+        throw new Error('Forbidden: Patients can only request appointment cancellation.');
+      }
+    } else if (session.role === ROLES.DOCTOR) {
+      if (existing.doctorId !== session.userId) {
+        throw new Error('Forbidden: Doctor can only update appointments for their own clinic.');
+      }
+    } else if (session.role === ROLES.ATTENDANT) {
+      if (existing.doctorId !== session.doctorId) {
+        throw new Error('Forbidden: Attendant is not assigned to this clinic appointment.');
+      }
+    }
     
     // Automatically trigger Cashfree Refund if cancelled by patient
     if (status === 'Cancelled' && existing?.payment_status === 'Paid' && existing?.transaction_id) {
@@ -365,8 +399,19 @@ export async function updateAppointmentStatus(appointmentId: string, status: str
 }
 
 export async function verifyVisitOtp(appointmentId: string, otp: string) {
-  await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.DOCTOR, ROLES.ATTENDANT]);
+  const session = await requireRoles([ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.DOCTOR, ROLES.ATTENDANT]);
   try {
+    const existing = await AppointmentService.getAppointmentById(appointmentId);
+    if (!existing) {
+      return { success: false, error: 'Appointment not found.' };
+    }
+    if (session.role === ROLES.DOCTOR && existing.doctorId !== session.userId) {
+      throw new Error('Forbidden: Doctor does not own this appointment.');
+    }
+    if (session.role === ROLES.ATTENDANT && existing.doctorId !== session.doctorId) {
+      throw new Error('Forbidden: Attendant is not assigned to this doctor clinic.');
+    }
+
     await AppointmentService.verifyVisitOtp(appointmentId, otp);
     return { success: true };
   } catch (error: any) {
@@ -387,6 +432,20 @@ export async function getBookedSlots(doctorId: string, date: string) {
 export async function rescheduleAppointment(appId: string, newDate: string, newTime: string) {
   const session = await requireAuth();
   try {
+    const existing = await AppointmentService.getAppointmentById(appId);
+    if (!existing) {
+      return { success: false, error: 'Appointment not found.' };
+    }
+    if (session.role === ROLES.PATIENT && existing.patientId !== session.userId) {
+      throw new Error('Forbidden: You can only reschedule your own appointment.');
+    }
+    if (session.role === ROLES.DOCTOR && existing.doctorId !== session.userId) {
+      throw new Error('Forbidden: Doctor does not own this appointment.');
+    }
+    if (session.role === ROLES.ATTENDANT && existing.doctorId !== session.doctorId) {
+      throw new Error('Forbidden: Attendant is not assigned to this clinic.');
+    }
+
     await AppointmentService.rescheduleAppointment(appId, newDate, newTime);
     return { success: true };
   } catch (error: any) {

@@ -111,9 +111,18 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // Doctor Routes Protection
-  if (pathname.startsWith('/doctor/')) {
+  // Doctor Dashboard Protection (Doctor public profile /doctor/[id] remains open)
+  if (pathname.startsWith('/doctor/dashboard')) {
     if (!role || (role !== 'DOCTOR' && role !== 'Doctor' && role !== 'SUPER_ADMIN')) {
+      const url = new URL('/login', request.url);
+      url.searchParams.set('callbackUrl', encodeURI(request.url));
+      return NextResponse.redirect(url);
+    }
+  }
+
+  // Attendant Dashboard Protection
+  if (pathname.startsWith('/attendant/dashboard') || pathname === '/attendant') {
+    if (!role || (role !== 'ATTENDANT' && role !== 'Attendant' && role !== 'SUPER_ADMIN')) {
       const url = new URL('/login', request.url);
       url.searchParams.set('callbackUrl', encodeURI(request.url));
       return NextResponse.redirect(url);

@@ -96,14 +96,22 @@ export async function unifiedLogin(identifier: string) {
     }
 
     // 4. Check if Attendant ID (e.g. ATT-123)
-    const attendantRes = await query('SELECT * FROM attendants WHERE attendant_id = $1 OR attendant_id = $2', [identifier, identifier.toUpperCase()]);
-    if (attendantRes.rows.length > 0) {
+    if (identifier.toUpperCase().startsWith('ATT-')) {
+      const attId = identifier.trim().toUpperCase();
+      const attendantRes = await query('SELECT * FROM attendants WHERE attendant_id = $1', [attId]);
+      if (attendantRes.rows.length === 0) {
+        return { success: false, error: 'Attendant ID not found in directory.' };
+      }
       const attendantData = attendantRes.rows[0];
-      await createSession(attendantData.attendant_id, 'Attendant');
+      const status = attendantData.status || attendantData.account_status || 'Active';
+      if (status !== 'Active') {
+        return { success: false, error: 'Account Suspended: Contact managing doctor to reactivate your access.' };
+      }
       return {
         success: true,
-        role: 'Attendant',
-        user: attendantData
+        requirePin: true,
+        attendantId: attendantData.attendant_id,
+        attendantName: attendantData.full_name
       };
     }
 
@@ -320,6 +328,64 @@ export async function verifyAdminOtp(email: string, otp: string) {
   } catch (error: any) {
     console.error('verifyAdminOtp Error:', error.message);
     return { success: false, error: 'Database verification failed.' };
+  }
+}
+
+/**
+ * Verifies Attendant PIN and creates a tenant-isolated session
+ */
+export async function verifyAttendantPin(attendantId: string, pin: string) {
+  if (!attendantId || !pin) {
+    return { success: false, error: 'Attendant ID and 6-digit PIN are required.' };
+  }
+  
+  const idUpper = attendantId.trim().toUpperCase();
+  const now = Date.now();
+  const limitRecord = otpLimitMap.get(idUpper);
+  if (limitRecord && limitRecord.lockUntil > now) {
+    const waitMinutes = Math.ceil((limitRecord.lockUntil - now) / 60000);
+    return { success: false, error: `Account locked due to multiple failed PIN attempts. Try again in ${waitMinutes} minutes.` };
+  }
+
+  try {
+    const attendantRes = await query('SELECT * FROM attendants WHERE attendant_id = $1', [idUpper]);
+    if (attendantRes.rows.length === 0) {
+      return { success: false, error: 'Attendant record not found in directory.' };
+    }
+
+    const attendantData = attendantRes.rows[0];
+    const status = attendantData.status || attendantData.account_status || 'Active';
+    if (status !== 'Active') {
+      return { success: false, error: 'Account Suspended: Contact managing doctor to reactivate your access.' };
+    }
+
+    const correctPin = attendantData.pin || '123456';
+    if (pin.trim() !== correctPin.trim()) {
+      const rec = limitRecord || { attempts: 0, lockUntil: 0 };
+      rec.attempts += 1;
+      if (rec.attempts >= 5) {
+        rec.lockUntil = now + 15 * 60 * 1000;
+        otpLimitMap.set(idUpper, rec);
+        return { success: false, error: 'Account locked due to 5 consecutive invalid PIN attempts. Try again in 15 minutes.' };
+      }
+      otpLimitMap.set(idUpper, rec);
+      return { success: false, error: `Invalid PIN. ${5 - rec.attempts} attempt(s) remaining.` };
+    }
+
+    // Clear limit upon successful login
+    otpLimitMap.delete(idUpper);
+
+    // Cryptographically secure session bound to doctor_id
+    await createSession(attendantData.attendant_id, 'Attendant', attendantData.doctor_id);
+
+    return {
+      success: true,
+      role: 'Attendant',
+      user: attendantData
+    };
+  } catch (error: any) {
+    console.error('verifyAttendantPin Error:', error.message);
+    return { success: false, error: 'Database verification failed. Please try again.' };
   }
 }
 

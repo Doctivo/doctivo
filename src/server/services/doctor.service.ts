@@ -25,7 +25,7 @@ export const DoctorService = {
     }
 
     const attendantId = `ATT-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-    await DoctorRepository.addAttendant(attendantId, attendantData, doctorId);
+    const pin = await DoctorRepository.addAttendant(attendantId, attendantData, doctorId);
 
     if (attendantData.email) {
       const welcomeHtml = `
@@ -34,13 +34,26 @@ export const DoctorService = {
           <p>Hello <strong>${attendantData.name}</strong>,</p>
           <p>You have been added as an attendant for Dr. ${doctor.name}.</p>
           <p><strong>Your Attendant ID:</strong> ${attendantId}</p>
+          <p><strong>Your Security PIN:</strong> ${pin}</p>
           <p>Login at <a href="https://doctivo.in/login">doctivo.in/login</a></p>
         </div>
       `;
-      await sendTransactionalEmail(attendantData.email, attendantData.name, 'Welcome to Doctivo!', welcomeHtml);
+      await sendTransactionalEmail(attendantData.email, attendantData.name, 'Welcome to Doctivo Clinic Staff!', welcomeHtml);
     }
 
-    return attendantId;
+    return { attendantId, pin };
+  },
+
+  async deleteAttendant(attendantId: string, doctorId: string) {
+    await DoctorRepository.deleteAttendant(attendantId, doctorId);
+  },
+
+  async updateAttendantStatus(attendantId: string, doctorId: string, status: string) {
+    await DoctorRepository.updateAttendantStatus(attendantId, doctorId, status);
+  },
+
+  async resetAttendantPin(attendantId: string, doctorId: string, newPin: string) {
+    await DoctorRepository.resetAttendantPin(attendantId, doctorId, newPin);
   },
 
   async updateDoctorSchedule(doctorId: string, defaultSchedule: any, customSchedule: any) {

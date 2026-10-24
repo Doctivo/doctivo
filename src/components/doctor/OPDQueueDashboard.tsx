@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Users, UserCheck, Stethoscope, CheckCircle, RefreshCw, LogOut, Settings, Plus, Trash2, Calendar, Clock } from 'lucide-react';
+import { Users, UserCheck, Stethoscope, CheckCircle, RefreshCw, LogOut, Settings, Plus, Trash2, Calendar, Clock, Copy, Check, UserMinus, KeyRound, Share2, ShieldAlert, ShieldCheck } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { getDoctorAppointmentsForDate, updateAppointmentStatus, verifyVisitOtp } from '@/actions/appointments';
 import { getDoctorsCatalog } from '@/actions/admin';
-import { getDoctorById, getDoctorAttendants, addAttendant, updateDoctorSchedule, updateDoctorServices } from '@/actions/doctors';
+import { getDoctorById, getDoctorAttendants, addAttendant, deleteAttendant, toggleAttendantStatus, resetAttendantPin, updateDoctorSchedule, updateDoctorServices } from '@/actions/doctors';
 import { logoutSession } from '@/actions/auth';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -47,8 +47,18 @@ export function OPDQueueDashboard({ mode }: OPDQueueDashboardProps) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [settingsTab, setSettingsTab] = useState<'staff' | 'schedule' | 'services'>('staff');
   const [staffList, setStaffList] = useState<any[]>([]);
-  const [newStaff, setNewStaff] = useState({ name: '', phone: '', email: '' });
+  const [newStaff, setNewStaff] = useState({ name: '', phone: '', email: '', pin: '' });
   const [isAddingStaff, setIsAddingStaff] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [resettingPinId, setResettingPinId] = useState<string | null>(null);
+  const [togglingStaffId, setTogglingStaffId] = useState<string | null>(null);
+  const [deletingStaffId, setDeletingStaffId] = useState<string | null>(null);
+  const [createdCredentialModal, setCreatedCredentialModal] = useState<{
+    id: string;
+    name: string;
+    phone: string;
+    pin: string;
+  } | null>(null);
   
   // Doctor Schedule state
   const [docDetails, setDocDetails] = useState<any | null>(null);
@@ -101,12 +111,22 @@ export function OPDQueueDashboard({ mode }: OPDQueueDashboardProps) {
       toast({ variant: 'destructive', title: 'Missing Info', description: 'Name and Phone are required.' });
       return;
     }
+    if (newStaff.phone.length !== 10) {
+      toast({ variant: 'destructive', title: 'Invalid Phone', description: 'Please enter a valid 10-digit mobile number.' });
+      return;
+    }
     setIsAddingStaff(true);
     try {
       const res = await addAttendant(newStaff, selectedDoctorId);
-      if (res.success) {
+      if (res.success && res.attendantId) {
         toast({ title: 'Staff Added', description: `Attendant registered with ID: ${res.attendantId}` });
-        setNewStaff({ name: '', phone: '', email: '' });
+        setCreatedCredentialModal({
+          id: res.attendantId,
+          name: newStaff.name,
+          phone: newStaff.phone,
+          pin: res.pin || newStaff.pin || '123456'
+        });
+        setNewStaff({ name: '', phone: '', email: '', pin: '' });
         const staff = await getDoctorAttendants(selectedDoctorId);
         setStaffList(staff);
       } else {
@@ -117,6 +137,73 @@ export function OPDQueueDashboard({ mode }: OPDQueueDashboardProps) {
     } finally {
       setIsAddingStaff(false);
     }
+  };
+
+  const handleDeleteStaff = async (attendantId: string) => {
+    if (!confirm('Are you sure you want to remove this attendant? They will lose access immediately.')) return;
+    setDeletingStaffId(attendantId);
+    try {
+      const res = await deleteAttendant(attendantId, selectedDoctorId);
+      if (res.success) {
+        toast({ title: 'Attendant Removed', description: 'Attendant access revoked successfully.' });
+        setStaffList(staffList.filter(s => s.attendant_id !== attendantId));
+      } else {
+        toast({ variant: 'destructive', title: 'Error', description: res.error });
+      }
+    } catch (e: any) {
+      toast({ variant: 'destructive', title: 'Error', description: e.message });
+    } finally {
+      setDeletingStaffId(null);
+    }
+  };
+
+  const handleToggleStaffStatus = async (attendantId: string, currentStatus: string) => {
+    const nextStatus = currentStatus === 'Active' ? 'Suspended' : 'Active';
+    setTogglingStaffId(attendantId);
+    try {
+      const res = await toggleAttendantStatus(attendantId, selectedDoctorId, nextStatus);
+      if (res.success) {
+        toast({ title: `Staff ${nextStatus}`, description: `Attendant status updated to ${nextStatus}.` });
+        setStaffList(staffList.map(s => s.attendant_id === attendantId ? { ...s, status: nextStatus, account_status: nextStatus } : s));
+      } else {
+        toast({ variant: 'destructive', title: 'Error', description: res.error });
+      }
+    } catch (e: any) {
+      toast({ variant: 'destructive', title: 'Error', description: e.message });
+    } finally {
+      setTogglingStaffId(null);
+    }
+  };
+
+  const handleResetStaffPin = async (attendantId: string, staffName: string) => {
+    setResettingPinId(attendantId);
+    try {
+      const res = await resetAttendantPin(attendantId, selectedDoctorId);
+      if (res.success && res.pin) {
+        toast({ title: 'PIN Reset Successfully', description: `New 6-digit PIN for ${staffName}: ${res.pin}` });
+        setStaffList(staffList.map(s => s.attendant_id === attendantId ? { ...s, pin: res.pin } : s));
+      } else {
+        toast({ variant: 'destructive', title: 'Error', description: res.error });
+      }
+    } catch (e: any) {
+      toast({ variant: 'destructive', title: 'Error', description: e.message });
+    } finally {
+      setResettingPinId(null);
+    }
+  };
+
+  const handleCopy = (text: string, id: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+    toast({ title: 'Copied to clipboard', description: text });
+  };
+
+  const handleShareWhatsApp = (staff: any) => {
+    const docName = docDetails?.name || 'Doctor';
+    const message = `Hello ${staff.full_name},\n\nYour Doctivo Clinic Attendant login credentials are:\n• Doctor: Dr. ${docName}\n• Attendant ID: ${staff.attendant_id}\n• Security PIN: ${staff.pin || '123456'}\n• Login Portal: https://doctivo.in/login\n\nPlease keep your PIN confidential.`;
+    const cleanPhone = (staff.phone_number || staff.mobile || '').replace(/\D/g, '').slice(-10);
+    window.open(`https://wa.me/91${cleanPhone}?text=${encodeURIComponent(message)}`, '_blank');
   };
 
   const handleAddOverride = () => {
@@ -589,30 +676,87 @@ export function OPDQueueDashboard({ mode }: OPDQueueDashboardProps) {
           <ScrollArea className="flex-1 p-8 overflow-y-auto">
             {settingsTab === 'staff' ? (
               <div className="space-y-8">
+                {/* Newly Created Credential Notification Modal/Card */}
+                {createdCredentialModal && (
+                  <div className="bg-emerald-50 border-2 border-emerald-500/30 rounded-2xl p-5 space-y-3 animate-in fade-in slide-in-from-top duration-300">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <ShieldCheck className="h-5 w-5 text-emerald-600" />
+                        <h4 className="text-sm font-black text-emerald-900 uppercase tracking-wide">Attendant Account Created!</h4>
+                      </div>
+                      <button 
+                        onClick={() => setCreatedCredentialModal(null)} 
+                        className="text-xs font-bold text-emerald-700 hover:text-emerald-900 px-2 py-1"
+                      >
+                        Dismiss
+                      </button>
+                    </div>
+                    <p className="text-xs text-emerald-800">
+                      Share these credentials with <strong>{createdCredentialModal.name}</strong> to let them sign in immediately at <code>doctivo.in/login</code>.
+                    </p>
+                    <div className="grid grid-cols-2 gap-3 bg-white p-3 rounded-xl border border-emerald-200">
+                      <div>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase">Attendant ID</span>
+                        <div className="flex items-center gap-2 font-mono font-black text-slate-800 text-sm">
+                          {createdCredentialModal.id}
+                          <button onClick={() => handleCopy(createdCredentialModal.id, 'modal_id')} className="text-slate-400 hover:text-blue-600">
+                            {copiedId === 'modal_id' ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+                          </button>
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase">Security PIN</span>
+                        <div className="flex items-center gap-2 font-mono font-black text-emerald-700 text-sm">
+                          {createdCredentialModal.pin}
+                          <button onClick={() => handleCopy(createdCredentialModal.pin, 'modal_pin')} className="text-slate-400 hover:text-blue-600">
+                            {copiedId === 'modal_pin' ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <Button 
+                      onClick={() => handleShareWhatsApp({ full_name: createdCredentialModal.name, attendant_id: createdCredentialModal.id, pin: createdCredentialModal.pin, phone_number: createdCredentialModal.phone })}
+                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl h-11 flex items-center justify-center gap-2 shadow-sm"
+                    >
+                      <Share2 className="h-4 w-4" /> Share Credentials via WhatsApp
+                    </Button>
+                  </div>
+                )}
+
                 {/* Add Attendant Section */}
                 <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 space-y-4">
                   <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">Add Clinic Attendant</h3>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-slate-400">Full Name</Label>
+                      <Label className="text-[10px] font-black uppercase text-slate-400">Full Name *</Label>
                       <Input 
-                        placeholder="John Doe" 
+                        placeholder="e.g. Ramesh Kumar" 
                         value={newStaff.name} 
                         onChange={e => setNewStaff({ ...newStaff, name: e.target.value })}
                         className="h-12 bg-white border-slate-200 font-bold rounded-xl"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-slate-400">Phone Number</Label>
+                      <Label className="text-[10px] font-black uppercase text-slate-400">Phone Number (10 Digits) *</Label>
                       <Input 
-                        placeholder="10-digit number" 
+                        placeholder="10-digit mobile number" 
                         maxLength={10}
                         value={newStaff.phone} 
                         onChange={e => setNewStaff({ ...newStaff, phone: e.target.value.replace(/\D/g, '') })}
                         className="h-12 bg-white border-slate-200 font-bold rounded-xl"
                       />
                     </div>
-                    <div className="col-span-2 space-y-2">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-slate-400">6-Digit Access PIN (Optional)</Label>
+                      <Input 
+                        placeholder="Auto-generated if left blank" 
+                        maxLength={6}
+                        value={newStaff.pin} 
+                        onChange={e => setNewStaff({ ...newStaff, pin: e.target.value.replace(/\D/g, '') })}
+                        className="h-12 bg-white border-slate-200 font-bold rounded-xl"
+                      />
+                    </div>
+                    <div className="space-y-2">
                       <Label className="text-[10px] font-black uppercase text-slate-400">Email Address (Optional)</Label>
                       <Input 
                         placeholder="attendant@example.com" 
@@ -625,30 +769,106 @@ export function OPDQueueDashboard({ mode }: OPDQueueDashboardProps) {
                   <Button 
                     onClick={handleAddStaff} 
                     disabled={isAddingStaff}
-                    className="w-full h-12 bg-blue-600 font-black rounded-xl text-white mt-2"
+                    className="w-full h-12 bg-blue-600 hover:bg-blue-700 font-black rounded-xl text-white mt-2 shadow-lg shadow-blue-600/20"
                   >
-                    {isAddingStaff ? <RefreshCw className="animate-spin h-5 w-5 text-white" /> : 'Register Attendant'}
+                    {isAddingStaff ? <RefreshCw className="animate-spin h-5 w-5 text-white" /> : 'Register Attendant & Generate PIN'}
                   </Button>
                 </div>
 
                 {/* Staff List Section */}
                 <div className="space-y-4">
-                  <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">Current Clinic Staff</h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">Active Clinic Staff ({staffList.length})</h3>
+                    <span className="text-[11px] text-slate-400 font-bold">Role: Attendant OPD Desk</span>
+                  </div>
                   {staffList.length === 0 ? (
-                    <p className="text-xs text-slate-400 font-medium italic">No attendants registered yet.</p>
+                    <div className="bg-slate-50 border border-dashed border-slate-200 rounded-2xl p-8 text-center space-y-2">
+                      <Users className="h-8 w-8 text-slate-300 mx-auto" />
+                      <p className="text-xs text-slate-500 font-bold">No attendants registered yet.</p>
+                      <p className="text-[11px] text-slate-400">Register your desk staff to manage check-ins and live queue.</p>
+                    </div>
                   ) : (
-                    <div className="divide-y divide-slate-100">
-                      {staffList.map(staff => (
-                        <div key={staff.attendant_id} className="py-4 flex justify-between items-center border-b border-slate-100">
-                          <div>
-                            <p className="text-sm font-black text-slate-800">{staff.full_name}</p>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">ID: {staff.attendant_id}</p>
+                    <div className="space-y-3">
+                      {staffList.map(staff => {
+                        const isSuspended = staff.status === 'Suspended' || staff.account_status === 'Suspended' || staff.account_status === 'Blocked';
+                        return (
+                          <div 
+                            key={staff.attendant_id} 
+                            className={`p-4 rounded-2xl border transition-all ${isSuspended ? 'bg-slate-50 border-rose-200 opacity-80' : 'bg-white border-slate-200 shadow-sm'}`}
+                          >
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                              <div className="space-y-1.5">
+                                <div className="flex items-center gap-2">
+                                  <h4 className="text-sm font-black text-slate-900">{staff.full_name}</h4>
+                                  <Badge className={isSuspended ? 'bg-rose-100 text-rose-700 hover:bg-rose-100 border-none text-[10px] font-black' : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none text-[10px] font-black'}>
+                                    {isSuspended ? 'SUSPENDED' : 'ACTIVE'}
+                                  </Badge>
+                                </div>
+                                <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 font-medium">
+                                  <span 
+                                    onClick={() => handleCopy(staff.attendant_id, staff.attendant_id)}
+                                    className="inline-flex items-center gap-1 font-mono font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 px-2 py-0.5 rounded cursor-pointer transition-colors"
+                                    title="Click to copy ID"
+                                  >
+                                    ID: {staff.attendant_id}
+                                    {copiedId === staff.attendant_id ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3 text-slate-400" />}
+                                  </span>
+                                  <span>•</span>
+                                  <span className="font-bold text-slate-700">{staff.phone_number || staff.mobile}</span>
+                                  <span>•</span>
+                                  <span className="text-[11px] text-slate-400">PIN: {staff.pin ? staff.pin : '••••••'}</span>
+                                </div>
+                              </div>
+
+                              <div className="flex flex-wrap items-center gap-2 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => handleShareWhatsApp(staff)}
+                                  className="h-9 px-3 text-emerald-700 border-emerald-200 hover:bg-emerald-50 rounded-xl font-bold text-xs flex items-center gap-1.5"
+                                  title="Share credentials on WhatsApp"
+                                >
+                                  <Share2 className="h-3.5 w-3.5" /> Share
+                                </Button>
+
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => handleResetStaffPin(staff.attendant_id, staff.full_name)}
+                                  disabled={resettingPinId === staff.attendant_id}
+                                  className="h-9 px-3 text-blue-700 border-blue-200 hover:bg-blue-50 rounded-xl font-bold text-xs flex items-center gap-1.5"
+                                  title="Generate new 6-digit PIN"
+                                >
+                                  <KeyRound className="h-3.5 w-3.5" /> 
+                                  {resettingPinId === staff.attendant_id ? 'Resetting...' : 'Reset PIN'}
+                                </Button>
+
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => handleToggleStaffStatus(staff.attendant_id, staff.status || staff.account_status || 'Active')}
+                                  disabled={togglingStaffId === staff.attendant_id}
+                                  className={`h-9 px-3 rounded-xl font-bold text-xs flex items-center gap-1.5 ${isSuspended ? 'text-emerald-700 border-emerald-200 hover:bg-emerald-50' : 'text-amber-700 border-amber-200 hover:bg-amber-50'}`}
+                                >
+                                  {isSuspended ? <ShieldCheck className="h-3.5 w-3.5" /> : <ShieldAlert className="h-3.5 w-3.5" />}
+                                  {isSuspended ? 'Activate' : 'Suspend'}
+                                </Button>
+
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost"
+                                  onClick={() => handleDeleteStaff(staff.attendant_id)}
+                                  disabled={deletingStaffId === staff.attendant_id}
+                                  className="h-9 w-9 p-0 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl"
+                                  title="Delete Attendant"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
                           </div>
-                          <div className="text-right text-xs font-bold text-slate-500">
-                            {staff.phone_number}
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>

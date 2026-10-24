@@ -65,8 +65,8 @@ export const PatientService = {
     return data;
   },
 
-  async removeFamilyMember(memberId: string) {
-    await PatientRepository.removeFamilyMember(memberId);
+  async removeFamilyMember(memberId: string, primaryUserId?: string) {
+    await PatientRepository.removeFamilyMember(memberId, primaryUserId);
   },
 
   async deletePatientAccount(patientId: string) {

@@ -7,9 +7,13 @@ import { logger } from '@/lib/logger';
 import { PatientService } from '@/server/services/patient.service';
 
 /**
- * Fetches a patient profile by phone number.
+ * Fetches a patient profile by phone number (Restricted to internal staff/admins).
  */
 export async function getPatientByPhone(phone: string) {
+  const session = await requireAuth();
+  if (session.role !== ROLES.ADMIN && session.role !== ROLES.SUPER_ADMIN && session.role !== ROLES.DOCTOR && session.role !== ROLES.ATTENDANT) {
+    throw new Error('Forbidden: Insufficient privileges.');
+  }
   try {
     return await PatientService.getPatientByPhone(phone);
   } catch (error: any) {
@@ -19,9 +23,13 @@ export async function getPatientByPhone(phone: string) {
 }
 
 /**
- * Fetches all family members for a primary user.
+ * Fetches all family members for a primary user (Guarded against IDOR).
  */
 export async function getFamilyMembers(primaryUserId: string) {
+  const session = await requireAuth();
+  if (session.userId !== primaryUserId && session.role !== ROLES.ADMIN && session.role !== ROLES.SUPER_ADMIN && session.role !== ROLES.DOCTOR) {
+    throw new Error('Forbidden: You can only access your own family members.');
+  }
   try {
     return await PatientService.getFamilyMembers(primaryUserId);
   } catch (error: any) {
@@ -81,12 +89,13 @@ export async function updateFamilyMember(member: Patient) {
 }
 
 /**
- * Removes a family member.
+ * Removes a family member safely scoped to the caller.
  */
 export async function removeFamilyMember(memberId: string) {
   const session = await requireAuth();
   try {
-    await PatientService.removeFamilyMember(memberId);
+    const isGlobalAdmin = session.role === ROLES.ADMIN || session.role === ROLES.SUPER_ADMIN;
+    await PatientService.removeFamilyMember(memberId, isGlobalAdmin ? undefined : session.userId);
     return { success: true };
   } catch (error: any) {
     logger.error('Remove Family Member Error::', { error: error.message || error });
@@ -110,4 +119,3 @@ export async function deletePatientAccount(patientId: string) {
     return { success: false, error: error.message };
   }
 }
-

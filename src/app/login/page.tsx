@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowRight, Loader2 } from 'lucide-react';
-import { unifiedLogin, verifyAdminOtp, verifyPatientOtp } from '@/actions/auth';
+import { unifiedLogin, verifyAdminOtp, verifyPatientOtp, verifyAttendantPin } from '@/actions/auth';
 import { useToast } from '@/hooks/use-toast';
 import { useStore } from '@/lib/store';
 import { Patient } from '@/types';
@@ -33,6 +33,9 @@ export default function LoginPage() {
   const [otpInput, setOtpInput] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
+  const [isPinMode, setIsPinMode] = useState(false);
+  const [pinAttendantId, setPinAttendantId] = useState('');
+  const [pinAttendantName, setPinAttendantName] = useState('');
 
   useEffect(() => {
     let interval: any;
@@ -104,6 +107,18 @@ export default function LoginPage() {
           return;
         }
 
+        // ATTENDANT 6-DIGIT PIN CHALLENGE
+        if ((result as any).requirePin) {
+          setIsPinMode(true);
+          setPinAttendantId((result as any).attendantId);
+          setPinAttendantName((result as any).attendantName || '');
+          setOtpSent(true);
+          setOtpEmail((result as any).attendantName || (result as any).attendantId);
+          toast({ title: 'Security PIN Required', description: `Please enter the 6-digit PIN for ${(result as any).attendantName || 'attendant'}.` });
+          setIsLoading(false);
+          return;
+        }
+
         // PATIENT SMS OTP (New logic)
         if ((result as any).requirePhoneOtp) {
           setOtpSent(true);
@@ -167,6 +182,30 @@ export default function LoginPage() {
     setIsVerifying(true);
     let isSuccess = false;
     try {
+      if (isPinMode) {
+        const result = await verifyAttendantPin(pinAttendantId, otpInput);
+        if (result.success && result.user) {
+          isSuccess = true;
+          setUserStore(null);
+          setPatientsStore([]);
+          setAppointmentsStore([]);
+          setAdminStore({
+            admin_id: result.user.attendant_id,
+            full_name: result.user.full_name,
+            email: "",
+            role: 'Attendant',
+            permissions: result.user.permissions || {},
+            doctor_id: result.user.doctor_id
+          });
+          setIsAuthenticated(true);
+          router.replace('/attendant/dashboard');
+          return;
+        } else {
+          toast({ variant: 'destructive', title: 'PIN Verification Failed', description: result.error });
+          return;
+        }
+      }
+
       const isPhoneOtp = /^\d{10}$/.test(otpEmail);
       
       // Verification call based on Phone vs Email
@@ -264,9 +303,11 @@ export default function LoginPage() {
            </div>
 
            <div>
-             <h2 className="text-3xl font-black text-slate-800 mb-2 px-1 tracking-tight">{otpSent ? "Verify OTP" : "Login"}</h2>
+             <h2 className="text-3xl font-black text-slate-800 mb-2 px-1 tracking-tight">{isPinMode ? "Attendant PIN" : (otpSent ? "Verify OTP" : "Login")}</h2>
              <p className="text-slate-400 font-bold text-xs uppercase tracking-widest px-1 mb-8">
-               {otpSent ? `Enter the 6-digit code sent to ${otpEmail}` : (isMobile ? "Enter your mobile number to continue" : "Access your portal using credentials")}
+               {isPinMode 
+                 ? `Enter 6-digit Security PIN for ${pinAttendantName || pinAttendantId}` 
+                 : (otpSent ? `Enter the 6-digit code sent to ${otpEmail}` : (isMobile ? "Enter your mobile number to continue" : "Access your portal using credentials"))}
              </p>
 
              <Card className="w-full bg-white dark:bg-slate-900 border-none shadow-[0_4px_25px_rgba(0,0,0,0.03)] dark:shadow-none rounded-[2.5rem] overflow-hidden">
@@ -274,23 +315,25 @@ export default function LoginPage() {
                  {otpSent ? (
                    <div className="space-y-6">
                      <div className="space-y-1 px-1">
-                       <label className="text-[10px] font-black text-primary uppercase tracking-widest">Verification Code</label>
+                       <label className="text-[10px] font-black text-primary uppercase tracking-widest">{isPinMode ? "Attendant 6-Digit PIN" : "Verification Code"}</label>
                        <div className="flex items-center border-b-2 border-slate-200 focus-within:border-primary transition-all py-3">
-                         <input type="tel" maxLength={6} placeholder="000000" className="border-none shadow-none outline-none focus:ring-0 h-10 text-2xl font-black text-slate-800 placeholder:text-slate-200 p-0 bg-transparent w-full text-center tracking-[0.5em]" value={otpInput || ''} onChange={(e) => setOtpInput(e.target.value.replace(/\D/g, '').slice(0, 6))} onKeyDown={(e) => e.key === 'Enter' && handleVerifyOtp()} />
+                         <input type="password" maxLength={6} placeholder="••••••" className="border-none shadow-none outline-none focus:ring-0 h-10 text-2xl font-black text-slate-800 placeholder:text-slate-200 p-0 bg-transparent w-full text-center tracking-[0.5em]" value={otpInput || ''} onChange={(e) => setOtpInput(e.target.value.replace(/\D/g, '').slice(0, 6))} onKeyDown={(e) => e.key === 'Enter' && handleVerifyOtp()} />
                        </div>
                      </div>
                      <Button className="w-full h-16 text-lg font-black bg-primary text-white rounded-full transition-all flex items-center justify-center gap-2 group shadow-xl shadow-primary/20 hover:bg-primary/90" onClick={handleVerifyOtp} disabled={otpInput.length !== 6 || isVerifying}>
-                       {isVerifying ? <Loader2 className="h-6 w-6 animate-spin" /> : <>Verify Code <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" /></>}
+                       {isVerifying ? <Loader2 className="h-6 w-6 animate-spin" /> : <>{isPinMode ? "Unlock Dashboard" : "Verify Code"} <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" /></>}
                      </Button>
                      <div className="flex justify-between items-center px-1 pt-2 text-xs font-bold">
-                       <button 
-                         onClick={handleLogin} 
-                         disabled={resendTimer > 0 || isLoading}
-                         className={`hover:underline transition-colors ${resendTimer > 0 ? 'text-slate-400 cursor-not-allowed' : 'text-primary'}`}
-                       >
-                         {resendTimer > 0 ? `Resend Code in ${resendTimer}s` : 'Resend Code'}
-                       </button>
-                       <button onClick={() => { setOtpSent(false); setOtpInput(''); }} className="text-slate-400 hover:text-slate-600">Change Identifier</button>
+                       {!isPinMode ? (
+                         <button 
+                           onClick={handleLogin} 
+                           disabled={resendTimer > 0 || isLoading}
+                           className={`hover:underline transition-colors ${resendTimer > 0 ? 'text-slate-400 cursor-not-allowed' : 'text-primary'}`}
+                         >
+                           {resendTimer > 0 ? `Resend Code in ${resendTimer}s` : 'Resend Code'}
+                         </button>
+                       ) : <span className="text-[10px] text-slate-400 font-bold uppercase">Clinic Staff Verification</span>}
+                       <button onClick={() => { setOtpSent(false); setIsPinMode(false); setOtpInput(''); }} className="text-slate-400 hover:text-slate-600">Change Identifier</button>
                      </div>
                    </div>
                  ) : (

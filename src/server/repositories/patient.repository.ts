@@ -173,8 +173,12 @@ export const PatientRepository = {
     return result.rows[0];
   },
 
-  async removeFamilyMember(memberId: string): Promise<void> {
-    await query('DELETE FROM family_members WHERE member_id = $1', [memberId]);
+  async removeFamilyMember(memberId: string, primaryUserId?: string): Promise<void> {
+    if (primaryUserId) {
+      await query('DELETE FROM family_members WHERE member_id = $1 AND primary_user_id = $2', [memberId, primaryUserId]);
+    } else {
+      await query('DELETE FROM family_members WHERE member_id = $1', [memberId]);
+    }
   },
 
   async deleteAccount(patientId: string): Promise<void> {

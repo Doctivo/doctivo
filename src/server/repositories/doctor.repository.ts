@@ -103,17 +103,54 @@ export const DoctorRepository = {
   },
 
   async findAttendantsByDoctorId(doctorId: string): Promise<any[]> {
-    const res = await query('SELECT * FROM attendants WHERE doctor_id = $1 ORDER BY full_name ASC', [doctorId]);
+    const res = await query(`
+      SELECT 
+        attendant_id, 
+        full_name, 
+        COALESCE(phone_number, mobile) as phone_number, 
+        email, 
+        doctor_id, 
+        pin, 
+        COALESCE(status, account_status, 'Active') as status, 
+        created_at 
+      FROM attendants 
+      WHERE doctor_id = $1 
+      ORDER BY created_at DESC, full_name ASC
+    `, [doctorId]);
     return res.rows;
   },
 
-  async addAttendant(attendantId: string, attendantData: any, doctorId: string): Promise<void> {
+  async addAttendant(attendantId: string, attendantData: any, doctorId: string): Promise<string> {
+    const pin = attendantData.pin && /^\d{6}$/.test(attendantData.pin) 
+      ? attendantData.pin 
+      : Math.floor(100000 + Math.random() * 900000).toString();
+
     await query(`
-      INSERT INTO attendants (attendant_id, full_name, phone_number, email, doctor_id, is_approved)
-      VALUES ($1, $2, $3, $4, $5, true)
+      INSERT INTO attendants (
+        attendant_id, full_name, phone_number, mobile, email, doctor_id, pin, status, account_status
+      )
+      VALUES ($1, $2, $3, $3, $4, $5, $6, 'Active', 'Active')
     `, [
-      attendantId, attendantData.name, attendantData.phone, attendantData.email || null, doctorId
+      attendantId, 
+      attendantData.name, 
+      attendantData.phone, 
+      attendantData.email || null, 
+      doctorId, 
+      pin
     ]);
+    return pin;
+  },
+
+  async deleteAttendant(attendantId: string, doctorId: string): Promise<void> {
+    await query('DELETE FROM attendants WHERE attendant_id = $1 AND doctor_id = $2', [attendantId, doctorId]);
+  },
+
+  async updateAttendantStatus(attendantId: string, doctorId: string, status: string): Promise<void> {
+    await query('UPDATE attendants SET status = $1, account_status = $1 WHERE attendant_id = $2 AND doctor_id = $3', [status, attendantId, doctorId]);
+  },
+
+  async resetAttendantPin(attendantId: string, doctorId: string, newPin: string): Promise<void> {
+    await query('UPDATE attendants SET pin = $1 WHERE attendant_id = $2 AND doctor_id = $3', [newPin, attendantId, doctorId]);
   },
 
   async updateSchedule(doctorId: string, defaultSchedule: any, customSchedule: any): Promise<void> {
