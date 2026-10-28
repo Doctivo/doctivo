@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AppointmentService } from '@/server/services/appointment.service';
 import { DoctorService } from '@/server/services/doctor.service';
+import { getISTDateInfo, isSlotInPast } from '@/lib/date-utils';
 
 const generateTimeSlots = (start: string, end: string) => {
-  const slots = [];
+  const slots: string[] = [];
   try {
     const [startH, startM] = start.split(':').map(Number);
     const [endH, endM] = end.split(':').map(Number);
@@ -16,7 +17,8 @@ const generateTimeSlots = (start: string, end: string) => {
       let hours = current.getHours();
       let minutes = current.getMinutes();
       const ampm = hours >= 12 ? 'PM' : 'AM';
-      hours = hours % 12; hours = hours ? hours : 12;
+      hours = hours % 12; 
+      hours = hours ? hours : 12;
       const minStr = minutes < 10 ? '0' + minutes : minutes;
       slots.push(`${hours}:${minStr} ${ampm}`);
       current.setMinutes(current.getMinutes() + 15); // Default 15 min duration
@@ -25,7 +27,7 @@ const generateTimeSlots = (start: string, end: string) => {
   return slots;
 };
 
-// In-memory cache for doctor shift times (5 min TTL) to avoid hitting database on every slot check
+// In-memory cache for doctor shift times (5 min TTL)
 const doctorScheduleCache = new Map<string, { data: any; expiry: number }>();
 
 export async function GET(
@@ -40,6 +42,13 @@ export async function GET(
     if (!date) {
       return NextResponse.json({ error: 'Date is required' }, { status: 400 });
     }
+
+    const cleanDate = date.split('T')[0].trim();
+    const { istTodayStr } = getISTDateInfo();
+
+    // Check if queried date is strictly in the past
+    const isPastDate = cleanDate < istTodayStr;
+    const isToday = cleanDate === istTodayStr;
 
     const doctorPromise = (async () => {
       const cached = doctorScheduleCache.get(doctorId);
@@ -56,7 +65,7 @@ export async function GET(
     // Run doctor lookup & booked slots query in PARALLEL
     const [doctor, bookedSlots] = await Promise.all([
       doctorPromise,
-      AppointmentService.getBookedSlots(doctorId, date),
+      isPastDate ? Promise.resolve([]) : AppointmentService.getBookedSlots(doctorId, cleanDate),
     ]);
 
     if (!doctor) {
@@ -69,17 +78,28 @@ export async function GET(
       doctor.endTime || '17:00'
     );
 
-    // Return the slots and mark which ones are booked
-    const slots = allSlots.map(time => ({
-      time,
-      isBooked: bookedSlots.includes(time)
-    }));
+    // CRITICAL: A slot is unbookable if:
+    // 1. It is already booked in the DB, OR
+    // 2. The entire date is in the past, OR
+    // 3. The date is today and slot time <= current IST time (e.g. 09:00 AM at 10:40 AM)
+    const slots = allSlots.map(time => {
+      const isPast = isPastDate || (isToday && isSlotInPast(cleanDate, time));
+      const isAlreadyBooked = bookedSlots.includes(time);
+      return {
+        time,
+        isBooked: isAlreadyBooked || isPast,
+        isPast,
+      };
+    });
 
     return NextResponse.json(
       { success: true, slots },
       {
         headers: {
-          'Cache-Control': 'public, max-age=5, stale-while-revalidate=15',
+          // Never cache today's slots at CDN to ensure live real-time ticking
+          'Cache-Control': isToday 
+            ? 'no-store, no-cache, must-revalidate' 
+            : 'public, max-age=60, stale-while-revalidate=120',
         },
       }
     );

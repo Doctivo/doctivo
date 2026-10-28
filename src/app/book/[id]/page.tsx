@@ -35,9 +35,10 @@ const generateTimeSlots = (start: string, end: string, duration: number, selecte
     const endTime = new Date();
     endTime.setHours(endH, endM, 0, 0);
 
-    const now = new Date();
+    const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
     // Offset local timezone for correct today check
-    const localNowStr = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+    const localNowStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    if (selectedDate < localNowStr) return [];
     const isToday = selectedDate === localNowStr;
 
     let current = new Date(startTime);
@@ -89,7 +90,7 @@ function BookingContent({ id }: { id: string }) {
 
   const getNext7Days = () => {
     const dates = [];
-    const now = new Date();
+    const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
     const isRestricted = doc?.stops_booking_at_midnight === true;
     const startOffset = isRestricted ? 1 : 0;
     

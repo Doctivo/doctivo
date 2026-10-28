@@ -1,9 +1,19 @@
 import { query } from '@/lib/db';
 import { Appointment } from '@/types';
 import { isBefore, parseISO, startOfDay } from 'date-fns';
+import { isSlotInPast } from '@/lib/date-utils';
 
 export const AppointmentRepository = {
   async create(app: Partial<Appointment>): Promise<any> {
+    if (!app.date || !app.time) {
+      throw new Error('Appointment date and time are required.');
+    }
+
+    // Strict Server-Side Guard: Reject booking for past date or past time slot
+    if (isSlotInPast(app.date, app.time)) {
+      throw new Error('This time slot has already passed. Please select an upcoming slot.');
+    }
+
     // 1. Cancel previous Pending_Payment appointments for the same user on this slot or older abandoned Pending_Payment
     await query(
       "UPDATE appointments SET status = 'Cancelled' WHERE doctor_id = $1 AND appointment_date = $2 AND appointment_time_slot = $3 AND status = 'Pending_Payment' AND (booked_by_user_id = $4 OR created_at < NOW() - INTERVAL '15 minutes')",
@@ -226,6 +236,10 @@ export const AppointmentRepository = {
   },
 
   async reschedule(appId: string, newDate: string, newTime: string): Promise<void> {
+    if (isSlotInPast(newDate, newTime)) {
+      throw new Error('Cannot reschedule to a past date or time slot. Please choose an upcoming slot.');
+    }
+
     const app = await query("SELECT doctor_id, status FROM appointments WHERE appointment_id = $1", [appId]);
     if (!app.rows.length) throw new Error('Appointment not found');
     

@@ -5,6 +5,7 @@ import { Appointment } from '@/types';
 import { requireAuth, requireRoles } from '@/lib/auth/session';
 import { ROLES } from '@/lib/auth/roles';
 import { logger } from '@/lib/logger';
+import { isSlotInPast } from '@/lib/date-utils';
 
 import crypto from 'crypto';
 
@@ -15,6 +16,15 @@ export async function createAppointment(app: Partial<Appointment>, razorpayData?
   const session = await requireAuth();
   if (session.userId !== app.patientId && session.role !== ROLES.ADMIN && session.role !== ROLES.SUPER_ADMIN) {
     throw new Error('Forbidden: You can only book appointments for your own account.');
+  }
+
+  if (!app.date || !app.time) {
+    return { success: false, error: 'Appointment date and time are required.' };
+  }
+
+  // Strict Server-Side Validation: Reject past slots in IST
+  if (isSlotInPast(app.date, app.time)) {
+    return { success: false, error: 'This time slot has already passed. Please select an upcoming slot.' };
   }
 
   // Verify payment if razorpayData is provided
@@ -50,6 +60,15 @@ export async function createPendingBooking(app: Partial<Appointment>, source?: s
   
   if (session.userId !== app.patientId && session.role !== ROLES.ADMIN && session.role !== ROLES.SUPER_ADMIN) {
     throw new Error('Forbidden: You can only book appointments for your own account.');
+  }
+
+  if (!app.date || !app.time) {
+    return { success: false, error: 'Appointment date and time are required.' };
+  }
+
+  // Strict Server-Side Validation: Reject past slots in IST
+  if (isSlotInPast(app.date, app.time)) {
+    return { success: false, error: 'This time slot has already passed. Please select an upcoming slot.' };
   }
 
   try {

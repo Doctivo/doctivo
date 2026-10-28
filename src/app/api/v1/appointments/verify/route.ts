@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAndConfirmBooking } from '@/actions/appointments';
 import { verifyAccessToken } from '@/lib/auth/jwt';
+import { query } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,6 +22,27 @@ export async function POST(request: NextRequest) {
 
     if (!orderId) {
       return NextResponse.json({ error: 'Missing orderId' }, { status: 400 });
+    }
+
+    // Security Check: Verify that this orderId belongs to the authenticated user (Prevents IDOR)
+    const orderCheck = await query(
+      'SELECT booked_by_user_id FROM appointments WHERE transaction_id = $1 OR appointment_id = $1',
+      [orderId]
+    );
+
+    if (orderCheck.rows.length === 0) {
+      return NextResponse.json({ success: false, error: 'Appointment order not found' }, { status: 404 });
+    }
+
+    const bookedByUserId = orderCheck.rows[0].booked_by_user_id;
+    const isOwner = bookedByUserId === decoded.userId;
+    const isAdmin = decoded.role === 'SUPER_ADMIN' || decoded.role === 'ADMIN';
+
+    if (!isOwner && !isAdmin) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Forbidden: You do not have permission to verify or view this appointment order' 
+      }, { status: 403 });
     }
 
     // Use the existing server action to verify payment with Cashfree and update DB

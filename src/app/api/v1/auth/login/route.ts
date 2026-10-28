@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
 
     // 4. Standard Auth / Patient record lookup
     const res = await query(
-      `SELECT patient_id, full_name as name, phone_number, age, gender, blood_group, city 
+      `SELECT patient_id, full_name as name, phone_number, age, gender, blood_group, city, is_profile_complete 
        FROM patients 
        WHERE phone_number = $1 OR phone_number = $2`,
       [cleanPhone, `+91${cleanPhone}`]
@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
       // Create new patient for the mobile app if they don't exist
       const userId = `PT-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
       await query(
-        'INSERT INTO patients (patient_id, phone_number, full_name) VALUES ($1, $2, $3)',
+        'INSERT INTO patients (patient_id, phone_number, full_name, is_profile_complete) VALUES ($1, $2, $3, false)',
         [userId, cleanPhone, 'New Patient']
       );
 
@@ -59,16 +59,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         success: true,
         ...tokens,
-        user: { id: userId, role: 'PATIENT', name: 'New Patient', phone: cleanPhone },
+        isNewUser: true,
+        isProfileComplete: false,
+        user: { id: userId, role: 'PATIENT', name: 'New Patient', phone: cleanPhone, isProfileComplete: false },
       });
     }
 
     const user = res.rows[0];
     const tokens = generateTokens(user.patient_id, 'PATIENT');
+    const isProfileComplete = Boolean(
+      user.is_profile_complete === true ||
+      (user.name && user.name !== 'New Patient' && user.name !== 'Patient User' && user.age && user.gender)
+    );
 
     return NextResponse.json({
       success: true,
       ...tokens,
+      isNewUser: false,
+      isProfileComplete,
       user: {
         id: user.patient_id,
         role: 'PATIENT',
@@ -78,6 +86,7 @@ export async function POST(req: NextRequest) {
         age: user.age,
         gender: user.gender,
         city: user.city,
+        isProfileComplete,
       },
     });
   } catch (error: any) {

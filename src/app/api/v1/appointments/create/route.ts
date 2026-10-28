@@ -5,6 +5,7 @@ import { query } from '@/lib/db';
 import crypto from 'crypto';
 import fetch from 'node-fetch';
 import { verifyAccessToken } from '@/lib/auth/jwt';
+import { isSlotInPast } from '@/lib/date-utils';
 
 export async function POST(req: NextRequest) {
   try {
@@ -35,6 +36,13 @@ export async function POST(req: NextRequest) {
 
     if (!doctorId || !date || !time) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    // Strict Server-Side Validation: Reject past dates and past times in IST
+    if (isSlotInPast(date, time)) {
+      return NextResponse.json({ 
+        error: 'This appointment slot has already passed. Please choose an upcoming time slot.' 
+      }, { status: 400 });
     }
 
     // 2. Validate Slot
